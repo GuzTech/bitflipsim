@@ -8,6 +8,8 @@ class Wire;
 class FullAdder : public Component {
 public:
 	FullAdder() = default;
+	FullAdder(std::string _name)
+		: Component(_name) {}
 	~FullAdder() = default;
 
 	enum class PORTS {A, B, Cin, S, Cout};

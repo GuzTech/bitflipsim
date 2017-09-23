@@ -8,6 +8,8 @@ class Wire;
 class HalfAdder : public Component {
 public:
 	HalfAdder() = default;
+	HalfAdder(std::string _name)
+		: Component(_name) {}
 	~HalfAdder() = default;
 
 	enum class PORTS {A, B, S, C};
