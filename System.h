@@ -10,6 +10,8 @@ public:
 	void Update();
 
 	uint64_t GetNumToggles();
+	int64_t  GetNumComponents() {return components.size();}
+	int64_t  GetNumWires() {return wires.size();}
 protected:
 
 private:
