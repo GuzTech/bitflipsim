@@ -1,10 +1,42 @@
 #include "main.h"
 #include <yaml-cpp/yaml.h>
+#include <map>
 
 using namespace std;
 
+void Connect(comp_t component, std::string port_name, wire_t wire) {
+	auto fa = dynamic_pointer_cast<FullAdder>(component);
+	auto ha = dynamic_pointer_cast<HalfAdder>(component);
+
+	if (fa != nullptr) {
+		if (port_name.compare("A") == 0) {
+			fa->Connect(FullAdder::PORTS::A, wire);
+		} else if (port_name.compare("B") == 0) {
+			fa->Connect(FullAdder::PORTS::B, wire);
+		} else if (port_name.compare("Cin") == 0) {
+			fa->Connect(FullAdder::PORTS::Cin, wire);
+		} else if (port_name.compare("S") == 0) {
+			fa->Connect(FullAdder::PORTS::S, wire);
+		} else if (port_name.compare("Cout") == 0) {
+			fa->Connect(FullAdder::PORTS::Cout, wire);
+		}
+	} else if (ha != nullptr) {
+		if (port_name.compare("A") == 0) {
+			ha->Connect(HalfAdder::PORTS::A, wire);
+		} else if (port_name.compare("B") == 0) {
+			ha->Connect(HalfAdder::PORTS::B, wire);
+		} else if (port_name.compare("S") == 0) {
+			ha->Connect(HalfAdder::PORTS::S, wire);
+		} else if (port_name.compare("C") == 0) {
+			ha->Connect(HalfAdder::PORTS::C, wire);
+		}
+	}
+}
+
 int main(int argc, char **argv) {
+	map<std::string, comp_t> comps;
 	YAML::Node config;
+	System system;
 	
 	// Check if a configuration file was supplied.
 	if (argc == 2) {
@@ -25,18 +57,83 @@ int main(int argc, char **argv) {
 
 	if (!config.IsNull()) {
 		if (config["components"]) {
-			for (auto c : config["components"]) {
-				cout << c << "\n";
+			auto components = config["components"];
+
+			for (YAML::const_iterator it = components.begin(); it != components.end(); ++it) {
+				std::string key = it->first.as<std::string>();
+				std::string val;
+
+				if (it->second) {
+				    val = it->second.as<std::string>();
+					cout << "Type: " << key << "\nName: " << val << "\n";
+				} else {
+					cout << "Type: " << key << "\n";
+				}
+
+				if (key.compare("FullAdder") == 0) {
+					comps[val] = make_shared<FullAdder>();
+				} else if (key.compare("HalfAdder") == 0) {
+					comps[val] = make_shared<HalfAdder>();
+				} else {
+					cout << "Unrecognized component type: " << key << "\n";
+				}
 			}
+
+			//auto fa1 = config["components"][0];
+			//auto fa2 = config["components"][1];
+
+			//cout << fa1["FullAdder"] << " " << fa2 << "\n";
+
+			//for (YAML::const_iterator c : config["components"]) {
+			//	cout << c->first.as<std::string>() << "\n";
+			//}
 		}
+
+		cout << "Number of components created: " << comps.size() << "\n";
+
+		cout << config["components"] << "\n";
 
 		if (config["wires"]) {
-			for (auto w : config["wires"]) {
-				cout << w << "\n";
+			auto wires = config["wires"];
+
+			for (YAML::const_iterator it = wires.begin(); it != wires.end(); ++it) {
+				std::string from = it->second[0]["from"].as<std::string>();
+				std::string from_port = it->second[0]["port"].as<std::string>();
+				std::string to = it->second[1]["to"].as<std::string>();
+				std::string to_port = it->second[1]["port"].as<std::string>();
+
+				if (comps.find(from) != comps.end() && comps.find(to) != comps.end()) {
+					auto wire = make_shared<Wire>();
+
+					auto from_comp = comps[from];
+					auto to_comp = comps[to];
+
+					Connect(from_comp, from_port, wire);
+					Connect(to_comp, to_port, wire);
+				} else if (from.compare("input") == 0) {
+					auto wire = make_shared<Wire>();
+
+					auto to_comp = comps[to];
+
+					Connect(to_comp, to_port, wire);
+				} else if (to.compare("output") == 0) {
+					auto wire = make_shared<Wire>();
+
+					auto from_comp = comps[from];
+
+					Connect(from_comp, from_port, wire);
+				}
 			}
+			//for (auto w : config["wires"]) {
+			//	cout << w << "\n";
+			//}
+		}
+
+		for (auto c : comps) {
+			system.AddComponent(c.second);
 		}
 	}
-
+#if 0
 	auto A0 = make_shared<Wire>();
 	auto B0 = make_shared<Wire>();
 	auto A1 = make_shared<Wire>();
@@ -126,6 +223,6 @@ int main(int argc, char **argv) {
 
 	cout << "S: " << S->GetValue() << " C: " << C->GetValue() << "\n";
 */
-
+#endif
 	return 0;
 }
