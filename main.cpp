@@ -1,8 +1,42 @@
 #include "main.h"
+#include <yaml-cpp/yaml.h>
 
 using namespace std;
 
 int main(int argc, char **argv) {
+	YAML::Node config;
+	
+	// Check if a configuration file was supplied.
+	if (argc == 2) {
+		std::string config_file_name(argv[1]);
+
+		try {
+			config = YAML::LoadFile(config_file_name.c_str());
+		} catch (YAML::BadFile e) {
+			cout << "[Error] Could not load file \"" <<
+				config_file_name.c_str() << "\": " << e.msg << "\n";
+		} catch (YAML::ParserException e) {
+			cout << "[Error] Could not parse file \"" <<
+				config_file_name.c_str() << "\": " << e.msg << "\n";
+		}
+	} else {
+		cout << "Usage: ./bitflipsim <configuration file>\n";
+	}
+
+	if (!config.IsNull()) {
+		if (config["components"]) {
+			for (auto c : config["components"]) {
+				cout << c << "\n";
+			}
+		}
+
+		if (config["wires"]) {
+			for (auto w : config["wires"]) {
+				cout << w << "\n";
+			}
+		}
+	}
+
 	auto A0 = make_shared<Wire>();
 	auto B0 = make_shared<Wire>();
 	auto A1 = make_shared<Wire>();
