@@ -71,39 +71,27 @@ int main(int argc, char **argv) {
 				}
 
 				if (key.compare("FullAdder") == 0) {
-					comps[val] = make_shared<FullAdder>();
+					comps[val] = make_shared<FullAdder>(val);
 				} else if (key.compare("HalfAdder") == 0) {
-					comps[val] = make_shared<HalfAdder>();
+					comps[val] = make_shared<HalfAdder>(val);
 				} else {
 					cout << "Unrecognized component type: " << key << "\n";
 				}
 			}
-
-			//auto fa1 = config["components"][0];
-			//auto fa2 = config["components"][1];
-
-			//cout << fa1["FullAdder"] << " " << fa2 << "\n";
-
-			//for (YAML::const_iterator c : config["components"]) {
-			//	cout << c->first.as<std::string>() << "\n";
-			//}
 		}
-
-		cout << "Number of components created: " << comps.size() << "\n";
-
-		cout << config["components"] << "\n";
 
 		if (config["wires"]) {
 			auto wires = config["wires"];
 
 			for (YAML::const_iterator it = wires.begin(); it != wires.end(); ++it) {
+				std::string wire_name = it->first.as<std::string>();
 				std::string from = it->second[0]["from"].as<std::string>();
 				std::string from_port = it->second[0]["port"].as<std::string>();
 				std::string to = it->second[1]["to"].as<std::string>();
 				std::string to_port = it->second[1]["port"].as<std::string>();
 
 				if (comps.find(from) != comps.end() && comps.find(to) != comps.end()) {
-					auto wire = make_shared<Wire>();
+					auto wire = make_shared<Wire>(wire_name);
 
 					auto from_comp = comps[from];
 					auto to_comp = comps[to];
@@ -111,27 +99,27 @@ int main(int argc, char **argv) {
 					Connect(from_comp, from_port, wire);
 					Connect(to_comp, to_port, wire);
 				} else if (from.compare("input") == 0) {
-					auto wire = make_shared<Wire>();
+					auto wire = make_shared<Wire>(wire_name);
 
 					auto to_comp = comps[to];
 
 					Connect(to_comp, to_port, wire);
 				} else if (to.compare("output") == 0) {
-					auto wire = make_shared<Wire>();
+					auto wire = make_shared<Wire>(wire_name);
 
 					auto from_comp = comps[from];
 
 					Connect(from_comp, from_port, wire);
 				}
 			}
-			//for (auto w : config["wires"]) {
-			//	cout << w << "\n";
-			//}
 		}
 
 		for (auto c : comps) {
 			system.AddComponent(c.second);
 		}
+
+		cout << "Number of components: " << system.GetNumComponents() <<
+			"\nNumber of wires: " << system.GetNumWires() << "\n";
 	}
 #if 0
 	auto A0 = make_shared<Wire>();
