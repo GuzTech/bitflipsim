@@ -1,0 +1,27 @@
+#ifndef HALFADDER_H
+#define HALFADDER_H
+
+#include "main.h"
+
+class Wire;
+
+class HalfAdder : public Component {
+public:
+	HalfAdder() = default;
+	~HalfAdder() = default;
+
+	enum class PORTS {A, B, S, C};
+
+	void Update() override;
+	void Connect(PORTS port, wire_t wire);
+
+	std::vector<wire_t> GetWires() override;
+
+private:
+	wire_t A;
+	wire_t B;
+	wire_t S;
+	wire_t C;
+};
+
+#endif // HALFADDER_H
