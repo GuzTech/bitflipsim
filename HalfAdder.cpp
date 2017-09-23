@@ -34,8 +34,8 @@ void HalfAdder::Update() {
 
 void HalfAdder::Connect(PORTS port, wire_t wire) {
 	switch (port) {
-	case PORTS::A: A = wire; wire->SetDrives(this->shared_from_base<HalfAdder>()); break;
-	case PORTS::B: B = wire; wire->SetDrives(this->shared_from_base<HalfAdder>()); break;
+	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<HalfAdder>()); break;
+	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<HalfAdder>()); break;
 	case PORTS::S: S = wire; break;
 	case PORTS::C: C = wire; break;
 	}

@@ -14,7 +14,7 @@ public:
 	const bool HasChanged();
 
 	void SetValue(bool val);
-	void SetDrives(comp_t component);
+	void AddOutput(comp_t component);
 
 	std::string GetName() {return name;}
 	uint64_t GetNumToggles() {return toggle_count;}
@@ -26,7 +26,7 @@ private:
 	uint64_t toggle_count = 0;
 	std::string name;
 
-	std::weak_ptr<Component> drives;
+	std::vector<std::weak_ptr<Component>> outputs;
 };
 
 #endif // WIRE_H

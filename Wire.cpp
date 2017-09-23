@@ -15,12 +15,14 @@ void Wire::SetValue(bool val) {
 	if (has_changed) {
 		toggle_count++;
 
-		if (auto spt = drives.lock()) {
-			spt->MarkUpdate();
+		for (auto c : outputs) {
+			if (auto spt = c.lock()) {
+				spt->MarkUpdate();
+			}
 		}
 	}
 }
 
-void Wire::SetDrives(comp_t component) {
-	drives = component;
+void Wire::AddOutput(comp_t component) {
+	outputs.push_back(component);
 }

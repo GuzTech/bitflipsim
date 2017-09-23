@@ -60,9 +60,9 @@ void FullAdder::Update() {
 
 void FullAdder::Connect(PORTS port, wire_t wire) {
 	switch (port) {
-	case PORTS::A:    A    = wire; wire->SetDrives(this->shared_from_base<FullAdder>()); break;
-	case PORTS::B:    B    = wire; wire->SetDrives(this->shared_from_base<FullAdder>()); break;
-	case PORTS::Cin:  Cin  = wire; wire->SetDrives(this->shared_from_base<FullAdder>()); break;
+	case PORTS::A:    A    = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
+	case PORTS::B:    B    = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
+	case PORTS::Cin:  Cin  = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
 	case PORTS::S:    S    = wire; break;
 	case PORTS::Cout: Cout = wire; break;
 	}
