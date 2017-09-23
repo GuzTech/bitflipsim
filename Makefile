@@ -14,10 +14,13 @@ bitflipsim: $(OBJDIR)/Component.o $(OBJDIR)/HalfAdder.o $(OBJDIR)/FullAdder.o $(
 debug: bitflipsim
 	gdbgui ./bitflipsim
 
-.PHONY: clean emscripten init
+.PHONY: clean emscripten
 
-init:
+lib/yaml-cpp/build/libyaml-cpp.a:
 	cd lib/yaml-cpp; mkdir build; cd build; cmake ..; make
+
+init: lib/yaml-cpp/build/libyaml-cpp.a
+	mkdir $(OBJDIR)
 
 emscripten:
 	em++ -O2 -std=c++1z *.cpp -o html/bitflipsim.html
