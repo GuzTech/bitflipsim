@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-Ilib/yaml-cpp -g -O0 -std=c++1z
+CXXFLAGS=-Ilib/yaml-cpp/include -g -O0 -std=c++1z
 
 OBJDIR=obj
 LDFLAGS=-Llib/yaml-cpp/build
