@@ -1,0 +1,10 @@
+components:
+  - FullAdder: &fa1
+  - FullAdder: &fa2
+wires:
+  - fa1Cout_fa2Cin:
+      - from: *fa1
+        port: Cout
+      - to: *fa2
+        port: Cin
+
