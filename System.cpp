@@ -34,3 +34,11 @@ uint64_t System::GetNumToggles() {
 
 	return toggle_count;
 }
+
+wire_t System::GetWire(std::string wire_name) {
+	if (wires.find(wire_name) != wires.end()) {
+		return wires[wire_name];
+	} else {
+		return nullptr;
+	}
+}
