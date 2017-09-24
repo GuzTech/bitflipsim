@@ -7,11 +7,11 @@ wires:
       port: Cout
     - to: *fa2
       port: Cin
-  InData:
+  &InData InData:
     - from: input
     - to: [*fa1, *fa1, *fa2, *fa2]
       port: [A, B, A, B]
-  C0:
+  &C0 C0:
     - from: input
     - to: *fa1
       port: Cin
@@ -23,7 +23,12 @@ wires:
     - from: *fa2
       port: S
     - to: output
-  C2:
+  &C2 C2:
     - from: *fa2
       port: Cout
     - to: output
+stimuli:
+  - *InData : 1
+    *C0 : 1
+  - *InData : 0
+    *C0 : 0

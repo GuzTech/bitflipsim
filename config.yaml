@@ -39,3 +39,4 @@ wires:
     - from: *fa2
       port: Cout
     - to: output
+stimuli:

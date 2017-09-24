@@ -155,6 +155,14 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 	}
 }
 
+void ParseStimuli(System &system, YAML::Node config) {
+	auto stimuli = config["stimuli"];
+
+	for (auto step : stimuli) {
+		cout << "Step: " << step << " size: " << step.size() << "\n";
+	}
+}
+
 int main(int argc, char **argv) {
 #if 1
 	map<std::string, comp_t> comps;
@@ -181,19 +189,34 @@ int main(int argc, char **argv) {
 	}
 
 	if (!config.IsNull()) {
-		if (config["components"]) {
-			ParseComponents(comps, config);
-		} else {
-			cout << "[Error] No components section found in \"" << config_file_name << "\"\n";
+		// First check for obvious errors.
+		if (!config["components"]) {
+			cout << "[Error] No \"components\" section found in \"" << config_file_name << "\"\n";
+			exit(1);
+		}
+		if (config["components"].size() == 0) {
+			cout << "[Error] \"components\" section in \"" << config_file_name << "\" is empty.\n";
+			exit(1);
+		}
+		if (!config["wires"]) {
+			cout << "[Error] No \"wires\" section found in \"" << config_file_name << "\"\n";
+			exit(1);
+		}
+		if (config["wires"].size() == 0) {
+			cout << "[Error] \"wires\" section in \"" << config_file_name << "\" is empty.\n";
+			exit(1);
+		}
+		if (!config["stimuli"]) {
+			cout << "[Error] No \"stimuli\" section found in \"" << config_file_name << "\"\n";
+			exit(1);
+		}
+		if (config["stimuli"].size() == 0) {
+			cout << "[Error] \"stimuli\" section in \"" << config_file_name << "\" is empty.\n";
 			exit(1);
 		}
 
-		if (config["wires"]) {
-			ParseWires(comps, config);
-		} else {
-			cout << "[Error] No wires section found in \"" << config_file_name << "\"\n";
-			exit(1);
-		}
+		ParseComponents(comps, config);
+		ParseWires(comps, config);
 
 		for (auto c : comps) {
 			system.AddComponent(c.second);
@@ -201,6 +224,18 @@ int main(int argc, char **argv) {
 
 		cout << "Number of components: " << system.GetNumComponents() <<
 			"\nNumber of wires: " << system.GetNumWires() << "\n";
+
+		ParseStimuli(system, config);
+
+		wire_t input = system.GetWire("InData");
+
+		if (input) {
+			input->SetValue(true);
+
+			system.Update();
+
+			cout << "Number of toggled wires: " << system.GetNumToggles() << "\n";
+		}
 	}
 #else
 	auto A0 = make_shared<Wire>();
