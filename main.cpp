@@ -59,22 +59,55 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 
 		if (it->second.size() == 2) {
 			auto wire = make_shared<Wire>(wire_name);
+
+			// There is always a single source for a Wire.
 			auto from = it->second[0];
-			auto to = it->second[1];
 			auto from_name = from["from"].as<string>();
-			auto to_name = to["to"].as<string>();
+
+			// There can be multiple sinks for a Wire.
+			auto to = it->second[1];
+			vector<string> to_port_names;
+			vector<comp_t> components;
+
+			auto to_comp_node = to["to"];
+			auto to_port_node = to["port"];
+			bool output = false;
+
+			if (to_comp_node.IsScalar() && to_port_node.IsScalar()) {
+				components.push_back(comps[to_comp_node.as<string>()]);
+				to_port_names.push_back(to_port_node.as<string>());
+			} else if (to_comp_node.IsSequence() && to_port_node.IsSequence()) {
+				for (auto comp : to_comp_node) {
+					components.push_back(comps[comp.as<string>()]);
+				}
+
+				for (auto port : to_port_node) {
+					to_port_names.push_back(port.as<string>());
+				}
+
+				if (components.size() != to_port_names.size()) {
+					cout << "[Error] Wire \"" << wire_name << "\" output component and port sequences must be same length.\n";
+					exit(1);
+				}
+			} else if (to_comp_node.IsScalar()) {
+				if (to_comp_node.as<string>().compare("output") == 0) {
+					output = true;
+				}
+			} else {
+				cout << "[Error] Wire \"" << wire_name << "\" output must be a scalar or sequence.\n";
+				exit(1);
+			}
 
 			if (from_name.compare("input") == 0) {
 				if (to.size() == 2) {
-					auto to_comp = comps[to_name];
-					auto to_port = to["port"].as<string>();
-
-					Connect(to_comp, to_port, wire);
+					for (int i = 0; i < components.size(); ++i) {
+						Connect(components[i], to_port_names[i], wire);
+					}
 				} else {
 					cout << "[Error] Input wire \"" << wire_name << "\" has incomplete declared output.\n";
 					exit(1);
 				}
-			} else if (to_name.compare("output") == 0) {
+			} else if (output) {
 				if (from.size() == 2) {
 					auto from_comp = comps[from_name];
 					auto from_port = from["port"].as<string>();
@@ -86,17 +119,19 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 				}
 			} else {
 				if (comps.find(from_name) != comps.end()) {
-					if (comps.find(to_name) != comps.end()) {
-						auto from_comp = comps[from_name];
-						auto to_comp = comps[to_name];
-						auto from_port = from["port"].as<string>();
-						auto to_port = to["port"].as<string>();
+					for (int i = 0; i < components.size(); ++i) {
+						if (comps.find(components[i]->GetName()) != comps.end()) {
+							auto from_comp = comps[from_name];
+							auto to_comp = components[i];
+							auto from_port = from["port"].as<string>();
+							auto to_port = to_port_names[i];
 
-						Connect(from_comp, from_port, wire);
-						Connect(to_comp, to_port, wire);
-					} else {
-						cout << "[Error] Wire \"" << wire_name << "\" input component does not exist.\n";
-						exit(1);
+							Connect(from_comp, from_port, wire);
+							Connect(to_comp, to_port, wire);
+						} else {
+							cout << "[Error] Wire \"" << wire_name << "\" input component does not exist.\n";
+							exit(1);
+						}
 					}
 				} else {
 					cout << "[Error] Wire \"" << wire_name << "\" output component does not exist.\n";
