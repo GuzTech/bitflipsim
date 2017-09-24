@@ -4,43 +4,53 @@
 
 using namespace std;
 
+void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
+	auto components = config["components"];
+
+	for (YAML::const_iterator it = components.begin(); it != components.end(); ++it) {
+		std::string comp_type = it->first.as<string>();
+		std::string comp_name;
+
+		if (it->second) {
+			comp_name = it->second.as<string>();
+		} else {
+			cout << "[Error] Component must have a name!\n";
+			exit(1);
+		}
+
+		if (comp_type.compare("FullAdder") == 0) comps[comp_name] = make_shared<FullAdder>(comp_name);
+		else if (comp_type.compare("HalfAdder") == 0) comps[comp_name] = make_shared<HalfAdder>(comp_name);
+	}
+}
+
 void Connect(comp_t component, std::string port_name, wire_t wire) {
 	auto fa = dynamic_pointer_cast<FullAdder>(component);
 	auto ha = dynamic_pointer_cast<HalfAdder>(component);
 
 	if (fa != nullptr) {
-		if (port_name.compare("A") == 0) {
-			fa->Connect(FullAdder::PORTS::A, wire);
-		} else if (port_name.compare("B") == 0) {
-			fa->Connect(FullAdder::PORTS::B, wire);
-		} else if (port_name.compare("Cin") == 0) {
-			fa->Connect(FullAdder::PORTS::Cin, wire);
-		} else if (port_name.compare("S") == 0) {
-			fa->Connect(FullAdder::PORTS::S, wire);
-		} else if (port_name.compare("Cout") == 0) {
-			fa->Connect(FullAdder::PORTS::Cout, wire);
-		}
+		if (port_name.compare("A") == 0)         fa->Connect(FullAdder::PORTS::A, wire);
+		else if (port_name.compare("B") == 0)    fa->Connect(FullAdder::PORTS::B, wire);
+		else if (port_name.compare("Cin") == 0)  fa->Connect(FullAdder::PORTS::Cin, wire);
+		else if (port_name.compare("S") == 0)    fa->Connect(FullAdder::PORTS::S, wire);
+		else if (port_name.compare("Cout") == 0) fa->Connect(FullAdder::PORTS::Cout, wire);
 	} else if (ha != nullptr) {
-		if (port_name.compare("A") == 0) {
-			ha->Connect(HalfAdder::PORTS::A, wire);
-		} else if (port_name.compare("B") == 0) {
-			ha->Connect(HalfAdder::PORTS::B, wire);
-		} else if (port_name.compare("S") == 0) {
-			ha->Connect(HalfAdder::PORTS::S, wire);
-		} else if (port_name.compare("C") == 0) {
-			ha->Connect(HalfAdder::PORTS::C, wire);
-		}
+		if (port_name.compare("A") == 0)      ha->Connect(HalfAdder::PORTS::A, wire);
+		else if (port_name.compare("B") == 0) ha->Connect(HalfAdder::PORTS::B, wire);
+		else if (port_name.compare("S") == 0) ha->Connect(HalfAdder::PORTS::S, wire);
+		else if (port_name.compare("C") == 0) ha->Connect(HalfAdder::PORTS::C, wire);
 	}
 }
 
 int main(int argc, char **argv) {
+#if 1
 	map<std::string, comp_t> comps;
 	YAML::Node config;
 	System system;
+	string config_file_name;
 	
 	// Check if a configuration file was supplied.
 	if (argc == 2) {
-		std::string config_file_name(argv[1]);
+		config_file_name = string(argv[1]);
 
 		try {
 			config = YAML::LoadFile(config_file_name.c_str());
@@ -57,27 +67,10 @@ int main(int argc, char **argv) {
 
 	if (!config.IsNull()) {
 		if (config["components"]) {
-			auto components = config["components"];
-
-			for (YAML::const_iterator it = components.begin(); it != components.end(); ++it) {
-				std::string key = it->first.as<std::string>();
-				std::string val;
-
-				if (it->second) {
-				    val = it->second.as<std::string>();
-					cout << "Type: " << key << "\nName: " << val << "\n";
-				} else {
-					cout << "Type: " << key << "\n";
-				}
-
-				if (key.compare("FullAdder") == 0) {
-					comps[val] = make_shared<FullAdder>(val);
-				} else if (key.compare("HalfAdder") == 0) {
-					comps[val] = make_shared<HalfAdder>(val);
-				} else {
-					cout << "Unrecognized component type: " << key << "\n";
-				}
-			}
+			ParseComponents(comps, config);
+		} else {
+			cout << "[Error] No components found in \"" << config_file_name << "\"\n";
+			exit(1);
 		}
 
 		if (config["wires"]) {
@@ -121,7 +114,7 @@ int main(int argc, char **argv) {
 		cout << "Number of components: " << system.GetNumComponents() <<
 			"\nNumber of wires: " << system.GetNumWires() << "\n";
 	}
-#if 0
+#else
 	auto A0 = make_shared<Wire>();
 	auto B0 = make_shared<Wire>();
 	auto A1 = make_shared<Wire>();
