@@ -5,7 +5,6 @@
 
 class Component : public std::enable_shared_from_this<Component> {
 public:
-	Component() = default;
 	Component(std::string _name)
 		: name(_name) {}
 	virtual ~Component() = default;
