@@ -15,8 +15,8 @@ public:
 protected:
 
 private:
-	std::vector<comp_t> components;
-	std::vector<wire_t> wires;
+	std::map<std::string, comp_t> components;
+	std::map<std::string, wire_t> wires;
 };
 
 #endif // SYSTEM_H

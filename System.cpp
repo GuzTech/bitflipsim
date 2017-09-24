@@ -1,23 +1,18 @@
 #include "main.h"
 
 void System::AddComponent(comp_t component) {
-	// Add the component if it was not added before.
-	if (std::find(components.begin(), components.end(), component) == components.end()) {
-		components.push_back(component);
-	}
+	components.insert(std::pair<std::string, comp_t>(component->GetName(), component));
 
-	// Add all wires of this component if they were not added before.
+	// Add all wires of this component.
 	for (auto w : component->GetWires()) {
-		if (std::find(wires.begin(), wires.end(), w) == wires.end()) {
-			wires.push_back(w);
-		}
+		wires.insert(std::pair<std::string, wire_t>(w->GetName(), w));
 	}
 }
 
 void System::Update() {
 	for (auto c : components) {
-		if (c) {
-			c->Update();
+		if (c.second) {
+			c.second->Update();
 		}
 	}
 }
@@ -26,14 +21,14 @@ uint64_t System::GetNumToggles() {
 	uint64_t toggle_count = 0;
 
 	for (auto c : components) {
-		if (c) {
-			toggle_count += c->GetNumToggles();
+		if (c.second) {
+			toggle_count += c.second->GetNumToggles();
 		}
 	}
 
 	for (auto w : wires) {
-		if (w) {
-			toggle_count += w->GetNumToggles();
+		if (w.second) {
+			toggle_count += w.second->GetNumToggles();
 		}
 	}
 
