@@ -4,26 +4,7 @@
 
 using namespace std;
 
-void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
-	auto components = config["components"];
-
-	for (YAML::const_iterator it = components.begin(); it != components.end(); ++it) {
-		std::string comp_type = it->first.as<string>();
-		std::string comp_name;
-
-		if (it->second) {
-			comp_name = it->second.as<string>();
-		} else {
-			cout << "[Error] Component must have a name!\n";
-			exit(1);
-		}
-
-		if (comp_type.compare("FullAdder") == 0) comps[comp_name] = make_shared<FullAdder>(comp_name);
-		else if (comp_type.compare("HalfAdder") == 0) comps[comp_name] = make_shared<HalfAdder>(comp_name);
-	}
-}
-
-void Connect(comp_t component, std::string port_name, wire_t wire) {
+void Connect(comp_t component, string port_name, wire_t wire) {
 	auto fa = dynamic_pointer_cast<FullAdder>(component);
 	auto ha = dynamic_pointer_cast<HalfAdder>(component);
 
@@ -38,6 +19,94 @@ void Connect(comp_t component, std::string port_name, wire_t wire) {
 		else if (port_name.compare("B") == 0) ha->Connect(HalfAdder::PORTS::B, wire);
 		else if (port_name.compare("S") == 0) ha->Connect(HalfAdder::PORTS::S, wire);
 		else if (port_name.compare("C") == 0) ha->Connect(HalfAdder::PORTS::C, wire);
+	}
+}
+
+void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
+	auto components = config["components"];
+
+	if (components.size() == 0) {
+		cout << "[Error] No components found.\n";
+		exit(1);
+	}
+
+	for (YAML::const_iterator it = components.begin(); it != components.end(); ++it) {
+		string comp_type = it->first.as<string>();
+		string comp_name;
+
+		if (it->second) {
+			comp_name = it->second.as<string>();
+		} else {
+			cout << "[Error] Component must have a name.\n";
+			exit(1);
+		}
+
+		if (comp_type.compare("FullAdder") == 0) comps[comp_name] = make_shared<FullAdder>(comp_name);
+		else if (comp_type.compare("HalfAdder") == 0) comps[comp_name] = make_shared<HalfAdder>(comp_name);
+	}
+}
+
+void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
+	auto wires = config["wires"];
+
+	if (wires.size() == 0) {
+		cout << "[Error] No wires found.\n";
+		exit(1);
+	}
+
+	for (YAML::const_iterator it = wires.begin(); it != wires.end(); ++it) {
+		auto wire_name = it->first.as<string>();
+
+		if (it->second.size() == 2) {
+			auto wire = make_shared<Wire>(wire_name);
+			auto from = it->second[0];
+			auto to = it->second[1];
+			auto from_name = from["from"].as<string>();
+			auto to_name = to["to"].as<string>();
+
+			if (from_name.compare("input") == 0) {
+				if (to.size() == 2) {
+					auto to_comp = comps[to_name];
+					auto to_port = to["port"].as<string>();
+
+					Connect(to_comp, to_port, wire);
+				} else {
+					cout << "[Error] Input wire \"" << wire_name << "\" has incomplete declared output.\n";
+					exit(1);
+				}
+			} else if (to_name.compare("output") == 0) {
+				if (from.size() == 2) {
+					auto from_comp = comps[from_name];
+					auto from_port = from["port"].as<string>();
+
+					Connect(from_comp, from_port, wire);
+				} else {
+					cout << "[Error] Output wire \"" << wire_name << "\" has incomplete declared input.\n";
+					exit(1);
+				}
+			} else {
+				if (comps.find(from_name) != comps.end()) {
+					if (comps.find(to_name) != comps.end()) {
+						auto from_comp = comps[from_name];
+						auto to_comp = comps[to_name];
+						auto from_port = from["port"].as<string>();
+						auto to_port = to["port"].as<string>();
+
+						Connect(from_comp, from_port, wire);
+						Connect(to_comp, to_port, wire);
+					} else {
+						cout << "[Error] Wire \"" << wire_name << "\" input component does not exist.\n";
+						exit(1);
+					}
+				} else {
+					cout << "[Error] Wire \"" << wire_name << "\" output component does not exist.\n";
+					exit(1);
+				}
+			}
+		} else {
+			cout << "[Error] Wire \"" << wire_name << "\" declaration is incomplete.\n";
+			exit(1);
+		}
 	}
 }
 
@@ -69,42 +138,15 @@ int main(int argc, char **argv) {
 		if (config["components"]) {
 			ParseComponents(comps, config);
 		} else {
-			cout << "[Error] No components found in \"" << config_file_name << "\"\n";
+			cout << "[Error] No components section found in \"" << config_file_name << "\"\n";
 			exit(1);
 		}
 
 		if (config["wires"]) {
-			auto wires = config["wires"];
-
-			for (YAML::const_iterator it = wires.begin(); it != wires.end(); ++it) {
-				std::string wire_name = it->first.as<std::string>();
-				std::string from = it->second[0]["from"].as<std::string>();
-				std::string from_port = it->second[0]["port"].as<std::string>();
-				std::string to = it->second[1]["to"].as<std::string>();
-				std::string to_port = it->second[1]["port"].as<std::string>();
-
-				if (comps.find(from) != comps.end() && comps.find(to) != comps.end()) {
-					auto wire = make_shared<Wire>(wire_name);
-
-					auto from_comp = comps[from];
-					auto to_comp = comps[to];
-
-					Connect(from_comp, from_port, wire);
-					Connect(to_comp, to_port, wire);
-				} else if (from.compare("input") == 0) {
-					auto wire = make_shared<Wire>(wire_name);
-
-					auto to_comp = comps[to];
-
-					Connect(to_comp, to_port, wire);
-				} else if (to.compare("output") == 0) {
-					auto wire = make_shared<Wire>(wire_name);
-
-					auto from_comp = comps[from];
-
-					Connect(from_comp, from_port, wire);
-				}
-			}
+			ParseWires(comps, config);
+		} else {
+			cout << "[Error] No wires section found in \"" << config_file_name << "\"\n";
+			exit(1);
 		}
 
 		for (auto c : comps) {

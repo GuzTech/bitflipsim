@@ -1,7 +1,6 @@
 components:
   FullAdder: &fa1 fa1
   FullAdder: &fa2 fa2
-  WeirdAdder: wa1
 wires:
   C1:
     - from: *fa1
@@ -10,41 +9,33 @@ wires:
       port: Cin
   A0:
     - from: input
-      port: A
     - to: *fa1
       port: A
   A1:
     - from: input
-      port: A
     - to: *fa2
       port: A
   B0:
     - from: input
-      port: B
     - to: *fa1
       port: B
   B1:
     - from: input
-      port: B
     - to: *fa2
       port: B
   C0:
     - from: input
-      port: Cin
     - to: *fa1
       port: Cin
   S0:
     - from: *fa1
       port: S
     - to: output
-      port: S
   S1:
     - from: *fa2
       port: S
     - to: output
-      port: S
   C2:
     - from: *fa2
       port: Cout
     - to: output
-      port: Cout
