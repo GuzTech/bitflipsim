@@ -62,7 +62,18 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 
 			// There is always a single source for a Wire.
 			auto from = it->second[0];
+
+			if (!from["from"].IsScalar()) {
+				cout << "[Error] Wire \"" << wire_name << "\" from input must be a scalar.\n";
+				exit(1);
+			}
+
 			auto from_name = from["from"].as<string>();
+			
+			if (!from["port"].IsScalar() && from_name.compare("input") != 0) {
+				cout << "[Error] Wire \"" << wire_name << "\" from port must be a scalar.\n";
+				exit(1);
+			}
 
 			// There can be multiple sinks for a Wire.
 			auto to = it->second[1];
