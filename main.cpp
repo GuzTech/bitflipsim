@@ -132,6 +132,7 @@ int main(int argc, char **argv) {
 		}
 	} else {
 		cout << "Usage: ./bitflipsim <configuration file>\n";
+		exit(0);
 	}
 
 	if (!config.IsNull()) {
