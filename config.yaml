@@ -3,6 +3,7 @@ components:
   FullAdder: &fa2 fa2
   And: &and1 and1
   Or: &or1 or1
+  Xor: &xor1 xor1
 wires:
   C1:
     - from: *fa1
@@ -32,13 +33,13 @@ wires:
   S0:
     - from: *fa1
       port: S
-    - to: [*and1, *or1]
-      port: [A, A]
+    - to: [*and1, *or1, *xor1]
+      port: [A, A, A]
   S1:
     - from: *fa2
       port: S
-    - to: [*and1, *or1]
-      port: [B, B]
+    - to: [*and1, *or1, *xor1]
+      port: [B, B, B]
   C2:
     - from: *fa2
       port: Cout
@@ -49,6 +50,10 @@ wires:
     - to: output
   OrO:
     - from: *or1
+      port: O
+    - to: output
+  Xor0:
+    - from: *xor1
       port: O
     - to: output
 stimuli:
