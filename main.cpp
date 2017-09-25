@@ -102,6 +102,7 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 		else if (comp_type.compare("Nand") == 0) comps[comp_name] = make_shared<Nand>(comp_name);
 		else if (comp_type.compare("Nor") == 0) comps[comp_name] = make_shared<Nor>(comp_name);
 		else if (comp_type.compare("Xnor") == 0) comps[comp_name] = make_shared<Xnor>(comp_name);
+		else if (comp_type.compare("Not") == 0) comps[comp_name] = make_shared<Not>(comp_name);
 		else {
 			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
 			exit(1);
