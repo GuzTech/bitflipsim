@@ -42,6 +42,10 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 
 		if (comp_type.compare("FullAdder") == 0) comps[comp_name] = make_shared<FullAdder>(comp_name);
 		else if (comp_type.compare("HalfAdder") == 0) comps[comp_name] = make_shared<HalfAdder>(comp_name);
+		else {
+			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
+			exit(1);
+		}
 	}
 }
 
