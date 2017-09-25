@@ -7,23 +7,23 @@ wires:
       port: Cout
     - to: *fa2
       port: Cin
-  A0:
+  &A0 A0:
     - from: input
     - to: *fa1
       port: A
-  A1:
+  &A1 A1:
     - from: input
     - to: *fa2
       port: A
-  B0:
+  &B0 B0:
     - from: input
     - to: *fa1
       port: B
-  B1:
+  &B1 B1:
     - from: input
     - to: *fa2
       port: B
-  C0:
+  &C0 C0:
     - from: input
     - to: *fa1
       port: Cin
@@ -40,3 +40,9 @@ wires:
       port: Cout
     - to: output
 stimuli:
+  - *A0 : true
+    *B0 : true
+    *C0 : true
+  - *A0 : false
+    *B0 : false
+    
