@@ -161,11 +161,21 @@ void ParseStimuli(System &system, YAML::Node config) {
 	for (size_t i = 0; i < stimuli.size(); ++i) {
 		for (auto step : stimuli[i]) {
 			auto wire_name = step.first.as<string>();
-			auto value_name = step.second.as<bool>();
+			auto value_name = step.second.as<string>();
+			auto value = false;
+
+			if (value_name.compare("1") == 0 || value_name.compare("true") == 0) {
+				value = true;
+			} else if (value_name.compare("0") == 0 || value_name.compare("false") == 0) {
+				value = false;
+			} else {
+				cout << "[Error] stimulus value has to be one of the following: 0, 1, true, false.\n";
+				exit(1);
+			}
 
 			auto wire = system.GetWire(wire_name);
 			if (wire) {
-				wire->SetValue(value_name);
+				wire->SetValue(value);
 			}
 		}
 
@@ -238,16 +248,6 @@ int main(int argc, char **argv) {
 		ParseStimuli(system, config);
 
 		cout << "\nNumber of toggles: " << system.GetNumToggles() << "\n";
-
-		/*wire_t input = system.GetWire("InData");
-
-		if (input) {
-			input->SetValue(true);
-
-			system.Update();
-
-			cout << "Number of toggled wires: " << system.GetNumToggles() << "\n";
-		}*/
 	}
 #else
 	auto A0 = make_shared<Wire>();
