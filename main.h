@@ -17,6 +17,7 @@ class Xor;
 class Nand;
 class Nor;
 class Xnor;
+class Not;
 class Wire;
 class System;
 
@@ -30,6 +31,7 @@ using xor_t  = std::shared_ptr<Xor>;
 using nand_t = std::shared_ptr<Nand>;
 using nor_t  = std::shared_ptr<Nor>;
 using xnor_t = std::shared_ptr<Xnor>;
+using not_t  = std::shared_ptr<Not>;
 
 #include "Component.h"
 #include "HalfAdder.h"
@@ -40,6 +42,7 @@ using xnor_t = std::shared_ptr<Xnor>;
 #include "Nand.h"
 #include "Nor.h"
 #include "Xnor.h"
+#include "Not.h"
 #include "Wire.h"
 #include "System.h"
 
