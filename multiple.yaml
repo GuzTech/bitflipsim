@@ -28,7 +28,7 @@ wires:
       port: Cout
     - to: output
 stimuli:
-  - *InData : 1
-    *C0 : 1
-  - *InData : 0
-    *C0 : 0
+  - *InData : true
+    *C0 : true
+  - *InData : false
+    *C0 : true

@@ -158,8 +158,18 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 void ParseStimuli(System &system, YAML::Node config) {
 	auto stimuli = config["stimuli"];
 
-	for (auto step : stimuli) {
-		cout << "Step: " << step << " size: " << step.size() << "\n";
+	for (size_t i = 0; i < stimuli.size(); ++i) {
+		for (auto step : stimuli[i]) {
+			auto wire_name = step.first.as<string>();
+			auto value_name = step.second.as<bool>();
+
+			auto wire = system.GetWire(wire_name);
+			if (wire) {
+				wire->SetValue(value_name);
+			}
+		}
+
+		system.Update();
 	}
 }
 
@@ -227,7 +237,9 @@ int main(int argc, char **argv) {
 
 		ParseStimuli(system, config);
 
-		wire_t input = system.GetWire("InData");
+		cout << "\nNumber of toggles: " << system.GetNumToggles() << "\n";
+
+		/*wire_t input = system.GetWire("InData");
 
 		if (input) {
 			input->SetValue(true);
@@ -235,7 +247,7 @@ int main(int argc, char **argv) {
 			system.Update();
 
 			cout << "Number of toggled wires: " << system.GetNumToggles() << "\n";
-		}
+		}*/
 	}
 #else
 	auto A0 = make_shared<Wire>();
