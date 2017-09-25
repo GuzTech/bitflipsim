@@ -3,6 +3,10 @@
 
 using namespace std;
 
+bool IsComponentDeclared(map<string, comp_t> &comps, string &name) {
+	return comps.find(name) != comps.end();
+}
+
 void Connect(comp_t component, string port_name, wire_t wire) {
 	auto fa = dynamic_pointer_cast<FullAdder>(component);
 	auto ha = dynamic_pointer_cast<HalfAdder>(component);
@@ -62,7 +66,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 	auto wires = config["wires"];
 
 	if (wires.size() == 0) {
-		cout << "[Error] No wires found.\n";
+		cout << "[Error] \"wires\" section is empty.\n";
 		exit(1);
 	}
 
@@ -96,12 +100,36 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 			auto to_port_node = to["port"];
 			bool output = false;
 
+			// If both "to:" and "port:" keys exist and have a scalar value.
 			if (to_comp_node.IsScalar() && to_port_node.IsScalar()) {
-				components.push_back(comps[to_comp_node.as<string>()]);
-				to_port_names.push_back(to_port_node.as<string>());
-			} else if (to_comp_node.IsSequence() && to_port_node.IsSequence()) {
+				auto comp_name = to_comp_node.as<string>();
+
+				if (comp_name.compare("output") == 0) {
+					cout << "[Error] Wire \"" << wire_name << "\" is an \"output\" wire, but has a port declared.\n";
+					cout << "Either remove the \"port:\" key, or connect the port to an existing component.\n";
+					exit(1);
+				}
+				if (IsComponentDeclared(comps, comp_name)) {
+					components.push_back(comps[comp_name]);
+					to_port_names.push_back(to_port_node.as<string>());
+				} else {
+					cout << "[Error] Wire \"" << wire_name << "\" refers to component \""
+						 << comp_name << "\" which does not exist.\n";
+					exit(1);
+				}
+			}
+			// If both "to:" and "port:" keys exist and have sequence values.
+			else if (to_comp_node.IsSequence() && to_port_node.IsSequence()) {
 				for (auto comp : to_comp_node) {
-					components.push_back(comps[comp.as<string>()]);
+					auto comp_name = comp.as<string>();
+
+					if (IsComponentDeclared(comps, comp_name)) {
+						components.push_back(comps[comp_name]);
+					} else {
+						cout << "[Error] Wire \"" << wire_name << "\" refers to component \""
+							 << comp_name << "\" which does not exist.\n";
+						exit(1);
+					}
 				}
 
 				for (auto port : to_port_node) {
@@ -112,12 +140,22 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 					cout << "[Error] Wire \"" << wire_name << "\" output component and port sequences must be same length.\n";
 					exit(1);
 				}
-			} else if (to_comp_node.IsScalar()) {
-				if (to_comp_node.as<string>().compare("output") == 0) {
+			}
+			// If only the "to:" key exists.
+			else if (to_comp_node.IsScalar() && !to_port_node.IsDefined()) {
+				auto comp_name = to_comp_node.as<string>();
+
+				// Node value must be "output".
+				if (comp_name.compare("output") == 0) {
 					output = true;
+				} else {
+					cout << "[Error] Wire \"" << wire_name << "\" has only a \"to:\" section without \"port:\".\n"
+						 << "In that case, the only valid value for \"to:\" is \"output\", but is now \""
+						 << comp_name << "\".\n";
+					exit(1);
 				}
 			} else {
-				cout << "[Error] Wire \"" << wire_name << "\" output must be a scalar or sequence.\n";
+				cout << "[Error] Wire \"" << wire_name << "\" output \"to:\" and \"port:\" must both be a scalar or sequence.\n";
 				exit(1);
 			}
 
@@ -141,7 +179,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 					exit(1);
 				}
 			} else {
-				if (comps.find(from_name) != comps.end()) {
+				if (IsComponentDeclared(comps, from_name)) {
 					for (int i = 0; i < components.size(); ++i) {
 						if (comps.find(components[i]->GetName()) != comps.end()) {
 							auto from_comp = comps[from_name];
@@ -182,13 +220,17 @@ void ParseStimuli(System &system, YAML::Node config) {
 			} else if (value_name.compare("0") == 0 || value_name.compare("false") == 0) {
 				value = false;
 			} else {
-				cout << "[Error] stimulus value has to be one of the following: 0, 1, true, false.\n";
+				cout << "[Error] stimulus value of wire \"" << wire_name <<
+					"\" has to be one of the following: 0, 1, true, false.\n";
 				exit(1);
 			}
 
 			auto wire = system.GetWire(wire_name);
 			if (wire) {
 				wire->SetValue(value);
+			} else {
+				cout << "[Error] Non-existent wire \"" << wire_name << "\" found in stimuli section.\n";
+				exit(1);
 			}
 		}
 
