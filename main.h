@@ -14,6 +14,9 @@ class FullAdder;
 class And;
 class Or;
 class Xor;
+class Nand;
+class Nor;
+class Xnor;
 class Wire;
 class System;
 
@@ -24,6 +27,9 @@ using fa_t   = std::shared_ptr<FullAdder>;
 using and_t  = std::shared_ptr<And>;
 using or_t   = std::shared_ptr<Or>;
 using xor_t  = std::shared_ptr<Xor>;
+using nand_t = std::shared_ptr<Nand>;
+using nor_t  = std::shared_ptr<Nor>;
+using xnor_t = std::shared_ptr<Xnor>;
 
 #include "Component.h"
 #include "HalfAdder.h"
@@ -31,6 +37,9 @@ using xor_t  = std::shared_ptr<Xor>;
 #include "And.h"
 #include "Or.h"
 #include "Xor.h"
+#include "Nand.h"
+#include "Nor.h"
+#include "Xnor.h"
 #include "Wire.h"
 #include "System.h"
 

@@ -8,11 +8,14 @@ bool IsComponentDeclared(map<string, comp_t> &comps, string &name) {
 }
 
 void Connect(comp_t component, string port_name, wire_t wire) {
-	auto fa_comp  = dynamic_pointer_cast<FullAdder>(component);
-	auto ha_comp  = dynamic_pointer_cast<HalfAdder>(component);
-	auto and_comp = dynamic_pointer_cast<And>(component);
-	auto or_comp  = dynamic_pointer_cast<Or>(component);
-	auto xor_comp = dynamic_pointer_cast<Xor>(component);
+	auto fa_comp   = dynamic_pointer_cast<FullAdder>(component);
+	auto ha_comp   = dynamic_pointer_cast<HalfAdder>(component);
+	auto and_comp  = dynamic_pointer_cast<And>(component);
+	auto or_comp   = dynamic_pointer_cast<Or>(component);
+	auto xor_comp  = dynamic_pointer_cast<Xor>(component);
+	auto nand_comp = dynamic_pointer_cast<Nand>(component);
+	auto nor_comp  = dynamic_pointer_cast<Nor>(component);
+	auto xnor_comp = dynamic_pointer_cast<Xnor>(component);
 
 	if (fa_comp != nullptr) {
 		if (port_name.compare("A") == 0)         fa_comp->Connect(FullAdder::PORTS::A, wire);
@@ -41,6 +44,21 @@ void Connect(comp_t component, string port_name, wire_t wire) {
 		if (port_name.compare("A") == 0)      xor_comp->Connect(Xor::PORTS::A, wire);
 		else if (port_name.compare("B") == 0) xor_comp->Connect(Xor::PORTS::B, wire);
 		else if (port_name.compare("O") == 0) xor_comp->Connect(Xor::PORTS::O, wire);
+		else goto error;
+	} else if (nand_comp != nullptr) {
+		if (port_name.compare("A") == 0)      nand_comp->Connect(Nand::PORTS::A, wire);
+		else if (port_name.compare("B") == 0) nand_comp->Connect(Nand::PORTS::B, wire);
+		else if (port_name.compare("O") == 0) nand_comp->Connect(Nand::PORTS::O, wire);
+		else goto error;
+	} else if (nor_comp != nullptr) {
+		if (port_name.compare("A") == 0)      nor_comp->Connect(Nor::PORTS::A, wire);
+		else if (port_name.compare("B") == 0) nor_comp->Connect(Nor::PORTS::B, wire);
+		else if (port_name.compare("O") == 0) nor_comp->Connect(Nor::PORTS::O, wire);
+		else goto error;
+	} else if (xnor_comp != nullptr) {
+		if (port_name.compare("A") == 0)      xnor_comp->Connect(Xnor::PORTS::A, wire);
+		else if (port_name.compare("B") == 0) xnor_comp->Connect(Xnor::PORTS::B, wire);
+		else if (port_name.compare("O") == 0) xnor_comp->Connect(Xnor::PORTS::O, wire);
 		else goto error;
 	}
 
@@ -76,6 +94,9 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 		else if (comp_type.compare("And") == 0) comps[comp_name] = make_shared<And>(comp_name);
 		else if (comp_type.compare("Or") == 0) comps[comp_name] = make_shared<Or>(comp_name);
 		else if (comp_type.compare("Xor") == 0) comps[comp_name] = make_shared<Xor>(comp_name);
+		else if (comp_type.compare("Nand") == 0) comps[comp_name] = make_shared<Nand>(comp_name);
+		else if (comp_type.compare("Nor") == 0) comps[comp_name] = make_shared<Nor>(comp_name);
+		else if (comp_type.compare("Xnor") == 0) comps[comp_name] = make_shared<Xnor>(comp_name);
 		else {
 			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
 			exit(1);
