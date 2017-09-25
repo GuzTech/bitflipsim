@@ -5,7 +5,12 @@ void System::AddComponent(comp_t component) {
 
 	// Add all wires of this component.
 	for (auto w : component->GetWires()) {
-		wires.insert(std::pair<std::string, wire_t>(w->GetName(), w));
+		if (!w) {
+			std::cout << "[Warning] Component \"" << component->GetName()
+					  << "\" has one or more ports that are not connected.\n";
+		} else {
+			wires.insert(std::pair<std::string, wire_t>(w->GetName(), w));
+		}
 	}
 }
 
