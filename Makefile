@@ -1,33 +1,35 @@
-CXX=g++
-CXXFLAGS=-Ilib/yaml-cpp/include -g -O0 -std=c++1z
+CC := g++
+INCLUDE_DIRS := lib/yaml-cpp/include
+CFLAGS := -I$(INCLUDE_DIRS) -g -O0 -std=c++1z
+LIBS := -lyaml-cpp
+LDFLAGS := -Llib/yaml-cpp/build $(LIBS)
+OBJDIR := obj
+OBJS := $(addprefix $(OBJDIR)/, Component.o FullAdder.o HalfAdder.o And.o Wire.o System.o main.o)
+EXECUTABLE := bitflipsim
 
-OBJDIR=obj
-LDFLAGS=-Llib/yaml-cpp/build
-LIBS=-lyaml-cpp
+all: $(OBJS) $(EXECUTABLE)
 
-$(OBJDIR)/%.o: %.cpp $(DEPS)
-	$(CXX) -c -o $@ $< $(CXXFLAGS)
+$(EXECUTABLE): $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 
-bitflipsim: $(OBJDIR)/Component.o $(OBJDIR)/HalfAdder.o $(OBJDIR)/FullAdder.o $(OBJDIR)/Wire.o $(OBJDIR)/System.o $(OBJDIR)/main.o
-	$(CXX) -o bitflipsim $(OBJDIR)/Component.o $(OBJDIR)/HalfAdder.o $(OBJDIR)/FullAdder.o $(OBJDIR)/Wire.o $(OBJDIR)/System.o $(OBJDIR)/main.o $(LDFLAGS) $(LIBS)
+$(OBJDIR)/%.o : %.cpp
+	$(CC) -c -o $@ $< $(CFLAGS)
 
-debug: bitflipsim
-	gdbgui ./bitflipsim
+$(OBJS): | $(OBJDIR)
 
-.PHONY: clean emscripten
+$(OBJDIR):
+	mkdir $(OBJDIR)
+
+debug: $(EXECUTABLE)
+	gdbgui ./$(EXECUTABLE)
 
 lib/yaml-cpp/build/libyaml-cpp.a:
 	cd lib/yaml-cpp; mkdir build; cd build; cmake ..; make
 
-init: lib/yaml-cpp/build/libyaml-cpp.a
-	mkdir $(OBJDIR)
+init: lib/yaml-cpp/build/libyaml-cpp.a $(OBJDIR)
 
-emscripten:
-	em++ -O2 -std=c++1z *.cpp -o html/bitflipsim.html
+.PHONY: clean
 
 clean:
-	rm -f bitflipsim
-	rm -rf html
+	rm -f $(EXECUTABLE)
 	rm -rf obj
-	mkdir obj
-	mkdir html

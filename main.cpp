@@ -8,21 +8,27 @@ bool IsComponentDeclared(map<string, comp_t> &comps, string &name) {
 }
 
 void Connect(comp_t component, string port_name, wire_t wire) {
-	auto fa = dynamic_pointer_cast<FullAdder>(component);
-	auto ha = dynamic_pointer_cast<HalfAdder>(component);
+	auto fa_comp  = dynamic_pointer_cast<FullAdder>(component);
+	auto ha_comp  = dynamic_pointer_cast<HalfAdder>(component);
+	auto and_comp = dynamic_pointer_cast<And>(component);
 
-	if (fa != nullptr) {
-		if (port_name.compare("A") == 0)         fa->Connect(FullAdder::PORTS::A, wire);
-		else if (port_name.compare("B") == 0)    fa->Connect(FullAdder::PORTS::B, wire);
-		else if (port_name.compare("Cin") == 0)  fa->Connect(FullAdder::PORTS::Cin, wire);
-		else if (port_name.compare("S") == 0)    fa->Connect(FullAdder::PORTS::S, wire);
-		else if (port_name.compare("Cout") == 0) fa->Connect(FullAdder::PORTS::Cout, wire);
+	if (fa_comp != nullptr) {
+		if (port_name.compare("A") == 0)         fa_comp->Connect(FullAdder::PORTS::A, wire);
+		else if (port_name.compare("B") == 0)    fa_comp->Connect(FullAdder::PORTS::B, wire);
+		else if (port_name.compare("Cin") == 0)  fa_comp->Connect(FullAdder::PORTS::Cin, wire);
+		else if (port_name.compare("S") == 0)    fa_comp->Connect(FullAdder::PORTS::S, wire);
+		else if (port_name.compare("Cout") == 0) fa_comp->Connect(FullAdder::PORTS::Cout, wire);
 		else goto error;
-	} else if (ha != nullptr) {
-		if (port_name.compare("A") == 0)      ha->Connect(HalfAdder::PORTS::A, wire);
-		else if (port_name.compare("B") == 0) ha->Connect(HalfAdder::PORTS::B, wire);
-		else if (port_name.compare("S") == 0) ha->Connect(HalfAdder::PORTS::S, wire);
-		else if (port_name.compare("C") == 0) ha->Connect(HalfAdder::PORTS::C, wire);
+	} else if (ha_comp != nullptr) {
+		if (port_name.compare("A") == 0)      ha_comp->Connect(HalfAdder::PORTS::A, wire);
+		else if (port_name.compare("B") == 0) ha_comp->Connect(HalfAdder::PORTS::B, wire);
+		else if (port_name.compare("S") == 0) ha_comp->Connect(HalfAdder::PORTS::S, wire);
+		else if (port_name.compare("C") == 0) ha_comp->Connect(HalfAdder::PORTS::C, wire);
+		else goto error;
+	} else if (and_comp != nullptr) {
+		if (port_name.compare("A") == 0)      and_comp->Connect(And::PORTS::A, wire);
+		else if (port_name.compare("B") == 0) and_comp->Connect(And::PORTS::B, wire);
+		else if (port_name.compare("O") == 0) and_comp->Connect(And::PORTS::O, wire);
 		else goto error;
 	}
 
@@ -55,6 +61,7 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 
 		if (comp_type.compare("FullAdder") == 0) comps[comp_name] = make_shared<FullAdder>(comp_name);
 		else if (comp_type.compare("HalfAdder") == 0) comps[comp_name] = make_shared<HalfAdder>(comp_name);
+		else if (comp_type.compare("And") == 0) comps[comp_name] = make_shared<And>(comp_name);
 		else {
 			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
 			exit(1);
