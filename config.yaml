@@ -31,11 +31,13 @@ wires:
   S0:
     - from: *fa1
       port: S
-    - to: output
+    - to: *and1
+      port: A
   S1:
     - from: *fa2
       port: S
-    - to: output
+    - to: *and1
+      port: B
   C2:
     - from: *fa2
       port: Cout
