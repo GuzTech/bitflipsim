@@ -13,12 +13,21 @@ void Connect(comp_t component, string port_name, wire_t wire) {
 		else if (port_name.compare("Cin") == 0)  fa->Connect(FullAdder::PORTS::Cin, wire);
 		else if (port_name.compare("S") == 0)    fa->Connect(FullAdder::PORTS::S, wire);
 		else if (port_name.compare("Cout") == 0) fa->Connect(FullAdder::PORTS::Cout, wire);
+		else goto error;
 	} else if (ha != nullptr) {
 		if (port_name.compare("A") == 0)      ha->Connect(HalfAdder::PORTS::A, wire);
 		else if (port_name.compare("B") == 0) ha->Connect(HalfAdder::PORTS::B, wire);
 		else if (port_name.compare("S") == 0) ha->Connect(HalfAdder::PORTS::S, wire);
 		else if (port_name.compare("C") == 0) ha->Connect(HalfAdder::PORTS::C, wire);
+		else goto error;
 	}
+
+	return;
+
+error:
+	cout << "[Error] Wire \"" << wire->GetName() << "\" wants to connect to non-existent port \""
+		 << port_name << "\" of component \"" << component->GetName() << "\".\n";
+	exit(1);
 }
 
 void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
