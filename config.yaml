@@ -1,6 +1,7 @@
 components:
   FullAdder: &fa1 fa1
   FullAdder: &fa2 fa2
+  And: &and1 and1
 wires:
   C1:
     - from: *fa1
@@ -38,6 +39,10 @@ wires:
   C2:
     - from: *fa2
       port: Cout
+    - to: output
+  And:
+    - from: *and1
+      port: O
     - to: output
 stimuli:
   - *A0 : true
