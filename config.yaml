@@ -7,6 +7,8 @@ components:
   Nand: &nand1 nand1
   Nor: &nor1 nor1
   Xnor: &xnor1 xnor1
+  Not: &not1 not1
+  Not: &not2 not2
 wires:
   C1:
     - from: *fa1
@@ -36,13 +38,13 @@ wires:
   S0:
     - from: *fa1
       port: S
-    - to: [*and1, *or1, *xor1, *nand1, *nor1, *xnor1]
-      port: [A, A, A, A, A, A]
+    - to: [*and1, *or1, *xor1, *nand1, *nor1, *xnor1, *not1]
+      port: [A, A, A, A, A, A, I]
   S1:
     - from: *fa2
       port: S
-    - to: [*and1, *or1, *xor1, *nand1, *nor1, *xnor1]
-      port: [B, B, B, B, B, B]
+    - to: [*and1, *or1, *xor1, *nand1, *nor1, *xnor1, *not2]
+      port: [B, B, B, B, B, B, I]
   C2:
     - from: *fa2
       port: Cout
@@ -69,6 +71,14 @@ wires:
     - to: output
   Xnor0:
     - from: *xnor1
+      port: O
+    - to: output
+  Not0:
+    - from: *not1
+      port: O
+    - to: output
+  Not1:
+    - from: *not2
       port: O
     - to: output
 stimuli:
