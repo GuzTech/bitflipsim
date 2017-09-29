@@ -5,7 +5,6 @@
 
 class Wire {
 public:
-	Wire() = default;
 	Wire(std::string _name)
 		: name(_name) {}
 	~Wire() = default;
@@ -15,15 +14,22 @@ public:
 
 	void SetValue(bool val);
 	void AddOutput(comp_t component);
+	void SetAsInputWire() {is_input_wire = true;}
+	void SetAsOutputWire() {is_output_wire = true;}
 
 	std::string GetName() {return name;}
-	uint64_t GetNumToggles() {return toggle_count;}
+	std::size_t GetNumToggles() {return toggle_count;}
+	std::vector<std::weak_ptr<Component>> GetOutputs() {return outputs;}
+	bool IsInputWire() {return is_input_wire;}
+	bool IsOutputWire() {return is_output_wire;}
 
 private:
 	bool curr_value = false;
 	bool has_changed = false;
+	bool is_input_wire = false;
+	bool is_output_wire = false;
 
-	uint64_t toggle_count = 0;
+	std::size_t toggle_count = 0;
 	std::string name;
 
 	std::vector<std::weak_ptr<Component>> outputs;

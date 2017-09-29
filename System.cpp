@@ -22,8 +22,8 @@ void System::Update() {
 	}
 }
 
-uint64_t System::GetNumToggles() {
-	uint64_t toggle_count = 0;
+std::size_t System::GetNumToggles() {
+	std::size_t toggle_count = 0;
 
 	for (auto c : components) {
 		if (c.second) {
