@@ -260,6 +260,14 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 
 					if (IsComponentDeclared(comps, comp_name)) {
 						to_components.push_back(comps[comp_name]);
+					} else if (comp_name.compare("output") == 0) {
+						if (!output) {
+							output = true;
+						} else {
+							cout << "[Error] \"to:\" section of wire \"" << wire_name
+								 << "\" has multiple \"output\" items configured.\n";
+							exit(1);
+						}
 					} else {
 						cout << "[Error] Wire \"" << wire_name << "\" refers to component \""
 							 << comp_name << "\" which does not exist.\n";
@@ -309,16 +317,6 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 					cout << "[Error] Input wire \"" << wire_name << "\" has incomplete declared output.\n";
 					exit(1);
 				}
-			} else if (output) {
-				if (from.size() == 2) {
-					auto from_comp = comps[from_name];
-					auto from_port = from["port"].as<string>();
-
-					Connect(from_comp, from_port, wire);
-				} else {
-					cout << "[Error] Output wire \"" << wire_name << "\" has incomplete declared input.\n";
-					exit(1);
-				}
 			} else {
 				if (IsComponentDeclared(comps, from_name)) {
 					for (int i = 0; i < to_components.size(); ++i) {
@@ -335,6 +333,18 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 							exit(1);
 						}
 					}
+
+					if (output) {
+						if (from.size() == 2) {
+							auto from_comp = comps[from_name];
+							auto from_port = from["port"].as<string>();
+
+							Connect(from_comp, from_port, wire);
+						} else {
+							cout << "[Error] Output wire \"" << wire_name << "\" has incomplete declared input.\n";
+							exit(1);
+						}
+					} 
 				} else {
 					cout << "[Error] Wire \"" << wire_name << "\" output component does not exist.\n";
 					exit(1);
