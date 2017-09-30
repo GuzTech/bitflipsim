@@ -17,6 +17,7 @@ void Connect(comp_t component, string port_name, wire_t wire) {
 	auto nor_comp  = dynamic_pointer_cast<Nor>(component);
 	auto xnor_comp = dynamic_pointer_cast<Xnor>(component);
 	auto not_comp  = dynamic_pointer_cast<Not>(component);
+	auto mux_comp  = dynamic_pointer_cast<Mux>(component);
 
 	if (fa_comp != nullptr) {
 		if (port_name.compare("A") == 0)         fa_comp->Connect(FullAdder::PORTS::A, wire);
@@ -65,6 +66,12 @@ void Connect(comp_t component, string port_name, wire_t wire) {
 		if (port_name.compare("I") == 0)      not_comp->Connect(Not::PORTS::I, wire);
 		else if (port_name.compare("O") == 0) not_comp->Connect(Not::PORTS::O, wire);
 		else goto error;
+	} else if (mux_comp != nullptr) {
+		if (port_name.compare("A") == 0)      mux_comp->Connect(Mux::PORTS::A, wire);
+		else if (port_name.compare("B") == 0) mux_comp->Connect(Mux::PORTS::B, wire);
+		else if (port_name.compare("S") == 0) mux_comp->Connect(Mux::PORTS::S, wire);
+		else if (port_name.compare("O") == 0) mux_comp->Connect(Mux::PORTS::O, wire);
+		else goto error;
 	}
 
 	return;
@@ -103,6 +110,7 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 		else if (comp_type.compare("Nor") == 0) comps[comp_name] = make_shared<Nor>(comp_name);
 		else if (comp_type.compare("Xnor") == 0) comps[comp_name] = make_shared<Xnor>(comp_name);
 		else if (comp_type.compare("Not") == 0) comps[comp_name] = make_shared<Not>(comp_name);
+		else if (comp_type.compare("Mux") == 0) comps[comp_name] = make_shared<Mux>(comp_name);
 		else {
 			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
 			exit(1);
