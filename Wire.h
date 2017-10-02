@@ -13,6 +13,7 @@ public:
 	const bool HasChanged();
 
 	void SetValue(bool val);
+	void SetInput(comp_t component) {input = component;}
 	void AddOutput(comp_t component);
 	void SetAsInputWire() {is_input_wire = true;}
 	void SetAsOutputWire() {is_output_wire = true;}
@@ -32,6 +33,7 @@ private:
 	std::size_t toggle_count = 0;
 	std::string name;
 
+	std::weak_ptr<Component> input;
 	std::vector<std::weak_ptr<Component>> outputs;
 };
 

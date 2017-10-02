@@ -29,7 +29,7 @@ void Nor::Connect(PORTS port, wire_t wire) {
 	switch(port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<Nor>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<Nor>()); break;
-	case PORTS::O: O = wire; break;
+	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Nor>()); break;
 	}
 }
 
