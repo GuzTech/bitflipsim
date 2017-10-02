@@ -1,0 +1,64 @@
+components:
+  Xor: &x1 x1
+  Xor: &x2 x2
+  And: &a1 a1
+  And: &a2 a2
+  Or: &o1 o1
+  FullAdder: &fa fa
+wires:
+  &A A:
+    - from: input
+    - to: [*x1, *a2, *fa]
+      port: [A, A, A]
+  &B B:
+    - from: input
+    - to: [*x1, *a2, *fa]
+      port: [B, B, B]
+  &C0 C0:
+    - from: input
+    - to: [*x2, *a1, *fa]
+      port: [B, B, Cin]
+  &C1 C1:
+    - from: *o1
+      port: O
+    - to: output
+  &C2 C2:
+    - from: *fa
+      port: Cout
+    - to: output
+  &S0 S0:
+    - from: *x2
+      port: O
+    - to: output
+  &S1 S1:
+    - from: *fa
+      port: S
+    - to: output
+  &I0 I0:
+    - from: *x1
+      port: O
+    - to: [*x2, *a1]
+      port: [A, A]
+  &I1 I1:
+    - from: *a1
+      port: O
+    - to: *o1
+      port: A
+  &I2 I2:
+    - from: *a2
+      port: O
+    - to: *o1
+      port: B
+stimuli:
+  - *A : 1
+    *B : 0
+    *C0 : 1
+  - *A : 1
+    *B : 0
+    *C0 : 1
+#  - *A : 1
+#    *B : 1
+#    *C0 : 1
+#  - *A : 1
+#    *B : 1
+#    *C0 : 1
