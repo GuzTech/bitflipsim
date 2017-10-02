@@ -10,6 +10,12 @@ void System::AddComponent(comp_t component) {
 					  << "\" has one or more ports that are not connected.\n";
 		} else {
 			wires.insert(std::pair<std::string, wire_t>(w->GetName(), w));
+
+			if (w->IsInputWire()) {
+				input_wires.push_back(w);
+			} else if (w->IsOutputWire()) {
+				output_wires.push_back(w);
+			}
 		}
 	}
 }

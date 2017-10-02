@@ -18,6 +18,11 @@ protected:
 private:
 	std::map<std::string, comp_t> components;
 	std::map<std::string, wire_t> wires;
+
+	std::vector<wire_t> input_wires;
+	std::vector<wire_t> output_wires;
+
+	std::size_t longest_path = 0;
 };
 
 #endif // SYSTEM_H
