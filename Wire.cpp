@@ -15,7 +15,7 @@ void Wire::SetValue(bool val) {
 	if (has_changed) {
 		toggle_count++;
 
-		for (auto c : outputs) {
+		for (auto &c : outputs) {
 			if (auto spt = c.lock()) {
 				spt->MarkUpdate();
 			}

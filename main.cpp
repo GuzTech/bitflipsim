@@ -243,6 +243,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 					cout << "Either remove the \"port:\" key, or connect the port to an existing component.\n";
 					exit(1);
 				}
+
 				if (IsComponentDeclared(comps, comp_name)) {
 					to_components.push_back(comps[comp_name]);
 					to_port_names.push_back(to_port_node.as<string>());
@@ -255,8 +256,8 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 			// If both "to:" and "port:" keys exist and have sequence values.
 			else if (comp_node_def && to_comp_node.IsSequence() &&
 					 port_node_def && to_port_node.IsSequence()) {
-				for (auto comp : to_comp_node) {
-					auto comp_name = comp.as<string>();
+				for (YAML::const_iterator it = to_comp_node.begin(); it != to_comp_node.end(); ++it) {
+					auto comp_name = (*it).as<string>();
 
 					if (IsComponentDeclared(comps, comp_name)) {
 						to_components.push_back(comps[comp_name]);
@@ -275,8 +276,8 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 					}
 				}
 
-				for (auto port : to_port_node) {
-					to_port_names.push_back(port.as<string>());
+				for (YAML::const_iterator it = to_port_node.begin(); it != to_port_node.end(); ++it) {
+					to_port_names.push_back((*it).as<string>());
 				}
 
 				if (to_components.size() != to_port_names.size()) {
@@ -450,7 +451,7 @@ int main(int argc, char **argv) {
 		ParseComponents(comps, config);
 		ParseWires(comps, config);
 
-		for (auto c : comps) {
+		for (auto &c : comps) {
 			system.AddComponent(c.second);
 		}
 
