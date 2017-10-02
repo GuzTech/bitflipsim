@@ -20,6 +20,7 @@ public:
 
 	std::string GetName() {return name;}
 	std::size_t GetNumToggles() {return toggle_count;}
+	std::weak_ptr<Component> GetInput() {return input;}
 	std::vector<std::weak_ptr<Component>> GetOutputs() {return outputs;}
 	bool IsInputWire() {return is_input_wire;}
 	bool IsOutputWire() {return is_output_wire;}
