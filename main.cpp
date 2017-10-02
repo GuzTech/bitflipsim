@@ -350,6 +350,12 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 					exit(1);
 				}
 			}
+
+			if (from_is_input) {
+				wire->SetAsInputWire();
+			} else if (output) {
+				wire->SetAsOutputWire();
+			}
 		} else {
 			cout << "[Error] Wire \"" << wire_name << "\" declaration needs exactly 1 \"from\" section and 1 \"to\" section.\n";
 			exit(1);
