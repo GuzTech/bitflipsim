@@ -8,7 +8,9 @@ class Wire;
 class Not : public Component {
 public:
 	Not(std::string _name)
-		: Component(_name) {}
+		: Component(_name) {
+		needs_update = true;
+	}
 	~Not() = default;
 
 	enum class PORTS {I, O};
