@@ -99,9 +99,11 @@ void System::FindLongestPathInSystem() {
 }
 
 void System::Update() {
-	for (auto &c : components) {
-		if (c.second) {
-			c.second->Update();
+	for (auto i = 0; i < longest_path; ++i) {
+		for (auto &c : components) {
+			if (c.second) {
+				c.second->Update();
+			}
 		}
 	}
 }
