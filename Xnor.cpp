@@ -37,3 +37,11 @@ void Xnor::Connect(PORTS port, wire_t wire) {
 std::vector<wire_t> Xnor::GetWires() {
 	return {A, B, O};
 }
+
+std::vector<wire_t> Xnor::GetInputWires() {
+	return {A, B};
+}
+
+std::vector<wire_t> Xnor::GetOutputWires() {
+	return {O};
+}

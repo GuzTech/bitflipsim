@@ -34,3 +34,11 @@ void Not::Connect(PORTS port, wire_t wire) {
 std::vector<wire_t> Not::GetWires() {
 	return {I, O};
 }
+
+std::vector<wire_t> Not::GetInputWires() {
+	return {I};
+}
+
+std::vector<wire_t> Not::GetOutputWires() {
+	return {O};
+}

@@ -44,3 +44,11 @@ void HalfAdder::Connect(PORTS port, wire_t wire) {
 std::vector<wire_t> HalfAdder::GetWires() {
 	return {A, B, S, C};
 }
+
+std::vector<wire_t> HalfAdder::GetInputWires() {
+	return {A, B};
+}
+
+std::vector<wire_t> HalfAdder::GetOutputWires() {
+	return {S, C};
+}

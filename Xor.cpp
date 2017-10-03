@@ -36,3 +36,11 @@ void Xor::Connect(PORTS port, wire_t wire) {
 std::vector<wire_t> Xor::GetWires() {
 	return {A, B, O};
 }
+
+std::vector<wire_t> Xor::GetInputWires() {
+	return {A, B};
+}
+
+std::vector<wire_t> Xor::GetOutputWires() {
+	return {O};
+}

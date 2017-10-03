@@ -16,6 +16,8 @@ public:
 	std::string GetName() {return name;}
 	uint64_t GetNumToggles() {return toggle_count;}
 	virtual std::vector<wire_t> GetWires() =0;
+	virtual std::vector<wire_t> GetInputWires() =0;
+	virtual std::vector<wire_t> GetOutputWires() =0;
 protected:
 	template <typename Derived> std::shared_ptr<Derived> shared_from_base() {
 		return std::static_pointer_cast<Derived>(shared_from_this());

@@ -37,3 +37,11 @@ void Nand::Connect(PORTS port, wire_t wire) {
 std::vector<wire_t> Nand::GetWires() {
 	return {A, B, O};
 }
+
+std::vector<wire_t> Nand::GetInputWires() {
+	return {A, B};
+}
+
+std::vector<wire_t> Nand::GetOutputWires() {
+	return {O};
+}

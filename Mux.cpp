@@ -41,3 +41,11 @@ void Mux::Connect(PORTS port, wire_t wire) {
 std::vector<wire_t> Mux::GetWires() {
 	return {A, B, S, O};
 }
+
+std::vector<wire_t> Mux::GetInputWires() {
+	return {A, B};
+}
+
+std::vector<wire_t> Mux::GetOutputWires() {
+	return {S, O};
+}

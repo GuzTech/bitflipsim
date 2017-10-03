@@ -71,3 +71,11 @@ void FullAdder::Connect(PORTS port, wire_t wire) {
 std::vector<wire_t> FullAdder::GetWires() {
 	return {A, B, Cin, S, Cout};
 }
+
+std::vector<wire_t> FullAdder::GetInputWires() {
+	return {A, B, Cin};
+}
+
+std::vector<wire_t> FullAdder::GetOutputWires() {
+	return {S, Cout};
+}

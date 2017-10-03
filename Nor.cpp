@@ -36,3 +36,11 @@ void Nor::Connect(PORTS port, wire_t wire) {
 std::vector<wire_t> Nor::GetWires() {
 	return {A, B, O};
 }
+
+std::vector<wire_t> Nor::GetInputWires() {
+	return {A, B};
+}
+
+std::vector<wire_t> Nor::GetOutputWires() {
+	return {O};
+}

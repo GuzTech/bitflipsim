@@ -36,3 +36,11 @@ void And::Connect(PORTS port, wire_t wire) {
 std::vector<wire_t> And::GetWires() {
 	return {A, B, O};
 }
+
+std::vector<wire_t> And::GetInputWires() {
+	return {A, B};
+}
+
+std::vector<wire_t> And::GetOutputWires() {
+	return {O};
+}

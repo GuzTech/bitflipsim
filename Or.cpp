@@ -36,3 +36,11 @@ void Or::Connect(PORTS port, wire_t wire) {
 std::vector<wire_t> Or::GetWires() {
 	return {A, B, O};
 }
+
+std::vector<wire_t> Or::GetInputWires() {
+	return {A, B};
+}
+
+std::vector<wire_t> Or::GetOutputWires() {
+	return {O};
+}
