@@ -7,6 +7,7 @@ class System {
 public:
 
 	void AddComponent(comp_t component);
+	void FindLongestPathInSystem();
 	void Update();
 
 	std::size_t GetNumToggles();

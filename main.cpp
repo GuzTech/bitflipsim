@@ -455,6 +455,8 @@ int main(int argc, char **argv) {
 			system.AddComponent(c.second);
 		}
 
+		system.FindLongestPathInSystem();
+
 		cout << "Number of components: " << system.GetNumComponents() <<
 			"\nNumber of wires: " << system.GetNumWires() << "\n";
 
