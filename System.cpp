@@ -96,8 +96,6 @@ void System::FindLongestPathInSystem() {
 			components_to_process.push_back(w->GetInput().lock());
 		}
 	}
-
-	std::cout << "longest path: " << longest_path << "\n";
 }
 
 void System::Update() {
