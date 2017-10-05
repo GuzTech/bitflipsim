@@ -15,14 +15,14 @@ public:
 	void SetAsInputWire() {is_input_wire = true;}
 	void SetAsOutputWire() {is_output_wire = true;}
 
-	const bool                            GetValue();
-	const bool                            HasChanged();
-	std::string                           GetName() {return name;}
-	std::size_t                           GetNumToggles() {return toggle_count;}
-	std::weak_ptr<Component>              GetInput() {return input;}
-	std::vector<std::weak_ptr<Component>> GetOutputs() {return outputs;}
-	const bool                            IsInputWire() {return is_input_wire;}
-	const bool                            IsOutputWire() {return is_output_wire;}
+	const bool           GetValue();
+	const bool           HasChanged();
+	std::string          GetName() {return name;}
+	std::size_t          GetNumToggles() {return toggle_count;}
+	comp_wt              GetInput() {return input;}
+	std::vector<comp_wt> GetOutputs() {return outputs;}
+	const bool           IsInputWire() {return is_input_wire;}
+	const bool           IsOutputWire() {return is_output_wire;}
 
 private:
 	bool curr_value = false;
@@ -33,8 +33,8 @@ private:
 	std::size_t toggle_count = 0;
 	std::string name;
 
-	std::weak_ptr<Component> input;
-	std::vector<std::weak_ptr<Component>> outputs;
+	comp_wt input;
+	std::vector<comp_wt> outputs;
 };
 
 #endif // WIRE_H

@@ -22,18 +22,19 @@ class Mux;
 class Wire;
 class System;
 
-using wire_t = std::shared_ptr<Wire>;
-using comp_t = std::shared_ptr<Component>;
-using ha_t   = std::shared_ptr<HalfAdder>;
-using fa_t   = std::shared_ptr<FullAdder>;
-using and_t  = std::shared_ptr<And>;
-using or_t   = std::shared_ptr<Or>;
-using xor_t  = std::shared_ptr<Xor>;
-using nand_t = std::shared_ptr<Nand>;
-using nor_t  = std::shared_ptr<Nor>;
-using xnor_t = std::shared_ptr<Xnor>;
-using not_t  = std::shared_ptr<Not>;
-using mux_t  = std::shared_ptr<Mux>;
+using wire_t  = std::shared_ptr<Wire>;
+using comp_t  = std::shared_ptr<Component>;
+using comp_wt = std::weak_ptr<Component>;
+using ha_t    = std::shared_ptr<HalfAdder>;
+using fa_t    = std::shared_ptr<FullAdder>;
+using and_t   = std::shared_ptr<And>;
+using or_t    = std::shared_ptr<Or>;
+using xor_t   = std::shared_ptr<Xor>;
+using nand_t  = std::shared_ptr<Nand>;
+using nor_t   = std::shared_ptr<Nor>;
+using xnor_t  = std::shared_ptr<Xnor>;
+using not_t   = std::shared_ptr<Not>;
+using mux_t   = std::shared_ptr<Mux>;
 
 #include "Component.h"
 #include "HalfAdder.h"
