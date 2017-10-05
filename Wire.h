@@ -9,21 +9,20 @@ public:
 		: name(_name) {}
 	~Wire() = default;
 
-	const bool GetValue();
-	const bool HasChanged();
-
 	void SetValue(bool val);
 	void SetInput(comp_t component) {input = component;}
 	void AddOutput(comp_t component);
 	void SetAsInputWire() {is_input_wire = true;}
 	void SetAsOutputWire() {is_output_wire = true;}
 
-	std::string GetName() {return name;}
-	std::size_t GetNumToggles() {return toggle_count;}
-	std::weak_ptr<Component> GetInput() {return input;}
+	const bool                            GetValue();
+	const bool                            HasChanged();
+	std::string                           GetName() {return name;}
+	std::size_t                           GetNumToggles() {return toggle_count;}
+	std::weak_ptr<Component>              GetInput() {return input;}
 	std::vector<std::weak_ptr<Component>> GetOutputs() {return outputs;}
-	bool IsInputWire() {return is_input_wire;}
-	bool IsOutputWire() {return is_output_wire;}
+	const bool                            IsInputWire() {return is_input_wire;}
+	const bool                            IsOutputWire() {return is_output_wire;}
 
 private:
 	bool curr_value = false;
