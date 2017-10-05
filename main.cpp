@@ -455,6 +455,7 @@ int main(int argc, char **argv) {
 		}
 
 		system.FindLongestPathInSystem();
+		system.FindInitialState();
 
 		cout << "Longest path in the system: " << system.GetLongestPath() << "\n";
 		cout << "Number of components: " << system.GetNumComponents() <<

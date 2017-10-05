@@ -66,6 +66,18 @@ void System::FindLongestPathInSystem() {
 	} while (!components_to_process.empty());
 }
 
+// Finds the initial state which is the state of the system
+// when all inputs are 0.
+void System::FindInitialState() {
+	for (auto i = 0; i < longest_path; ++i) {
+		for (auto &c : components) {
+			if (c.second) {
+				c.second->Update(false);
+			}
+		}
+	}
+}
+
 void System::Update() {
 	for (auto i = 0; i < longest_path - 1; ++i) {
 		for (auto &c : components) {

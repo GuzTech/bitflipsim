@@ -8,6 +8,7 @@ public:
 
 	void AddComponent(comp_t component);
 	void FindLongestPathInSystem();
+	void FindInitialState();
 	void Update();
 
 	std::size_t         GetNumToggles();
