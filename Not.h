@@ -15,7 +15,7 @@ public:
 
 	enum class PORTS {I, O};
 
-	void Update() override;
+	void Update(bool propagating) override;
 	void Connect(PORTS port, wire_t wire);
 
 	std::vector<wire_t> GetWires() override;

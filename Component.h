@@ -9,7 +9,7 @@ public:
 		: name(_name) {}
 	virtual ~Component() = default;
 
-	virtual void Update() =0;
+	virtual void Update(bool propagating = true) =0;
 	void MarkUpdate() {needs_update = true;}
 	void Reset() {needs_update = false; toggle_count = 0;}
 

@@ -10,17 +10,19 @@
        |T|
 */
 
-void Not::Update() {
-	if (needs_update) {
+void Not::Update(bool propagating) {
+	if (needs_update || !propagating) {
 		bool in;
 
 		in = I ? I->GetValue() : false;
 
 		if (O) {
-			O->SetValue(!in);
+			O->SetValue(!in, propagating);
 		}
 
-		needs_update = false;
+		if (!propagating) {
+			needs_update = false;
+		}
 	}
 }
 

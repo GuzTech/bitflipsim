@@ -67,11 +67,17 @@ void System::FindLongestPathInSystem() {
 }
 
 void System::Update() {
-	for (auto i = 0; i < longest_path; ++i) {
+	for (auto i = 0; i < longest_path - 1; ++i) {
 		for (auto &c : components) {
 			if (c.second) {
-				c.second->Update();
+				c.second->Update(true);
 			}
+		}
+	}
+
+	for (auto &c : components) {
+		if (c.second) {
+			c.second->Update(false);
 		}
 	}
 }

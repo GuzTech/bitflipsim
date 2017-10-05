@@ -8,12 +8,20 @@ const bool Wire::HasChanged() {
 	return has_changed;
 }
 
-void Wire::SetValue(bool val) {
-	has_changed = curr_value ^ val;
+void Wire::SetValue(bool val, bool propagating) {
+	if (propagating) {
+		has_changed = curr_value ^ val;
+	} else {
+		has_changed = prev_value ^ val;
+		prev_value = val;
+	}
+
 	curr_value = val;
 
 	if (has_changed) {
-		toggle_count++;
+		if (!propagating) {
+			toggle_count++;
+		}
 
 		for (auto &c : outputs) {
 			if (auto spt = c.lock()) {

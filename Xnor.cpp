@@ -11,15 +11,15 @@
   B ---|R|
 */
 
-void Xnor::Update() {
-	if (needs_update) {
+void Xnor::Update(bool propagating) {
+	if (needs_update || !propagating) {
 		bool inA, inB;
 
 		inA = A ? A->GetValue() : false;
 		inB = B ? B->GetValue() : false;
 
 		if (O) {
-			O->SetValue(!(inA ^ inB));
+			O->SetValue(!(inA ^ inB), propagating);
 		}
 
 		needs_update = false;

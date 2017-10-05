@@ -13,8 +13,8 @@
   S -----
 */
 
-void Mux::Update() {
-	if (needs_update) {
+void Mux::Update(bool propagating) {
+	if (needs_update || !propagating) {
 		bool inA, inB, inS;
 
 		inA = A ? A->GetValue() : false;
@@ -22,7 +22,7 @@ void Mux::Update() {
 		inS = S ? B->GetValue() : false;
 
 		if (O) {
-			O->SetValue(inS ? inB : inA);
+			O->SetValue(inS ? inB : inA, propagating);
 		}
 
 		needs_update = false;

@@ -20,8 +20,8 @@
        |----------------|D|
  */
 
-void FullAdder::Update() {
-	if (needs_update) {
+void FullAdder::Update(bool propagating) {
+	if (needs_update || !propagating) {
 		bool i_A, i_B, i_C, o_S, o_C;
 
 		// Get the wire values.
@@ -38,21 +38,23 @@ void FullAdder::Update() {
 
 		// Set the output values.
 		if (S) {
-			S->SetValue(o_S);
+			S->SetValue(o_S, propagating);
 		}
 		if (Cout) {
-			Cout->SetValue(o_C);
+			Cout->SetValue(o_C, propagating);
 		}
 
-		// Count number of toggles.
-		if (iw_1_curr != iw_1_prev) toggle_count++;
-		if (iw_2_curr != iw_2_prev) toggle_count++;
-		if (iw_3_curr != iw_3_prev) toggle_count++;
+		if (!propagating) {
+			// Count number of toggles.
+			if (iw_1_curr != iw_1_prev) toggle_count++;
+			if (iw_2_curr != iw_2_prev) toggle_count++;
+			if (iw_3_curr != iw_3_prev) toggle_count++;
 
-		// Save the current state.
-		iw_1_prev = iw_1_curr;
-		iw_2_prev = iw_2_curr;
-		iw_3_prev = iw_3_curr;
+			// Save the current state.
+			iw_1_prev = iw_1_curr;
+			iw_2_prev = iw_2_curr;
+			iw_3_prev = iw_3_curr;
+		}
 
 		needs_update = false;
 	}

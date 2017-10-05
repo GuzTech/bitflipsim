@@ -14,18 +14,18 @@
       |---|D|
  */
 
-void HalfAdder::Update() {
-	if (needs_update) {
+void HalfAdder::Update(bool propagating) {
+	if (needs_update || !propagating) {
 		bool inA, inB;
 
 		inA = A ? A->GetValue() : false;
 		inB = B ? B->GetValue() : false;
 
 		if (S) {
-			S->SetValue(inA ^ inB);
+			S->SetValue(inA ^ inB, propagating);
 		}
 		if (C) {
-			C->SetValue(inA & inB);
+			C->SetValue(inA & inB, propagating);
 		}
 
 		needs_update = false;
