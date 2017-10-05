@@ -385,11 +385,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 
 			auto wire = system.GetWire(wire_name);
 			if (wire) {
-				if (wire->IsInputWire()) {
-					wire->SetValue(value);
-				} else {
-					wire->SetValue(value, false);
-				}
+				wire->SetValue(value);
 			} else {
 				cout << "[Error] Non-existent wire \"" << wire_name << "\" found in stimuli section.\n";
 				exit(1);
