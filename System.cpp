@@ -26,76 +26,44 @@ void System::AddComponent(comp_t component) {
 }
 
 void System::FindLongestPathInSystem() {
-	// Keep track of which components still need to be processed.
-	std::vector<comp_t> input_components;
-
-	// Initially fill the list with all components
-	// that are connected to global input wires.
-	for (auto &iw : input_wires) {
-		std::vector<std::weak_ptr<Component>> outputs = iw->GetOutputs();
-
-		for (auto &o : outputs) {
-			input_components.push_back(o.lock());
-		}
-	}
-
-	// Keep track of components that are connected to global output wires.
+	// Start with the global input wires.
+	std::vector<wire_t> wires_to_process(input_wires);
 	std::vector<comp_t> components_to_process;
 
-	// Initially fill the list with all components that are directly
-	// connected to global output wires, and then work your way to the input.
-	for (auto &ow : output_wires) {
-		components_to_process.push_back(ow->GetInput().lock());
-	}
+	do {
+		components_to_process.clear();
+		
+		// Find all the components that the wires to be processed are connected to.
+		for (auto &w : wires_to_process) {
+			for (auto &c : w->GetOutputs()) {
+				auto comp = c.lock();
 
-	while (input_components.size() != 0) {
-		auto it = components_to_process.begin();
-
-		// Find all components that are connected to global output wires,
-		// and see if they are connected to components that are connected
-		// to global input wires.
-		// If there are still "input" components, then find the "output"
-		// components that are one "level" closer to the "input" components,
-		// and repeat the process.
-		while (it != components_to_process.end()) {
-			auto found = std::find(input_components.begin(),
-								   input_components.end(),
-								   (*it));
-			if (found != input_components.end()) {
-				input_components.erase(found);
-			} else {
-				it++;
+				if (std::find(components_to_process.begin(),
+							  components_to_process.end(),
+							  comp) == components_to_process.end()) {
+					components_to_process.push_back(comp);
+				}
 			}
 		}
 
-		// First clear the list of output wires.
-		output_wires.empty();
-
-		// Update the longest path length.
-		longest_path++;
-
-		// Check if we are done.
-		if (input_components.size() == 0) {
-			break;
+		if (!components_to_process.empty()) {
+			longest_path++;
 		}
 
-		// Find all wires that connected to the input ports of the
-		// components to process.
+		// Populate the list of wires to be processed with the outputs of
+		// the components to process.
+		wires_to_process.clear();
+
 		for (auto &c : components_to_process) {
-			for (auto &w : c->GetInputWires()) {
-				output_wires.push_back(w);
+			for (auto &w : c->GetOutputWires()) {
+				if (std::find(wires_to_process.begin(),
+							  wires_to_process.end(),
+							  w) == wires_to_process.end()) {
+					wires_to_process.push_back(w);
+				}
 			}
 		}
-
-		// Clear the components to process.
-		components_to_process.empty();
-
-		// Add the components that are connected to the new output
-		// wires on the opposite side.
-		for (auto &w : output_wires) {
-			components_to_process.push_back(w->GetInput().lock());
-		}
-	}
+	} while (!components_to_process.empty());
 }
 
 void System::Update() {
@@ -132,4 +100,14 @@ wire_t System::GetWire(std::string wire_name) {
 	} else {
 		return nullptr;
 	}
+}
+
+std::vector<wire_t> System::GetWires() {
+	std::vector<wire_t> w;
+
+	for (auto &wire : wires) {
+		w.push_back(wire.second);
+	}
+
+	return w;
 }
