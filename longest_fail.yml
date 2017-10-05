@@ -1,0 +1,60 @@
+components:
+  FullAdder: fa1
+  FullAdder: fa2
+  And: and
+  Not: not
+wires:
+  C1:
+    - from: fa1
+      port: Cout
+    - to: fa2
+      port: Cin
+  A0:
+    - from: input
+    - to: fa1
+      port: A
+  A1:
+    - from: input
+    - to: fa2
+      port: A
+  B0:
+    - from: input
+    - to: fa1
+      port: B
+  B1:
+    - from: input
+    - to: fa2
+      port: B
+  C0:
+    - from: input
+    - to: fa1
+      port: Cin
+  S0:
+    - from: fa1
+      port: S
+    - to: and
+      port: A
+  S1:
+    - from: fa2
+      port: S
+    - to: and
+      port: B
+  C2:
+    - from: fa2
+      port: Cout
+    - to: output
+  AndO:
+    - from: and
+      port: O
+    - to: not
+      port: I
+  Not:
+    - from: not
+      port: O
+    - to: output
+stimuli:
+  - A0 : true
+    B0 : true
+    C0 : true
+#  - A0 : false
+#    B0 : false    

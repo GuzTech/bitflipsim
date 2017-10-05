@@ -1,0 +1,19 @@
+components:
+  Not: n1
+  Not: n2
+wires:
+  I:
+    - from: input
+    - to: n1
+      port: I
+  I1:
+    - from: n1
+      port: O
+    - to: n2
+      port: I
+  O:
+    - from: n2
+      port: O
+    - to: output
+stimuli:
+  - I: 1
