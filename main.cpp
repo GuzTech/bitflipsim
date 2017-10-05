@@ -385,7 +385,11 @@ void ParseStimuli(System &system, YAML::Node config) {
 
 			auto wire = system.GetWire(wire_name);
 			if (wire) {
-				wire->SetValue(value);
+				if (wire->IsInputWire()) {
+					wire->SetValue(value);
+				} else {
+					wire->SetValue(value, false);
+				}
 			} else {
 				cout << "[Error] Non-existent wire \"" << wire_name << "\" found in stimuli section.\n";
 				exit(1);
@@ -457,12 +461,19 @@ int main(int argc, char **argv) {
 
 		system.FindLongestPathInSystem();
 
+		cout << "Longest path in the system: " << system.GetLongestPath() << "\n";
 		cout << "Number of components: " << system.GetNumComponents() <<
 			"\nNumber of wires: " << system.GetNumWires() << "\n";
 
 		ParseStimuli(system, config);
 
 		cout << "\nNumber of toggles: " << system.GetNumToggles() << "\n";
+
+		cout << "\nValue of all wires:\n";
+		for (auto &ow : system.GetWires()) {
+			cout << "Wire \"" << ow->GetName()
+				 << "\": " << ow->GetValue() << "\n";
+		}
 	}
 #else
 	auto A0 = make_shared<Wire>();
