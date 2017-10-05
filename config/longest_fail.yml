@@ -56,5 +56,5 @@ stimuli:
   - A0 : true
     B0 : true
     C0 : true
-#  - A0 : false
-#    B0 : false    
+  - A0 : false
+    B0 : false    

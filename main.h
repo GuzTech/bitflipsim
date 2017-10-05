@@ -39,6 +39,7 @@ using mux_t   = std::shared_ptr<Mux>;
 #include "Component.h"
 #include "HalfAdder.h"
 #include "FullAdder.h"
+#include "RippleCarryAdder.h"
 #include "And.h"
 #include "Or.h"
 #include "Xor.h"
