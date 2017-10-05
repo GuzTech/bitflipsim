@@ -399,7 +399,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 int main(int argc, char **argv) {
 	map<std::string, comp_t> comps;
 	YAML::Node config;
-	System system;
+	System *system = System::Get();
 	string config_file_name;
 	
 	// Check if a configuration file was supplied.
@@ -451,21 +451,21 @@ int main(int argc, char **argv) {
 		ParseWires(comps, config);
 
 		for (auto &c : comps) {
-			system.AddComponent(c.second);
+			system->AddComponent(c.second);
 		}
 
-		system.FindLongestPathInSystem();
+		system->FindLongestPathInSystem();
 
-		cout << "Longest path in the system: " << system.GetLongestPath() << "\n";
-		cout << "Number of components: " << system.GetNumComponents() <<
-			"\nNumber of wires: " << system.GetNumWires() << "\n";
+		cout << "Longest path in the system: " << system->GetLongestPath() << "\n";
+		cout << "Number of components: " << system->GetNumComponents() <<
+			"\nNumber of wires: " << system->GetNumWires() << "\n";
 
-		ParseStimuli(system, config);
+		ParseStimuli(*system, config);
 
-		cout << "\nNumber of toggles: " << system.GetNumToggles() << "\n";
+		cout << "\nNumber of toggles: " << system->GetNumToggles() << "\n";
 
 		cout << "\nValue of all wires:\n";
-		for (auto &ow : system.GetWires()) {
+		for (auto &ow : system->GetWires()) {
 			cout << "Wire \"" << ow->GetName()
 				 << "\": " << ow->GetValue() << "\n";
 		}

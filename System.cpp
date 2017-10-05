@@ -1,5 +1,15 @@
 #include "main.h"
 
+System *System::instance = nullptr;
+
+System *System::Get() {
+	if (!instance) {
+		instance = new System();
+	}
+
+	return instance;
+}
+
 void System::AddComponent(comp_t component) {
 	components.insert(std::pair<std::string, comp_t>(component->GetName(), component));
 

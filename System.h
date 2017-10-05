@@ -5,7 +5,8 @@
 
 class System {
 public:
-
+	static System *Get();
+	
 	void AddComponent(comp_t component);
 	void FindLongestPathInSystem();
 	void Update();
@@ -18,9 +19,14 @@ public:
 	std::vector<wire_t> GetInputWires() {return input_wires;}
 	std::vector<wire_t> GetOutputWires() {return output_wires;}
 	std::size_t         GetLongestPath() {return longest_path;}
-protected:
 
 private:
+	System() {};
+	System(System const&) {};
+	System& operator = (System const&) {};
+
+	static System *instance;
+	
 	std::map<std::string, comp_t> components;
 	std::map<std::string, wire_t> wires;
 
