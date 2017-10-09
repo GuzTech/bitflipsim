@@ -46,9 +46,15 @@ void FullAdder::Update(bool propagating) {
 
 		if (!propagating) {
 			// Count number of toggles.
-			if (iw_1_curr != iw_1_prev) toggle_count++;
-			if (iw_2_curr != iw_2_prev) toggle_count++;
-			if (iw_3_curr != iw_3_prev) toggle_count++;
+			if (iw_1_curr != iw_1_prev) {
+				toggle_count++;
+			}
+			if (iw_2_curr != iw_2_prev) {
+				toggle_count++;
+			}
+			if (iw_3_curr != iw_3_prev) {
+				toggle_count++;
+			}
 
 			// Save the current state.
 			iw_1_prev = iw_1_curr;
