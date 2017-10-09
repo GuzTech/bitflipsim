@@ -481,9 +481,11 @@ int main(int argc, char **argv) {
 		} catch (YAML::BadFile e) {
 			cout << "[Error] Could not load file \"" <<
 				config_file_name.c_str() << "\": " << e.msg << '\n';
+			exit(1);
 		} catch (YAML::ParserException e) {
 			cout << "[Error] Could not parse file \"" <<
 				config_file_name.c_str() << "\": " << e.msg << '\n';
+			exit(1);
 		}
 	} else {
 		cout << "Usage: ./bitflipsim <configuration file>\n";
