@@ -7,6 +7,9 @@ class Component : public std::enable_shared_from_this<Component> {
 public:
 	Component(std::string _name)
 		: name(_name) {}
+	Component(std::string _name, std::size_t _longest_path)
+		: name(_name)
+		, longest_path(_longest_path) {}
 	virtual ~Component() = default;
 
 	virtual void Update(bool propagating = true) =0;
@@ -14,7 +17,8 @@ public:
 	void Reset() {needs_update = false; toggle_count = 0;}
 
 	std::string GetName() {return name;}
-	uint64_t GetNumToggles() {return toggle_count;}
+	virtual std::size_t GetNumToggles() {return toggle_count;}
+	std::size_t GetLongestPath() {return longest_path;}
 	virtual std::vector<wire_t> GetWires() =0;
 	virtual std::vector<wire_t> GetInputWires() =0;
 	virtual std::vector<wire_t> GetOutputWires() =0;
@@ -24,7 +28,8 @@ protected:
 	}
 
 	bool needs_update = false;
-	uint64_t toggle_count = 0;
+	std::size_t toggle_count = 0;
+	std::size_t longest_path = 1; // Default path length is 1.
 	std::string name;
 };
 
