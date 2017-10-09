@@ -7,7 +7,7 @@ bool IsComponentDeclared(map<string, comp_t> &comps, string &name) {
 	return comps.find(name) != comps.end();
 }
 
-void Connect(comp_t component, string port_name, wire_t wire) {
+void Connect(comp_t component, string port_name, wire_t wire, size_t index = 0) {
 	auto fa_comp   = dynamic_pointer_cast<FullAdder>(component);
 	auto ha_comp   = dynamic_pointer_cast<HalfAdder>(component);
 	auto and_comp  = dynamic_pointer_cast<And>(component);
@@ -18,6 +18,7 @@ void Connect(comp_t component, string port_name, wire_t wire) {
 	auto xnor_comp = dynamic_pointer_cast<Xnor>(component);
 	auto not_comp  = dynamic_pointer_cast<Not>(component);
 	auto mux_comp  = dynamic_pointer_cast<Mux>(component);
+	auto rca_comp  = dynamic_pointer_cast<RippleCarryAdder>(component);
 
 	if (fa_comp != nullptr) {
 		if (port_name.compare("A") == 0)         fa_comp->Connect(FullAdder::PORTS::A, wire);
@@ -72,6 +73,14 @@ void Connect(comp_t component, string port_name, wire_t wire) {
 		else if (port_name.compare("S") == 0) mux_comp->Connect(Mux::PORTS::S, wire);
 		else if (port_name.compare("O") == 0) mux_comp->Connect(Mux::PORTS::O, wire);
 		else goto error;
+	} else if (rca_comp != nullptr) {
+		//cout << port_name << '\n';
+		if (port_name.compare("A") == 0)         rca_comp->Connect(RippleCarryAdder::PORTS::A, wire, index);
+		else if (port_name.compare("B") == 0)    rca_comp->Connect(RippleCarryAdder::PORTS::B, wire, index);
+		else if (port_name.compare("S") == 0)    rca_comp->Connect(RippleCarryAdder::PORTS::S, wire, index);
+		else if (port_name.compare("Cin") == 0)  rca_comp->Connect(RippleCarryAdder::PORTS::Cin, wire, index);
+		else if (port_name.compare("Cout") == 0) rca_comp->Connect(RippleCarryAdder::PORTS::Cout, wire, index);
+		else goto error;
 	}
 
 	return;
@@ -80,6 +89,45 @@ error:
 	cout << "[Error] Wire \"" << wire->GetName() << "\" wants to connect to non-existent port \""
 		 << port_name << "\" of component \"" << component->GetName() << "\".\n";
 	exit(1);
+}
+
+void ParsePortAndIndex(string wire_name, string port_string, string &port_name, size_t &index) {
+	// Check if the name contains a space to indicate that the name
+	// consists of the name of the port and the index of that port.
+	size_t pos = port_string.find(" ");
+	if (pos != string::npos) {
+		// We assume the first value is the name.
+		port_name = port_string.substr(0, pos);
+
+		// We remove the name + " " part from the string, and search again.
+		// There should be a second part which should be a number to indicate the index.
+		port_string.erase(0, pos + 1);
+
+		pos = port_string.find(" ");
+		if (port_string.length() != 0 && pos == string::npos) {
+			try {
+				index = stoul(port_string.substr(0, pos));
+			} catch (invalid_argument e) {
+				cout << "[Error] Index for port \"" << port_name << "\" of wire \""
+					 << wire_name << "\" is not a number.\n";
+				exit(1);
+			} catch (out_of_range e) {
+				cout << "[Error] Index number for port \"" << port_name << "\" of wire \""
+					 << wire_name << "\" is too large.\n";
+				exit(1);
+			}
+		} else {
+			cout << "[Error] One index should be given after port name \"" << port_name
+				 << "\" for wire \"" << wire_name << "\".\n";
+			exit(1);
+
+			// This only happens if the user enters a port name with at least one space after it
+			// in double quotation marks like so "A ". Else the YAML parser removes whitespace.
+		}
+	} else {
+		// The name is just the port and does not contain an index.
+		port_name = port_string;
+	}
 }
 
 void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
@@ -94,8 +142,18 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 		string comp_type = it->first.as<string>();
 		string comp_name;
 
-		if (it->second) {
-			comp_name = it->second.as<string>();
+		size_t num_bits = 0;
+		auto value = it->second;
+		if (value) {
+			if (value.IsScalar()) {
+				comp_name = value.as<string>();
+			} else if (value.IsSequence() && value.size() == 2) {
+				comp_name = value[0].as<string>();
+				num_bits = value[1].as<size_t>();
+			} else {
+				cout << "[Error] Component name must be a scalar or sequence.\n";
+				exit(1);
+			}
 		} else {
 			cout << "[Error] Component must have a name.\n";
 			exit(1);
@@ -111,6 +169,7 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 		else if (comp_type.compare("Xnor") == 0) comps[comp_name] = make_shared<Xnor>(comp_name);
 		else if (comp_type.compare("Not") == 0) comps[comp_name] = make_shared<Not>(comp_name);
 		else if (comp_type.compare("Mux") == 0) comps[comp_name] = make_shared<Mux>(comp_name);
+		else if (comp_type.compare("RippleCarryAdder") == 0) comps[comp_name] = make_shared<RippleCarryAdder>(comp_name, num_bits);
 		else {
 			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
 			exit(1);
@@ -246,6 +305,10 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 
 				if (IsComponentDeclared(comps, comp_name)) {
 					to_components.push_back(comps[comp_name]);
+
+					//string port_name;
+					//ParsePortAndIndex(wire_name, to_port_node.as<string>(), port_name, index);
+					//to_port_names.push_back(port_name);
 					to_port_names.push_back(to_port_node.as<string>());
 				} else {
 					cout << "[Error] Wire \"" << wire_name << "\" refers to component \""
@@ -312,42 +375,49 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 			if (from_name.compare("input") == 0) {
 				if (to.size() == 2) {
 					for (int i = 0; i < to_components.size(); ++i) {
-						Connect(to_components[i], to_port_names[i], wire);
+						string port_name;
+						size_t index = 0;
+						ParsePortAndIndex(wire_name, to_port_names[i], port_name, index);
+
+						Connect(to_components[i], port_name, wire, index);
 					}
 				} else {
 					cout << "[Error] Input wire \"" << wire_name << "\" has incomplete declared output.\n";
 					exit(1);
 				}
 			} else {
-				if (IsComponentDeclared(comps, from_name)) {
-					for (int i = 0; i < to_components.size(); ++i) {
-						if (comps.find(to_components[i]->GetName()) != comps.end()) {
-							auto from_comp = comps[from_name];
-							auto to_comp = to_components[i];
-							auto from_port = from["port"].as<string>();
-							auto to_port = to_port_names[i];
+				if (from.size() == 2) {
+					auto from_comp = comps[from_name];
+					auto from_port = from["port"].as<string>();
 
-							Connect(from_comp, from_port, wire);
-							Connect(to_comp, to_port, wire);
-						} else {
-							cout << "[Error] Wire \"" << wire_name << "\" input component does not exist.\n";
-							exit(1);
+					string from_port_name;
+					size_t from_index = 0;
+					ParsePortAndIndex(wire_name, from_port, from_port_name, from_index);
+					Connect(from_comp, from_port_name, wire, from_index);
+
+					if (IsComponentDeclared(comps, from_name)) {
+						for (int i = 0; i < to_components.size(); ++i) {
+							if (comps.find(to_components[i]->GetName()) != comps.end()) {
+								auto to_comp = to_components[i];
+								auto to_port = to_port_names[i];
+								
+								string to_port_name;
+								size_t to_index = 0;
+								
+								ParsePortAndIndex(wire_name, to_port, to_port_name, to_index);
+								Connect(to_comp, to_port_name, wire, to_index);
+							} else {
+								cout << "[Error] Wire \"" << wire_name << "\" input component does not exist.\n";
+								exit(1);
+							}
 						}
+					} else {
+						cout << "[Error] Output component of wire \"" << wire_name << "\" does not exist.\n";
+						exit(1);
 					}
-
-					if (output) {
-						if (from.size() == 2) {
-							auto from_comp = comps[from_name];
-							auto from_port = from["port"].as<string>();
-
-							Connect(from_comp, from_port, wire);
-						} else {
-							cout << "[Error] Output wire \"" << wire_name << "\" has incomplete declared input.\n";
-							exit(1);
-						}
-					} 
 				} else {
-					cout << "[Error] Wire \"" << wire_name << "\" output component does not exist.\n";
+					cout << "[Error] Output wire \"" << wire_name << "\" input declaration needs one \"from:\" and "
+						 << "one \"to:\" section.\n";
 					exit(1);
 				}
 			}
@@ -410,10 +480,10 @@ int main(int argc, char **argv) {
 			config = YAML::LoadFile(config_file_name.c_str());
 		} catch (YAML::BadFile e) {
 			cout << "[Error] Could not load file \"" <<
-				config_file_name.c_str() << "\": " << e.msg << "\n";
+				config_file_name.c_str() << "\": " << e.msg << '\n';
 		} catch (YAML::ParserException e) {
 			cout << "[Error] Could not parse file \"" <<
-				config_file_name.c_str() << "\": " << e.msg << "\n";
+				config_file_name.c_str() << "\": " << e.msg << '\n';
 		}
 	} else {
 		cout << "Usage: ./bitflipsim <configuration file>\n";
@@ -457,18 +527,18 @@ int main(int argc, char **argv) {
 		system.FindLongestPathInSystem();
 		system.FindInitialState();
 
-		cout << "Longest path in the system: " << system.GetLongestPath() << "\n";
+		cout << "Longest path in the system: " << system.GetLongestPath() << '\n';
 		cout << "Number of components: " << system.GetNumComponents() <<
-			"\nNumber of wires: " << system.GetNumWires() << "\n";
+			"\nNumber of wires: " << system.GetNumWires() << '\n';
 
 		ParseStimuli(system, config);
 
-		cout << "\nNumber of toggles: " << system.GetNumToggles() << "\n";
+		cout << "\nNumber of toggles: " << system.GetNumToggles() << '\n';
 
 		cout << "\nValue of all wires:\n";
 		for (auto &ow : system.GetWires()) {
 			cout << "Wire \"" << ow->GetName()
-				 << "\": " << ow->GetValue() << "\n";
+				 << "\": " << ow->GetValue() << '\n';
 		}
 	}
 
