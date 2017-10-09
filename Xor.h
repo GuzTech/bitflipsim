@@ -3,8 +3,6 @@
 
 #include "main.h"
 
-class Wire;
-
 class Xor : public Component {
 public:
 	Xor(std::string _name)

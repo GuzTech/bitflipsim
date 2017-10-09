@@ -3,8 +3,6 @@
 
 #include "main.h"
 
-class Wire;
-
 class Xnor : public Component {
 public:
 	Xnor(std::string _name)

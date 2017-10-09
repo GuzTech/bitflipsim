@@ -3,8 +3,6 @@
 
 #include "main.h"
 
-class Wire;
-
 class Nor : public Component {
 public:
 	Nor(std::string _name)

@@ -3,8 +3,6 @@
 
 #include "main.h"
 
-class Wire;
-
 class RippleCarryAdder : public Component {
 public:
 	RippleCarryAdder(std::string _name, std::size_t _num_bits);

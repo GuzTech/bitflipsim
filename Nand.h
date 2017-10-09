@@ -3,8 +3,6 @@
 
 #include "main.h"
 
-class Wire;
-
 class Nand : public Component {
 public:
 	Nand(std::string _name)

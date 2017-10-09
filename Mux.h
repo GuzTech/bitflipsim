@@ -3,8 +3,6 @@
 
 #include "main.h"
 
-class Wire;
-
 class Mux : public Component {
 public:
 	Mux(std::string _name)

@@ -3,8 +3,6 @@
 
 #include "main.h"
 
-class Wire;
-
 class Or : public Component {
 public:
 	Or(std::string _name)

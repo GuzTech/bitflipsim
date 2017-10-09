@@ -3,8 +3,6 @@
 
 #include "main.h"
 
-class Wire;
-
 class HalfAdder : public Component {
 public:
 	HalfAdder(std::string _name)

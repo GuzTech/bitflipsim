@@ -3,8 +3,6 @@
 
 #include "main.h"
 
-class Wire;
-
 class Not : public Component {
 public:
 	Not(std::string _name)

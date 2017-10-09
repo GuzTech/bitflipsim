@@ -3,8 +3,6 @@
 
 #include "main.h"
 
-class Wire;
-
 class And : public Component {
 public:
 	And(std::string _name)
