@@ -38,20 +38,17 @@
 */
 
 RippleCarryAdder::RippleCarryAdder(std::string _name, std::size_t _num_bits)
-	: Component(_name)
+	: Component(_name, _num_bits)
 	, num_bits(_num_bits)
 {
 	// Reserve space.
 	full_adders.reserve(num_bits);
-	An.reserve(num_bits);
-	Bn.reserve(num_bits);
-	Sn.reserve(num_bits);
 
 	// Create the full-adders.
 	for (auto i = 0; i < num_bits; ++i) {
 		std::string fa_name(_name);
 		fa_name += "_fa_";
-		fa_name += i;
+		fa_name += std::to_string(i);
 		
 		full_adders.push_back(std::make_shared<FullAdder>(fa_name));
 	}
@@ -60,9 +57,9 @@ RippleCarryAdder::RippleCarryAdder(std::string _name, std::size_t _num_bits)
 	for (auto i = 1; i < num_bits; ++i) {
 		std::string wire_name(_name);
 		wire_name += "_fa_wire_";
-		wire_name += i - 1;
+		wire_name += std::to_string(i - 1);
 		wire_name += "_to_";
-		wire_name += i;
+		wire_name += std::to_string(i);
 		
 		auto wire = std::make_shared<Wire>(wire_name);
 		auto fa_prev = full_adders[i - 1];
@@ -75,8 +72,10 @@ RippleCarryAdder::RippleCarryAdder(std::string _name, std::size_t _num_bits)
 
 void RippleCarryAdder::Update(bool propagating) {
 	if (needs_update || !propagating) {
-		for (auto &fa : full_adders) {
-			fa->Update(propagating);
+		for (auto i = 0; i < longest_path; ++i) {
+			for (auto &fa : full_adders) {
+				fa->Update(propagating);
+			}
 		}
 
 		needs_update = false;
@@ -85,28 +84,38 @@ void RippleCarryAdder::Update(bool propagating) {
 
 void RippleCarryAdder::Connect(PORTS port, wire_t wire, std::size_t index) {
 	if (index >= num_bits) {
-		std::cout << "[Error] Index " << index << " out of bound for "
+		std::cout << "[Error] Index " << index << " out of bounds for "
 				  << "ripple-carry adder \"" << name << "\"\n";
 		exit(1);
 	}
 
 	switch (port) {
-	case PORTS::An:	  An[index] = wire; wire->AddOutput(this->shared_from_base<RippleCarryAdder>()); break;
-	case PORTS::Bn:   Bn[index] = wire; wire->AddOutput(this->shared_from_base<RippleCarryAdder>()); break;
-	case PORTS::Sn:   Sn[index] = wire; wire->SetInput(this->shared_from_base<RippleCarryAdder>()); break;
-    case PORTS::Cin:  Cin       = wire; wire->AddOutput(this->shared_from_base<RippleCarryAdder>()); break;
-	case PORTS::Cout: Cout      = wire; wire->SetInput(this->shared_from_base<RippleCarryAdder>()); break;
+	case PORTS::A:	  full_adders[index]->Connect(FullAdder::PORTS::A, wire); break;
+	case PORTS::B:    full_adders[index]->Connect(FullAdder::PORTS::B, wire); break;
+	case PORTS::S:    full_adders[index]->Connect(FullAdder::PORTS::S, wire); break;
+	case PORTS::Cin:  full_adders[0]->Connect(FullAdder::PORTS::Cin, wire); break;
+	case PORTS::Cout: full_adders[num_bits - 1]->Connect(FullAdder::PORTS::Cout, wire); break;
 	}
+}
+
+std::size_t RippleCarryAdder::GetNumToggles() {
+	toggle_count = 0;
+	for (auto &fa : full_adders) {
+		toggle_count += fa->GetNumToggles();
+	}
+
+	return toggle_count;
 }
 
 std::vector<wire_t> RippleCarryAdder::GetWires() {
 	std::vector<wire_t> all_wires;
 
-	all_wires.insert(all_wires.end(), An.begin(), An.end());
-	all_wires.insert(all_wires.end(), Bn.begin(), Bn.end());
-	all_wires.insert(all_wires.end(), Sn.begin(), Sn.end());
-	all_wires.push_back(Cin);
-	all_wires.push_back(Cout);
+	for (auto &fa : full_adders) {
+		auto wires = fa->GetWires();
+		all_wires.insert(all_wires.end(),
+						 wires.begin(),
+						 wires.end());
+	}
 
 	return all_wires;
 }
@@ -114,9 +123,12 @@ std::vector<wire_t> RippleCarryAdder::GetWires() {
 std::vector<wire_t> RippleCarryAdder::GetInputWires() {
 	std::vector<wire_t> input_wires;
 
-	input_wires.insert(input_wires.end(), An.begin(), An.end());
-	input_wires.insert(input_wires.end(), Bn.begin(), Bn.end());
-	input_wires.push_back(Cin);
+	for (auto &fa : full_adders) {
+		auto wires = fa->GetInputWires();
+		input_wires.insert(input_wires.end(),
+						   wires.begin(),
+						   wires.end());
+	}
 
 	return input_wires;
 }
@@ -124,8 +136,12 @@ std::vector<wire_t> RippleCarryAdder::GetInputWires() {
 std::vector<wire_t> RippleCarryAdder::GetOutputWires() {
 	std::vector<wire_t> output_wires;
 
-	output_wires.insert(output_wires.end(), Sn.begin(), Sn.end());
-	output_wires.push_back(Cout);
+	for (auto &fa : full_adders) {
+		auto wires = fa->GetOutputWires();
+		output_wires.insert(output_wires.end(),
+							wires.begin(),
+							wires.end());
+	}
 
 	return output_wires;
 }
