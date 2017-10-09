@@ -374,7 +374,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 
 			if (from_name.compare("input") == 0) {
 				if (to.size() == 2) {
-					for (int i = 0; i < to_components.size(); ++i) {
+					for (std::size_t i = 0; i < to_components.size(); ++i) {
 						string port_name;
 						size_t index = 0;
 						ParsePortAndIndex(wire_name, to_port_names[i], port_name, index);
@@ -396,7 +396,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 					Connect(from_comp, from_port_name, wire, from_index);
 
 					if (IsComponentDeclared(comps, from_name)) {
-						for (int i = 0; i < to_components.size(); ++i) {
+						for (std::size_t i = 0; i < to_components.size(); ++i) {
 							if (comps.find(to_components[i]->GetName()) != comps.end()) {
 								auto to_comp = to_components[i];
 								auto to_port = to_port_names[i];

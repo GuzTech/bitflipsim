@@ -27,10 +27,10 @@ protected:
 		return std::static_pointer_cast<Derived>(shared_from_this());
 	}
 
+	std::string name;
 	bool needs_update = false;
 	std::size_t toggle_count = 0;
 	std::size_t longest_path = 1; // Default path length is 1.
-	std::string name;
 };
 
 #endif // COMPONENT_H

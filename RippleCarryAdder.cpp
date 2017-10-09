@@ -45,7 +45,7 @@ RippleCarryAdder::RippleCarryAdder(std::string _name, std::size_t _num_bits)
 	full_adders.reserve(num_bits);
 
 	// Create the full-adders.
-	for (auto i = 0; i < num_bits; ++i) {
+	for (std::size_t i = 0; i < num_bits; ++i) {
 		std::string fa_name(_name);
 		fa_name += "_fa_";
 		fa_name += std::to_string(i);
@@ -54,7 +54,7 @@ RippleCarryAdder::RippleCarryAdder(std::string _name, std::size_t _num_bits)
 	}
 
 	// Create the wires between the carry ports of the full-adders.
-	for (auto i = 1; i < num_bits; ++i) {
+	for (std::size_t i = 1; i < num_bits; ++i) {
 		std::string wire_name(_name);
 		wire_name += "_fa_wire_";
 		wire_name += std::to_string(i - 1);
@@ -72,7 +72,7 @@ RippleCarryAdder::RippleCarryAdder(std::string _name, std::size_t _num_bits)
 
 void RippleCarryAdder::Update(bool propagating) {
 	if (needs_update || !propagating) {
-		for (auto i = 0; i < longest_path; ++i) {
+		for (std::size_t i = 0; i < longest_path; ++i) {
 			for (auto &fa : full_adders) {
 				fa->Update(propagating);
 			}

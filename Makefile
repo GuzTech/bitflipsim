@@ -1,6 +1,6 @@
 CC := g++
 INCLUDE_DIRS := lib/yaml-cpp/include
-CFLAGS := -I$(INCLUDE_DIRS) -g -O0 -std=c++1z
+CFLAGS := -I$(INCLUDE_DIRS) -g -O0 -std=c++1z -Wall -Werror
 LIBS := -lyaml-cpp
 LDFLAGS := -Llib/yaml-cpp/build $(LIBS)
 OBJDIR := obj
