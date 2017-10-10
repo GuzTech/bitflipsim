@@ -26,11 +26,15 @@ void Xnor::Update(bool propagating) {
 	}
 }
 
-void Xnor::Connect(PORTS port, wire_t wire) {
+void Xnor::Connect(PORTS port, wire_t wire, std::size_t index) {
 	switch(port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<Xnor>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<Xnor>()); break;
 	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Xnor>()); break;
+	default:
+		std::cout << "[Error] Trying to connect to undefined port of Xnor "
+				  << "\"" << name << "\"n";
+		exit(1);
 	}
 }
 

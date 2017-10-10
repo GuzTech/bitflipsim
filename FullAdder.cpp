@@ -66,13 +66,17 @@ void FullAdder::Update(bool propagating) {
 	}
 }
 
-void FullAdder::Connect(PORTS port, wire_t wire) {
+void FullAdder::Connect(PORTS port, wire_t wire, std::size_t index) {
 	switch (port) {
 	case PORTS::A:    A    = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
 	case PORTS::B:    B    = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
 	case PORTS::Cin:  Cin  = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
 	case PORTS::S:    S    = wire; wire->SetInput(this->shared_from_base<FullAdder>()); break;
 	case PORTS::Cout: Cout = wire; wire->SetInput(this->shared_from_base<FullAdder>()); break;
+	default:
+		std::cout << "[Error] Trying to connect to undefined port of FullAdder "
+				  << "\"" << name << "\"n";
+		exit(1);
 	}
 }
 

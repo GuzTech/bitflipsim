@@ -10,7 +10,7 @@
   B --+---|R|
       | |
       | |-|A|
-      |   |N|------ C
+      |   |N|------ Cout
       |---|D|
  */
 
@@ -24,25 +24,29 @@ void HalfAdder::Update(bool propagating) {
 		if (S) {
 			S->SetValue(inA ^ inB, propagating);
 		}
-		if (C) {
-			C->SetValue(inA & inB, propagating);
+		if (Cout) {
+			Cout->SetValue(inA & inB, propagating);
 		}
 
 		needs_update = false;
 	}
 }
 
-void HalfAdder::Connect(PORTS port, wire_t wire) {
+void HalfAdder::Connect(PORTS port, wire_t wire, std::size_t index) {
 	switch (port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<HalfAdder>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<HalfAdder>()); break;
 	case PORTS::S: S = wire; wire->SetInput(this->shared_from_base<HalfAdder>()); break;
-	case PORTS::C: C = wire; wire->SetInput(this->shared_from_base<HalfAdder>()); break;
+	case PORTS::Cout: Cout = wire; wire->SetInput(this->shared_from_base<HalfAdder>()); break;
+	default:
+		std::cout << "[Error] Trying to connect to undefined port of HalfAdder "
+				  << "\"" << name << "\"n";
+		exit(1);
 	}
 }
 
 std::vector<wire_t> HalfAdder::GetWires() {
-	return {A, B, S, C};
+	return {A, B, S, Cout};
 }
 
 std::vector<wire_t> HalfAdder::GetInputWires() {
@@ -50,5 +54,5 @@ std::vector<wire_t> HalfAdder::GetInputWires() {
 }
 
 std::vector<wire_t> HalfAdder::GetOutputWires() {
-	return {S, C};
+	return {S, Cout};
 }

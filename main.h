@@ -11,6 +11,9 @@
 class Component;
 class HalfAdder;
 class FullAdder;
+class RippleCarryAdder;
+class Multiplier_2C;
+class Multiplier_Smag;
 class And;
 class Or;
 class Xor;
@@ -21,6 +24,8 @@ class Not;
 class Mux;
 class Wire;
 class System;
+
+enum class PORTS {A, B, Cin, Cout, I, O, S};
 
 using wire_t  = std::shared_ptr<Wire>;
 using comp_t  = std::shared_ptr<Component>;
@@ -35,11 +40,16 @@ using nor_t   = std::shared_ptr<Nor>;
 using xnor_t  = std::shared_ptr<Xnor>;
 using not_t   = std::shared_ptr<Not>;
 using mux_t   = std::shared_ptr<Mux>;
+using rca_t   = std::shared_ptr<RippleCarryAdder>;
+using m2c_t   = std::shared_ptr<Multiplier_2C>;
+using msmag_t = std::shared_ptr<Multiplier_Smag>;
 
 #include "Component.h"
 #include "HalfAdder.h"
 #include "FullAdder.h"
 #include "RippleCarryAdder.h"
+#include "Multiplier_2C.h"
+#include "Multiplier_Smag.h"
 #include "And.h"
 #include "Or.h"
 #include "Xor.h"

@@ -25,11 +25,15 @@ void Nor::Update(bool propagating) {
 	}
 }
 
-void Nor::Connect(PORTS port, wire_t wire) {
+void Nor::Connect(PORTS port, wire_t wire, std::size_t index) {
 	switch(port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<Nor>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<Nor>()); break;
 	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Nor>()); break;
+	default:
+		std::cout << "[Error] Trying to connect to undefined port of Nor "
+				  << "\"" << name << "\"n";
+		exit(1);
 	}
 }
 

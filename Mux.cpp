@@ -29,12 +29,16 @@ void Mux::Update(bool propagating) {
 	}
 }
 
-void Mux::Connect(PORTS port, wire_t wire) {
+void Mux::Connect(PORTS port, wire_t wire, std::size_t index) {
 	switch(port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<Mux>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<Mux>()); break;
 	case PORTS::S: S = wire; wire->SetInput(this->shared_from_base<Mux>()); break;
 	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Mux>()); break;
+	default:
+		std::cout << "[Error] Trying to connect to undefined port of Mux "
+				  << "\"" << name << "\"n";
+		exit(1);
 	}
 }
 

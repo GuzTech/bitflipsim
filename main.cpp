@@ -21,65 +21,65 @@ void Connect(comp_t component, string port_name, wire_t wire, size_t index = 0) 
 	auto rca_comp  = dynamic_pointer_cast<RippleCarryAdder>(component);
 
 	if (fa_comp != nullptr) {
-		if (port_name.compare("A") == 0)         fa_comp->Connect(FullAdder::PORTS::A, wire);
-		else if (port_name.compare("B") == 0)    fa_comp->Connect(FullAdder::PORTS::B, wire);
-		else if (port_name.compare("Cin") == 0)  fa_comp->Connect(FullAdder::PORTS::Cin, wire);
-		else if (port_name.compare("S") == 0)    fa_comp->Connect(FullAdder::PORTS::S, wire);
-		else if (port_name.compare("Cout") == 0) fa_comp->Connect(FullAdder::PORTS::Cout, wire);
+		if (port_name.compare("A") == 0)         fa_comp->Connect(PORTS::A, wire);
+		else if (port_name.compare("B") == 0)    fa_comp->Connect(PORTS::B, wire);
+		else if (port_name.compare("Cin") == 0)  fa_comp->Connect(PORTS::Cin, wire);
+		else if (port_name.compare("S") == 0)    fa_comp->Connect(PORTS::S, wire);
+		else if (port_name.compare("Cout") == 0) fa_comp->Connect(PORTS::Cout, wire);
 		else goto error;
 	} else if (ha_comp != nullptr) {
-		if (port_name.compare("A") == 0)      ha_comp->Connect(HalfAdder::PORTS::A, wire);
-		else if (port_name.compare("B") == 0) ha_comp->Connect(HalfAdder::PORTS::B, wire);
-		else if (port_name.compare("S") == 0) ha_comp->Connect(HalfAdder::PORTS::S, wire);
-		else if (port_name.compare("C") == 0) ha_comp->Connect(HalfAdder::PORTS::C, wire);
+		if (port_name.compare("A") == 0)         ha_comp->Connect(PORTS::A, wire);
+		else if (port_name.compare("B") == 0)    ha_comp->Connect(PORTS::B, wire);
+		else if (port_name.compare("S") == 0)    ha_comp->Connect(PORTS::S, wire);
+		else if (port_name.compare("Cout") == 0) ha_comp->Connect(PORTS::Cout, wire);
 		else goto error;
 	} else if (and_comp != nullptr) {
-		if (port_name.compare("A") == 0)      and_comp->Connect(And::PORTS::A, wire);
-		else if (port_name.compare("B") == 0) and_comp->Connect(And::PORTS::B, wire);
-		else if (port_name.compare("O") == 0) and_comp->Connect(And::PORTS::O, wire);
+		if (port_name.compare("A") == 0)      and_comp->Connect(PORTS::A, wire);
+		else if (port_name.compare("B") == 0) and_comp->Connect(PORTS::B, wire);
+		else if (port_name.compare("O") == 0) and_comp->Connect(PORTS::O, wire);
 		else goto error;
 	} else if (or_comp != nullptr) {
-		if (port_name.compare("A") == 0)      or_comp->Connect(Or::PORTS::A, wire);
-		else if (port_name.compare("B") == 0) or_comp->Connect(Or::PORTS::B, wire);
-		else if (port_name.compare("O") == 0) or_comp->Connect(Or::PORTS::O, wire);
+		if (port_name.compare("A") == 0)      or_comp->Connect(PORTS::A, wire);
+		else if (port_name.compare("B") == 0) or_comp->Connect(PORTS::B, wire);
+		else if (port_name.compare("O") == 0) or_comp->Connect(PORTS::O, wire);
 		else goto error;
 	} else if (xor_comp != nullptr) {
-		if (port_name.compare("A") == 0)      xor_comp->Connect(Xor::PORTS::A, wire);
-		else if (port_name.compare("B") == 0) xor_comp->Connect(Xor::PORTS::B, wire);
-		else if (port_name.compare("O") == 0) xor_comp->Connect(Xor::PORTS::O, wire);
+		if (port_name.compare("A") == 0)      xor_comp->Connect(PORTS::A, wire);
+		else if (port_name.compare("B") == 0) xor_comp->Connect(PORTS::B, wire);
+		else if (port_name.compare("O") == 0) xor_comp->Connect(PORTS::O, wire);
 		else goto error;
 	} else if (nand_comp != nullptr) {
-		if (port_name.compare("A") == 0)      nand_comp->Connect(Nand::PORTS::A, wire);
-		else if (port_name.compare("B") == 0) nand_comp->Connect(Nand::PORTS::B, wire);
-		else if (port_name.compare("O") == 0) nand_comp->Connect(Nand::PORTS::O, wire);
+		if (port_name.compare("A") == 0)      nand_comp->Connect(PORTS::A, wire);
+		else if (port_name.compare("B") == 0) nand_comp->Connect(PORTS::B, wire);
+		else if (port_name.compare("O") == 0) nand_comp->Connect(PORTS::O, wire);
 		else goto error;
 	} else if (nor_comp != nullptr) {
-		if (port_name.compare("A") == 0)      nor_comp->Connect(Nor::PORTS::A, wire);
-		else if (port_name.compare("B") == 0) nor_comp->Connect(Nor::PORTS::B, wire);
-		else if (port_name.compare("O") == 0) nor_comp->Connect(Nor::PORTS::O, wire);
+		if (port_name.compare("A") == 0)      nor_comp->Connect(PORTS::A, wire);
+		else if (port_name.compare("B") == 0) nor_comp->Connect(PORTS::B, wire);
+		else if (port_name.compare("O") == 0) nor_comp->Connect(PORTS::O, wire);
 		else goto error;
 	} else if (xnor_comp != nullptr) {
-		if (port_name.compare("A") == 0)      xnor_comp->Connect(Xnor::PORTS::A, wire);
-		else if (port_name.compare("B") == 0) xnor_comp->Connect(Xnor::PORTS::B, wire);
-		else if (port_name.compare("O") == 0) xnor_comp->Connect(Xnor::PORTS::O, wire);
+		if (port_name.compare("A") == 0)      xnor_comp->Connect(PORTS::A, wire);
+		else if (port_name.compare("B") == 0) xnor_comp->Connect(PORTS::B, wire);
+		else if (port_name.compare("O") == 0) xnor_comp->Connect(PORTS::O, wire);
 		else goto error;
 	} else if (not_comp != nullptr) {
-		if (port_name.compare("I") == 0)      not_comp->Connect(Not::PORTS::I, wire);
-		else if (port_name.compare("O") == 0) not_comp->Connect(Not::PORTS::O, wire);
+		if (port_name.compare("I") == 0)      not_comp->Connect(PORTS::I, wire);
+		else if (port_name.compare("O") == 0) not_comp->Connect(PORTS::O, wire);
 		else goto error;
 	} else if (mux_comp != nullptr) {
-		if (port_name.compare("A") == 0)      mux_comp->Connect(Mux::PORTS::A, wire);
-		else if (port_name.compare("B") == 0) mux_comp->Connect(Mux::PORTS::B, wire);
-		else if (port_name.compare("S") == 0) mux_comp->Connect(Mux::PORTS::S, wire);
-		else if (port_name.compare("O") == 0) mux_comp->Connect(Mux::PORTS::O, wire);
+		if (port_name.compare("A") == 0)      mux_comp->Connect(PORTS::A, wire);
+		else if (port_name.compare("B") == 0) mux_comp->Connect(PORTS::B, wire);
+		else if (port_name.compare("S") == 0) mux_comp->Connect(PORTS::S, wire);
+		else if (port_name.compare("O") == 0) mux_comp->Connect(PORTS::O, wire);
 		else goto error;
 	} else if (rca_comp != nullptr) {
 		//cout << port_name << '\n';
-		if (port_name.compare("A") == 0)         rca_comp->Connect(RippleCarryAdder::PORTS::A, wire, index);
-		else if (port_name.compare("B") == 0)    rca_comp->Connect(RippleCarryAdder::PORTS::B, wire, index);
-		else if (port_name.compare("S") == 0)    rca_comp->Connect(RippleCarryAdder::PORTS::S, wire, index);
-		else if (port_name.compare("Cin") == 0)  rca_comp->Connect(RippleCarryAdder::PORTS::Cin, wire, index);
-		else if (port_name.compare("Cout") == 0) rca_comp->Connect(RippleCarryAdder::PORTS::Cout, wire, index);
+		if (port_name.compare("A") == 0)         rca_comp->Connect(PORTS::A, wire, index);
+		else if (port_name.compare("B") == 0)    rca_comp->Connect(PORTS::B, wire, index);
+		else if (port_name.compare("S") == 0)    rca_comp->Connect(PORTS::S, wire, index);
+		else if (port_name.compare("Cin") == 0)  rca_comp->Connect(PORTS::Cin, wire, index);
+		else if (port_name.compare("Cout") == 0) rca_comp->Connect(PORTS::Cout, wire, index);
 		else goto error;
 	}
 
@@ -543,6 +543,8 @@ int main(int argc, char **argv) {
 				 << "\": " << ow->GetValue() << '\n';
 		}
 	}
+
+	auto mul = Multiplier_2C("mul", 2, 2);
 
 	return 0;
 }

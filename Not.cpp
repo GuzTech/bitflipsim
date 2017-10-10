@@ -26,10 +26,14 @@ void Not::Update(bool propagating) {
 	}
 }
 
-void Not::Connect(PORTS port, wire_t wire) {
+void Not::Connect(PORTS port, wire_t wire, std::size_t index) {
 	switch(port) {
 	case PORTS::I: I = wire; wire->AddOutput(this->shared_from_base<Not>()); break;
 	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Not>()); break;
+	default:
+		std::cout << "[Error] Trying to connect to undefined port of Not "
+				  << "\"" << name << "\"n";
+		exit(1);
 	}
 }
 

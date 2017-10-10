@@ -9,10 +9,8 @@ public:
 		: Component(_name) {}
 	~Nand() = default;
 
-	enum class PORTS {A, B, O};
-
 	void Update(bool propagating) override;
-	void Connect(PORTS port, wire_t wire);
+	void Connect(PORTS port, wire_t wire, std::size_t index = 0) override;
 
 	std::vector<wire_t> GetWires() override;
 	std::vector<wire_t> GetInputWires() override;

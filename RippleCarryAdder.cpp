@@ -65,8 +65,8 @@ RippleCarryAdder::RippleCarryAdder(std::string _name, std::size_t _num_bits)
 		auto fa_prev = full_adders[i - 1];
 		auto fa_curr = full_adders[i];
 
-		fa_prev->Connect(FullAdder::PORTS::Cout, wire);
-		fa_curr->Connect(FullAdder::PORTS::Cin, wire);
+		fa_prev->Connect(PORTS::Cout, wire);
+		fa_curr->Connect(PORTS::Cin, wire);
 	}
 }
 
@@ -90,11 +90,15 @@ void RippleCarryAdder::Connect(PORTS port, wire_t wire, std::size_t index) {
 	}
 
 	switch (port) {
-	case PORTS::A:	  full_adders[index]->Connect(FullAdder::PORTS::A, wire); break;
-	case PORTS::B:    full_adders[index]->Connect(FullAdder::PORTS::B, wire); break;
-	case PORTS::S:    full_adders[index]->Connect(FullAdder::PORTS::S, wire); break;
-	case PORTS::Cin:  full_adders[0]->Connect(FullAdder::PORTS::Cin, wire); break;
-	case PORTS::Cout: full_adders[num_bits - 1]->Connect(FullAdder::PORTS::Cout, wire); break;
+	case PORTS::A:	  full_adders[index]->Connect(PORTS::A, wire); break;
+	case PORTS::B:    full_adders[index]->Connect(PORTS::B, wire); break;
+	case PORTS::S:    full_adders[index]->Connect(PORTS::S, wire); break;
+	case PORTS::Cin:  full_adders[0]->Connect(PORTS::Cin, wire); break;
+	case PORTS::Cout: full_adders[num_bits - 1]->Connect(PORTS::Cout, wire); break;
+	default:
+		std::cout << "[Error] Trying to connect to undefined port of RippleCarryAdder "
+				  << "\"" << name << "\"n";
+		exit(1);
 	}
 }
 

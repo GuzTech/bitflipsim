@@ -9,10 +9,8 @@ public:
 		: Component(_name) {}
 	~HalfAdder() = default;
 
-	enum class PORTS {A, B, S, C};
-
 	void Update(bool propagating) override;
-	void Connect(PORTS port, wire_t wire);
+	void Connect(PORTS port, wire_t wire, std::size_t index = 0) override;
 
 	std::vector<wire_t> GetWires() override;
 	std::vector<wire_t> GetInputWires() override;
@@ -22,7 +20,7 @@ private:
 	wire_t A;
 	wire_t B;
 	wire_t S;
-	wire_t C;
+	wire_t Cout;
 };
 
 #endif // HALFADDER_H

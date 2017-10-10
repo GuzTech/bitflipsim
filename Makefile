@@ -5,7 +5,7 @@ CFLAGS := -I$(INCLUDE_DIRS) -g -O0 -std=c++1z -Wall -Werror $(SANITIZER)
 LIBS := -lyaml-cpp
 LDFLAGS := -Llib/yaml-cpp/build $(LIBS) $(SANITIZER)
 OBJDIR := obj
-OBJS := $(addprefix $(OBJDIR)/, Component.o FullAdder.o HalfAdder.o RippleCarryAdder.o And.o Or.o Xor.o Nand.o Nor.o Xnor.o Not.o Mux.o Wire.o System.o main.o)
+OBJS := $(addprefix $(OBJDIR)/, Component.o FullAdder.o HalfAdder.o RippleCarryAdder.o Multiplier_2C.o Multiplier_Smag.o And.o Or.o Xor.o Nand.o Nor.o Xnor.o Not.o Mux.o Wire.o System.o main.o)
 EXECUTABLE := bitflipsim
 
 all: $(OBJS) $(EXECUTABLE)

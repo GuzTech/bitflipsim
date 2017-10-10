@@ -13,6 +13,7 @@ public:
 	virtual ~Component() = default;
 
 	virtual void Update(bool propagating = true) =0;
+	virtual void Connect(PORTS port, wire_t wire, std::size_t index = 0) =0;
 	void MarkUpdate() {needs_update = true;}
 	void Reset() {needs_update = false; toggle_count = 0;}
 

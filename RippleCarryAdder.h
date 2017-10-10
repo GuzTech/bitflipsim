@@ -8,10 +8,8 @@ public:
 	RippleCarryAdder(std::string _name, std::size_t _num_bits);
 	~RippleCarryAdder() = default;
 
-	enum class PORTS {A, B, Cin, S, Cout};
-
 	void Update(bool propagating) override;
-	void Connect(PORTS port, wire_t wire, std::size_t index);
+	void Connect(PORTS port, wire_t wire, std::size_t index) override;
 
 	std::size_t GetNumToggles() final;
 	std::vector<wire_t> GetWires() override;
