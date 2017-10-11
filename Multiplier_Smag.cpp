@@ -62,7 +62,29 @@ void Multiplier_Smag::Update(bool propagating) {
 }
 
 void Multiplier_Smag::Connect(PORTS port, wire_t wire, std::size_t index) {
+	if (port == PORTS::A && index >= num_bits_A) {
+		std::cout << "[Error] Index " << index << " of port A is out of "
+				  << "bounds for Multiplier_Smag \"" << name << "\"n";
+		exit(1);
+	} else if (port == PORTS::B && index >= num_bits_B) {
+		std::cout << "[Error] Index " << index << " of port B is out of "
+				  << "bounds for Multiplier_Smag \"" << name << "\"n";
+		exit(1);
+	} else if (port == PORTS::O && index >= (num_bits_A + num_bits_B)) {
+		std::cout << "[Error] Index " << index << " of port O is out of "
+				  << "bounds for Multiplier_Smag \"" << name << "\"n";
+		exit(1);
+	}
 
+	switch(port) {
+	case PORTS::A: ands[0][index]->Connect(PORTS::A, wire); break;
+	case PORTS::B: ands[0][index]->Connect(PORTS::B, wire); break;
+	case PORTS::O: adders[num_bits_B - 1][index]->Connect(PORTS::O, wire); break;
+	default:
+		std::cout << "[Error] Trying to connect to undefined port of Multiplier_Smag "
+				  << "\"" << name << "\"n";
+		exit(1);
+	}
 }
 
 std::size_t Multiplier_Smag::GetNumToggles() {

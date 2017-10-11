@@ -85,7 +85,7 @@ void RippleCarryAdder::Update(bool propagating) {
 void RippleCarryAdder::Connect(PORTS port, wire_t wire, std::size_t index) {
 	if (index >= num_bits) {
 		std::cout << "[Error] Index " << index << " out of bounds for "
-				  << "ripple-carry adder \"" << name << "\"\n";
+				  << "RippleCarryAdder \"" << name << "\"\n";
 		exit(1);
 	}
 

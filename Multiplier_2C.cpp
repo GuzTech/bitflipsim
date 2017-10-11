@@ -73,15 +73,15 @@ void Multiplier_2C::Update(bool propagating) {
 void Multiplier_2C::Connect(PORTS port, wire_t wire, std::size_t index) {
 	if (port == PORTS::A && index >= num_bits_A) {
 		std::cout << "[Error] Index " << index << " of port A is out of "
-				  << "bounds for twos-complement multiplier \"" << name << "\"n";
+				  << "bounds for Multiplier_2C \"" << name << "\"n";
 		exit(1);
 	} else if (port == PORTS::B && index >= num_bits_B) {
 		std::cout << "[Error] Index " << index << " of port B is out of "
-				  << "bounds for twos-complement multiplier \"" << name << "\"n";
+				  << "bounds for Multiplier_2C \"" << name << "\"n";
 		exit(1);
 	} else if (port == PORTS::O && index >= (num_bits_A + num_bits_B)) {
 		std::cout << "[Error] Index " << index << " of port O is out of "
-				  << "bounds for twos-complement multiplier \"" << name << "\"n";
+				  << "bounds for Multiplier_2C \"" << name << "\"n";
 		exit(1);
 	}
 
