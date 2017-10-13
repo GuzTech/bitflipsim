@@ -21,8 +21,14 @@ public:
 private:
 	std::size_t num_bits_A = 0;
 	std::size_t num_bits_B = 0;
+	std::size_t num_bits_O = 0;
+	std::size_t num_adder_levels = 0;
+	std::size_t num_and_levels = 0;
+	std::size_t num_adders_per_level = 0;
+	std::size_t num_ands_per_level = 0;
 
-	std::vector<std::vector<comp_t>> components;
+	std::vector<std::vector<comp_t>> adders;
+	std::vector<std::vector<and_t>> ands;
 };
 
 #endif // MULTIPLIER_SMAG_H

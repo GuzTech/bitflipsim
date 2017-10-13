@@ -544,7 +544,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	auto mul = Multiplier_2C("mul", 2, 2);
+	auto mul = Multiplier_Smag("mul", 6, 4);
 
 	return 0;
 }
