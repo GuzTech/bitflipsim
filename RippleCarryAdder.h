@@ -5,21 +5,21 @@
 
 class RippleCarryAdder : public Component {
 public:
-	RippleCarryAdder(std::string _name, std::size_t _num_bits);
+	RippleCarryAdder(string _name, size_t _num_bits);
 	~RippleCarryAdder() = default;
 
 	void Update(bool propagating) override;
-	void Connect(PORTS port, wire_t wire, std::size_t index) override;
+	void Connect(PORTS port, wire_t wire, size_t index) override;
 
-	std::size_t GetNumToggles() final;
-	std::vector<wire_t> GetWires() override;
-	std::vector<wire_t> GetInputWires() override;
-	std::vector<wire_t> GetOutputWires() override;
+	size_t GetNumToggles() final;
+	vector<wire_t> GetWires() override;
+	vector<wire_t> GetInputWires() override;
+	vector<wire_t> GetOutputWires() override;
 
 private:
-	std::size_t num_bits = 0;
+	size_t num_bits = 0;
 
-	std::vector<fa_t> full_adders;
+	vector<fa_t> full_adders;
 };
 
 #endif // RIPPLECARRYADDER_H

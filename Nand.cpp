@@ -26,26 +26,26 @@ void Nand::Update(bool propagating) {
 	}
 }
 
-void Nand::Connect(PORTS port, wire_t wire, std::size_t index) {
+void Nand::Connect(PORTS port, wire_t wire, size_t index) {
 	switch(port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<Nand>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<Nand>()); break;
 	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Nand>()); break;
 	default:
-		std::cout << "[Error] Trying to connect to undefined port of Nand "
-				  << "\"" << name << "\"n";
+		cout << "[Error] Trying to connect to undefined port of Nand "
+			 << "\"" << name << "\"n";
 		exit(1);
 	}
 }
 
-std::vector<wire_t> Nand::GetWires() {
+vector<wire_t> Nand::GetWires() {
 	return {A, B, O};
 }
 
-std::vector<wire_t> Nand::GetInputWires() {
+vector<wire_t> Nand::GetInputWires() {
 	return {A, B};
 }
 
-std::vector<wire_t> Nand::GetOutputWires() {
+vector<wire_t> Nand::GetOutputWires() {
 	return {O};
 }

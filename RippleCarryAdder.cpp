@@ -37,7 +37,7 @@
           ---------
 */
 
-RippleCarryAdder::RippleCarryAdder(std::string _name, std::size_t _num_bits)
+RippleCarryAdder::RippleCarryAdder(string _name, size_t _num_bits)
 	: Component(_name, _num_bits)
 	, num_bits(_num_bits)
 {
@@ -45,23 +45,23 @@ RippleCarryAdder::RippleCarryAdder(std::string _name, std::size_t _num_bits)
 	full_adders.reserve(num_bits);
 
 	// Create the full-adders.
-	for (std::size_t i = 0; i < num_bits; ++i) {
-		std::string fa_name(_name);
+	for (size_t i = 0; i < num_bits; ++i) {
+		string fa_name(_name);
 		fa_name += "_fa_";
-		fa_name += std::to_string(i);
+		fa_name += to_string(i);
 		
-		full_adders.push_back(std::make_shared<FullAdder>(fa_name));
+		full_adders.push_back(make_shared<FullAdder>(fa_name));
 	}
 
 	// Create the wires between the carry ports of the full-adders.
-	for (std::size_t i = 1; i < num_bits; ++i) {
-		std::string wire_name(_name);
+	for (size_t i = 1; i < num_bits; ++i) {
+		string wire_name(_name);
 		wire_name += "_fa_wire_";
-		wire_name += std::to_string(i - 1);
+		wire_name += to_string(i - 1);
 		wire_name += "_to_";
-		wire_name += std::to_string(i);
+		wire_name += to_string(i);
 		
-		auto wire = std::make_shared<Wire>(wire_name);
+		auto wire = make_shared<Wire>(wire_name);
 		auto fa_prev = full_adders[i - 1];
 		auto fa_curr = full_adders[i];
 
@@ -72,7 +72,7 @@ RippleCarryAdder::RippleCarryAdder(std::string _name, std::size_t _num_bits)
 
 void RippleCarryAdder::Update(bool propagating) {
 	if (needs_update || !propagating) {
-		for (std::size_t i = 0; i < longest_path; ++i) {
+		for (size_t i = 0; i < longest_path; ++i) {
 			for (auto &fa : full_adders) {
 				fa->Update(propagating);
 			}
@@ -82,10 +82,10 @@ void RippleCarryAdder::Update(bool propagating) {
 	}
 }
 
-void RippleCarryAdder::Connect(PORTS port, wire_t wire, std::size_t index) {
+void RippleCarryAdder::Connect(PORTS port, wire_t wire, size_t index) {
 	if (index >= num_bits) {
-		std::cout << "[Error] Index " << index << " out of bounds for "
-				  << "RippleCarryAdder \"" << name << "\"\n";
+		cout << "[Error] Index " << index << " out of bounds for "
+			 << "RippleCarryAdder \"" << name << "\"\n";
 		exit(1);
 	}
 
@@ -96,13 +96,13 @@ void RippleCarryAdder::Connect(PORTS port, wire_t wire, std::size_t index) {
 	case PORTS::Cin:  full_adders[0]->Connect(PORTS::Cin, wire); break;
 	case PORTS::Cout: full_adders[num_bits - 1]->Connect(PORTS::Cout, wire); break;
 	default:
-		std::cout << "[Error] Trying to connect to undefined port of RippleCarryAdder "
-				  << "\"" << name << "\"n";
+		cout << "[Error] Trying to connect to undefined port of RippleCarryAdder "
+			 << "\"" << name << "\"n";
 		exit(1);
 	}
 }
 
-std::size_t RippleCarryAdder::GetNumToggles() {
+size_t RippleCarryAdder::GetNumToggles() {
 	toggle_count = 0;
 	for (auto &fa : full_adders) {
 		toggle_count += fa->GetNumToggles();
@@ -111,8 +111,8 @@ std::size_t RippleCarryAdder::GetNumToggles() {
 	return toggle_count;
 }
 
-std::vector<wire_t> RippleCarryAdder::GetWires() {
-	std::vector<wire_t> all_wires;
+vector<wire_t> RippleCarryAdder::GetWires() {
+	vector<wire_t> all_wires;
 
 	for (auto &fa : full_adders) {
 		auto wires = fa->GetWires();
@@ -124,8 +124,8 @@ std::vector<wire_t> RippleCarryAdder::GetWires() {
 	return all_wires;
 }
 
-std::vector<wire_t> RippleCarryAdder::GetInputWires() {
-	std::vector<wire_t> input_wires;
+vector<wire_t> RippleCarryAdder::GetInputWires() {
+	vector<wire_t> input_wires;
 
 	for (auto &fa : full_adders) {
 		auto wires = fa->GetInputWires();
@@ -137,8 +137,8 @@ std::vector<wire_t> RippleCarryAdder::GetInputWires() {
 	return input_wires;
 }
 
-std::vector<wire_t> RippleCarryAdder::GetOutputWires() {
-	std::vector<wire_t> output_wires;
+vector<wire_t> RippleCarryAdder::GetOutputWires() {
+	vector<wire_t> output_wires;
 
 	for (auto &fa : full_adders) {
 		auto wires = fa->GetOutputWires();

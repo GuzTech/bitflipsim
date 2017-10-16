@@ -19,6 +19,8 @@ void Connect(comp_t component, string port_name, wire_t wire, size_t index = 0) 
 	auto not_comp  = dynamic_pointer_cast<Not>(component);
 	auto mux_comp  = dynamic_pointer_cast<Mux>(component);
 	auto rca_comp  = dynamic_pointer_cast<RippleCarryAdder>(component);
+	auto m2C_comp  = dynamic_pointer_cast<Multiplier_2C>(component);
+	auto smag_comp = dynamic_pointer_cast<Multiplier_Smag>(component);
 
 	if (fa_comp != nullptr) {
 		if (port_name.compare("A") == 0)         fa_comp->Connect(PORTS::A, wire);
@@ -74,12 +76,21 @@ void Connect(comp_t component, string port_name, wire_t wire, size_t index = 0) 
 		else if (port_name.compare("O") == 0) mux_comp->Connect(PORTS::O, wire);
 		else goto error;
 	} else if (rca_comp != nullptr) {
-		//cout << port_name << '\n';
 		if (port_name.compare("A") == 0)         rca_comp->Connect(PORTS::A, wire, index);
 		else if (port_name.compare("B") == 0)    rca_comp->Connect(PORTS::B, wire, index);
 		else if (port_name.compare("S") == 0)    rca_comp->Connect(PORTS::S, wire, index);
 		else if (port_name.compare("Cin") == 0)  rca_comp->Connect(PORTS::Cin, wire, index);
 		else if (port_name.compare("Cout") == 0) rca_comp->Connect(PORTS::Cout, wire, index);
+		else goto error;
+	} else if (m2C_comp != nullptr) {
+		if (port_name.compare("A") == 0) m2C_comp->Connect(PORTS::A, wire, index);
+		else if (port_name.compare("B") == 0) m2C_comp->Connect(PORTS::B, wire, index);
+		else if (port_name.compare("O") == 0) m2C_comp->Connect(PORTS::O, wire, index);
+		else goto error;
+	}else if (smag_comp != nullptr) {
+		if (port_name.compare("A") == 0) smag_comp->Connect(PORTS::A, wire, index);
+		else if (port_name.compare("B") == 0) smag_comp->Connect(PORTS::B, wire, index);
+		else if (port_name.compare("O") == 0) smag_comp->Connect(PORTS::O, wire, index);
 		else goto error;
 	}
 
@@ -142,14 +153,15 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 		string comp_type = it->first.as<string>();
 		string comp_name;
 
-		size_t num_bits = 0;
+		size_t num_bits_A = 0;
+		size_t num_bits_B = 0;
 		auto value = it->second;
 		if (value) {
 			if (value.IsScalar()) {
 				comp_name = value.as<string>();
 			} else if (value.IsSequence() && value.size() == 2) {
 				comp_name = value[0].as<string>();
-				num_bits = value[1].as<size_t>();
+				num_bits_A = value[1].as<size_t>();
 			} else {
 				cout << "[Error] Component name must be a scalar or sequence.\n";
 				exit(1);
@@ -169,7 +181,9 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 		else if (comp_type.compare("Xnor") == 0) comps[comp_name] = make_shared<Xnor>(comp_name);
 		else if (comp_type.compare("Not") == 0) comps[comp_name] = make_shared<Not>(comp_name);
 		else if (comp_type.compare("Mux") == 0) comps[comp_name] = make_shared<Mux>(comp_name);
-		else if (comp_type.compare("RippleCarryAdder") == 0) comps[comp_name] = make_shared<RippleCarryAdder>(comp_name, num_bits);
+		else if (comp_type.compare("RippleCarryAdder") == 0) comps[comp_name] = make_shared<RippleCarryAdder>(comp_name, num_bits_A);
+		else if (comp_type.compare("Multiplier_2C") == 0) comps[comp_name] = make_shared<Multiplier_2C>(comp_name, num_bits_A, num_bits_B);
+		else if (comp_type.compare("Multiplier_Smag") == 0) comps[comp_name] = make_shared<Multiplier_Smag>(comp_name, num_bits_A, num_bits_B);
 		else {
 			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
 			exit(1);

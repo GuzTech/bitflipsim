@@ -8,6 +8,8 @@
 #include <vector>
 #include <map>
 
+using namespace std;
+
 class Component;
 class HalfAdder;
 class FullAdder;
@@ -27,22 +29,22 @@ class System;
 
 enum class PORTS {A, B, Cin, Cout, I, O, S};
 
-using wire_t  = std::shared_ptr<Wire>;
-using comp_t  = std::shared_ptr<Component>;
-using comp_wt = std::weak_ptr<Component>;
-using ha_t    = std::shared_ptr<HalfAdder>;
-using fa_t    = std::shared_ptr<FullAdder>;
-using and_t   = std::shared_ptr<And>;
-using or_t    = std::shared_ptr<Or>;
-using xor_t   = std::shared_ptr<Xor>;
-using nand_t  = std::shared_ptr<Nand>;
-using nor_t   = std::shared_ptr<Nor>;
-using xnor_t  = std::shared_ptr<Xnor>;
-using not_t   = std::shared_ptr<Not>;
-using mux_t   = std::shared_ptr<Mux>;
-using rca_t   = std::shared_ptr<RippleCarryAdder>;
-using m2c_t   = std::shared_ptr<Multiplier_2C>;
-using msmag_t = std::shared_ptr<Multiplier_Smag>;
+using wire_t  = shared_ptr<Wire>;
+using comp_t  = shared_ptr<Component>;
+using comp_wt = weak_ptr<Component>;
+using ha_t    = shared_ptr<HalfAdder>;
+using fa_t    = shared_ptr<FullAdder>;
+using and_t   = shared_ptr<And>;
+using or_t    = shared_ptr<Or>;
+using xor_t   = shared_ptr<Xor>;
+using nand_t  = shared_ptr<Nand>;
+using nor_t   = shared_ptr<Nor>;
+using xnor_t  = shared_ptr<Xnor>;
+using not_t   = shared_ptr<Not>;
+using mux_t   = shared_ptr<Mux>;
+using rca_t   = shared_ptr<RippleCarryAdder>;
+using m2c_t   = shared_ptr<Multiplier_2C>;
+using msmag_t = shared_ptr<Multiplier_Smag>;
 
 #include "Component.h"
 #include "HalfAdder.h"

@@ -5,30 +5,31 @@
 
 class Multiplier_Smag : public Component {
 public:
-	Multiplier_Smag(std::string _name,
-					std::size_t _num_bits_A,
-					std::size_t _num_bits_B);
+	Multiplier_Smag(string _name,
+					size_t _num_bits_A,
+					size_t _num_bits_B);
 	~Multiplier_Smag() = default;
 
 	void Update(bool propagating) override;
-	void Connect(PORTS port, wire_t wire, std::size_t index) override;
+	void Connect(PORTS port, wire_t wire, size_t index) override;
 
-	std::size_t GetNumToggles() final;
-	std::vector<wire_t> GetWires() override;
-	std::vector<wire_t> GetInputWires() override;
-	std::vector<wire_t> GetOutputWires() override;
+	size_t GetNumToggles() final;
+	vector<wire_t> GetWires() override;
+	vector<wire_t> GetInputWires() override;
+	vector<wire_t> GetOutputWires() override;
 
 private:
-	std::size_t num_bits_A = 0;
-	std::size_t num_bits_B = 0;
-	std::size_t num_bits_O = 0;
-	std::size_t num_adder_levels = 0;
-	std::size_t num_and_levels = 0;
-	std::size_t num_adders_per_level = 0;
-	std::size_t num_ands_per_level = 0;
+	size_t num_bits_A = 0;
+	size_t num_bits_B = 0;
+	size_t num_bits_O = 0;
+	size_t num_adder_levels = 0;
+	size_t num_and_levels = 0;
+	size_t num_adders_per_level = 0;
+	size_t num_ands_per_level = 0;
 
-	std::vector<std::vector<comp_t>> adders;
-	std::vector<std::vector<and_t>> ands;
+	vector<vector<comp_t>> adders;
+	vector<vector<and_t>> ands;
+	xor_t sign = nullptr;
 };
 
 #endif // MULTIPLIER_SMAG_H

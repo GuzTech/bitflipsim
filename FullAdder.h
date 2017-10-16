@@ -5,16 +5,16 @@
 
 class FullAdder : public Component {
 public:
-	FullAdder(std::string _name)
+	FullAdder(string _name)
 		: Component(_name) {}
 	~FullAdder() = default;
 
 	void Update(bool propagating) override;
-	void Connect(PORTS port, wire_t wire, std::size_t index = 0) override;
+	void Connect(PORTS port, wire_t wire, size_t index = 0) override;
 
-	std::vector<wire_t> GetWires() override;
-	std::vector<wire_t> GetInputWires() override;
-	std::vector<wire_t> GetOutputWires() override;
+	vector<wire_t> GetWires() override;
+	vector<wire_t> GetInputWires() override;
+	vector<wire_t> GetOutputWires() override;
 
 private:
 	wire_t A;

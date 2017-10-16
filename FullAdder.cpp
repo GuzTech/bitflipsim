@@ -66,7 +66,7 @@ void FullAdder::Update(bool propagating) {
 	}
 }
 
-void FullAdder::Connect(PORTS port, wire_t wire, std::size_t index) {
+void FullAdder::Connect(PORTS port, wire_t wire, size_t index) {
 	switch (port) {
 	case PORTS::A:    A    = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
 	case PORTS::B:    B    = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
@@ -74,20 +74,20 @@ void FullAdder::Connect(PORTS port, wire_t wire, std::size_t index) {
 	case PORTS::S:    S    = wire; wire->SetInput(this->shared_from_base<FullAdder>()); break;
 	case PORTS::Cout: Cout = wire; wire->SetInput(this->shared_from_base<FullAdder>()); break;
 	default:
-		std::cout << "[Error] Trying to connect to undefined port of FullAdder "
-				  << "\"" << name << "\"n";
+		cout << "[Error] Trying to connect to undefined port of FullAdder "
+			 << "\"" << name << "\"n";
 		exit(1);
 	}
 }
 
-std::vector<wire_t> FullAdder::GetWires() {
+vector<wire_t> FullAdder::GetWires() {
 	return {A, B, Cin, S, Cout};
 }
 
-std::vector<wire_t> FullAdder::GetInputWires() {
+vector<wire_t> FullAdder::GetInputWires() {
 	return {A, B, Cin};
 }
 
-std::vector<wire_t> FullAdder::GetOutputWires() {
+vector<wire_t> FullAdder::GetOutputWires() {
 	return {S, Cout};
 }
