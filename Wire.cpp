@@ -20,7 +20,7 @@ void Wire::SetValue(bool val, bool propagating) {
 
 	if (has_changed) {
 		if (!propagating) {
-			toggle_count++;
+			toggle_count += num_outputs;
 		}
 
 		for (auto &c : outputs) {
@@ -33,4 +33,5 @@ void Wire::SetValue(bool val, bool propagating) {
 
 void Wire::AddOutput(comp_t component) {
 	outputs.push_back(component);
+	num_outputs = outputs.size();
 }

@@ -36,6 +36,7 @@ private:
 
 	comp_wt input; // The component that drives this wire.
 	vector<comp_wt> outputs; // The components that are driven by this wire.
+	size_t num_outputs = 1; // The number of components that are driven by this wire.
 };
 
 #endif // WIRE_H
