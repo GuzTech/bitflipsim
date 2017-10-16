@@ -97,7 +97,7 @@ void RippleCarryAdder::Connect(PORTS port, wire_t wire, size_t index) {
 	case PORTS::Cout: full_adders[num_bits - 1]->Connect(PORTS::Cout, wire); break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of RippleCarryAdder "
-			 << "\"" << name << "\"n";
+			 << "\"" << name << "\"\n";
 		exit(1);
 	}
 }
@@ -184,7 +184,7 @@ wire_t RippleCarryAdder::GetWire(PORTS port, size_t index) {
 		return full_adders[index]->GetWire(port);
 	default:
 		cout << "[Error] Trying to retrieve undefined port of RippleCarryAdder "
-			 << "\"" << name << "\"n";
+			 << "\"" << name << "\"\n";
 		exit(1);
 	}
 }

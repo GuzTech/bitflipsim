@@ -129,15 +129,15 @@ void Multiplier_2C::Update(bool propagating) {
 void Multiplier_2C::Connect(PORTS port, wire_t wire, size_t index) {
 	if (port == PORTS::A && index >= num_bits_A) {
 		cout << "[Error] Index " << index << " of port A is out of "
-			 << "bounds for Multiplier_2C \"" << name << "\"n";
+			 << "bounds for Multiplier_2C \"" << name << "\"\n";
 		exit(1);
 	} else if (port == PORTS::B && index >= num_bits_B) {
 		cout << "[Error] Index " << index << " of port B is out of "
-			 << "bounds for Multiplier_2C \"" << name << "\"n";
+			 << "bounds for Multiplier_2C \"" << name << "\"\n";
 		exit(1);
 	} else if (port == PORTS::O && index >= (num_bits_A + num_bits_B)) {
 		cout << "[Error] Index " << index << " of port O is out of "
-			 << "bounds for Multiplier_2C \"" << name << "\"n";
+			 << "bounds for Multiplier_2C \"" << name << "\"\n";
 		exit(1);
 	}
 
@@ -147,7 +147,7 @@ void Multiplier_2C::Connect(PORTS port, wire_t wire, size_t index) {
 	case PORTS::O: adders[num_bits_B - 1][index]->Connect(PORTS::O, wire); break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of Multiplier_2C "
-			 << "\"" << name << "\"n";
+			 << "\"" << name << "\"\n";
 		exit(1);
 	}
 }

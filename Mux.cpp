@@ -37,7 +37,7 @@ void Mux::Connect(PORTS port, wire_t wire, size_t index) {
 	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Mux>()); break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of Mux "
-			 << "\"" << name << "\"n";
+			 << "\"" << name << "\"\n";
 		exit(1);
 	}
 }
@@ -62,7 +62,7 @@ wire_t Mux::GetWire(PORTS port, size_t index) {
 	case PORTS::O: return O;
 	default:
 		cout << "[Error] Trying to retrieve undefined port of Mux "
-			 << "\"" << name << "\"n";
+			 << "\"" << name << "\"\n";
 		exit(1);
 	}
 }

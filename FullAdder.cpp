@@ -75,7 +75,7 @@ void FullAdder::Connect(PORTS port, wire_t wire, size_t index) {
 	case PORTS::Cout: Cout = wire; wire->SetInput(this->shared_from_base<FullAdder>()); break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of FullAdder "
-			 << "\"" << name << "\"n";
+			 << "\"" << name << "\"\n";
 		exit(1);
 	}
 }
@@ -101,7 +101,7 @@ wire_t FullAdder::GetWire(PORTS port, size_t index) {
 	case PORTS::Cout: return Cout;
 	default:
 		cout << "[Error] Trying to retrieve an undefined port of FullAdder "
-			 << "\"" << name << "\"n";
+			 << "\"" << name << "\"\n";
 		exit(1);
 	}
 }

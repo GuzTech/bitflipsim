@@ -33,7 +33,7 @@ void Nand::Connect(PORTS port, wire_t wire, size_t index) {
 	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Nand>()); break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of Nand "
-			 << "\"" << name << "\"n";
+			 << "\"" << name << "\"\n";
 		exit(1);
 	}
 }
@@ -57,7 +57,7 @@ wire_t Nand::GetWire(PORTS port, size_t index) {
 	case PORTS::O: return O;
 	default:
 		cout << "[Error] Trying to retrieve undefined port of Nand "
-			 << "\"" << name << "\"n";
+			 << "\"" << name << "\"\n";
 		exit(1);
 	}
 }
