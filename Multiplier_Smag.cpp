@@ -16,6 +16,16 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 	, num_adders_per_level(num_bits_A)
 	, num_ands_per_level(num_bits_A)
 {
+	if (num_bits_A < 2) {
+		cout << "[Error] Size of port A of Multiplier_Smag \"" << _name
+			 << "\" must be larger or equal to 2.\n";
+		exit(1);
+	} else if (num_bits_B < 2) {
+		cout << "[Error] Size of port B of Multiplier_Smag \"" << _name
+			 << "\" must be larger or equal to 2.\n";
+		exit(1);
+	}
+
 	sign = make_shared<Xor>(_name + "sign");
 
 	// Names for the adders.
@@ -102,21 +112,41 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 		const bool last_b = b == (num_adder_levels - 1);
 		
 		if (b == 0) {
-			// First row has 2 HalfAdders so the connections
-			// are slightly different.
-			for (size_t a = 0; a < num_adders_per_level; ++a) {
-				row_name = row_name_prefix + to_string(a);
+			// If we do not have 1 level of adders...
+			if (num_adder_levels != 1) {
+				// First row has 2 HalfAdders so the connections are slightly different.
+				for (size_t a = 0; a < num_adders_per_level; ++a) {
+					row_name = row_name_prefix + to_string(a);
 
-				const bool second_to_last_a = a == (num_adders_per_level - 2);
-				const bool last_a = a == (num_adders_per_level - 1);
+					const bool second_to_last_a = a == (num_adders_per_level - 2);
+					const bool last_a = a == (num_adders_per_level - 1);
 
-				auto wire = make_shared<Wire>(row_name);
-				adders[b][a]->Connect(PORTS::Cout, wire);
-				internal_wires.push_back(wire);
+					auto wire = make_shared<Wire>(row_name);
+					adders[b][a]->Connect(PORTS::Cout, wire);
+					internal_wires.push_back(wire);
 
-				if (last_a) {
-					adders[b+1][a]->Connect(PORTS::A, wire);
-				} else {
+					if (last_a) {
+						adders[b+1][a]->Connect(PORTS::A, wire);
+					} else {
+						if (second_to_last_a) {
+							adders[b][a+1]->Connect(PORTS::A, wire);
+						} else {
+							adders[b][a+1]->Connect(PORTS::Cin, wire);
+						}
+					}
+				}
+			} else {
+				// If we have only 1 level of adders, do not connect the last
+				// full adder carry output to the next level, since there is none.
+				for (size_t a = 0; a < num_adders_per_level - 1; ++a) {
+					row_name = row_name_prefix + to_string(a);
+
+					const bool second_to_last_a = a == (num_adders_per_level - 2);
+
+					auto wire = make_shared<Wire>(row_name);
+					adders[b][a]->Connect(PORTS::Cout, wire);
+					internal_wires.push_back(wire);
+
 					if (second_to_last_a) {
 						adders[b][a+1]->Connect(PORTS::A, wire);
 					} else {
@@ -156,37 +186,37 @@ void Multiplier_Smag::Update(bool propagating) {
 }
 
 void Multiplier_Smag::Connect(PORTS port, wire_t wire, size_t index) {
-	if (port == PORTS::A && index >= num_bits_A) {
+	if (port == PORTS::A && index > num_bits_A) {
 		cout << "[Error] Index " << index << " of port A is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\"n";
+			 << "bounds for Multiplier_Smag \"" << name << "\"\n";
 		exit(1);
-	} else if (port == PORTS::B && index >= num_bits_B) {
+	} else if (port == PORTS::B && index > num_bits_B) {
 		cout << "[Error] Index " << index << " of port B is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\"n";
+			 << "bounds for Multiplier_Smag \"" << name << "\"\n";
 		exit(1);
 	} else if (port == PORTS::O && index >= num_bits_O) {
 		cout << "[Error] Index " << index << " of port O is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\"n";
+			 << "bounds for Multiplier_Smag \"" << name << "\"\n";
 		exit(1);
 	}
 
 	switch(port) {
 	case PORTS::A:
-		if (index == (num_adders_per_level - 1)) {
+		if (index == num_adders_per_level) {
 			// MSB is the sign bit.
 			sign->Connect(PORTS::A, wire); break;
 		} else {
 			ands[0][index]->Connect(PORTS::A, wire); break;
 		}
 	case PORTS::B:
-		if (index == (num_adders_per_level - 1)) {
+		if (index == num_adders_per_level) {
 			// MSB is the sign bit.
 			sign->Connect(PORTS::B, wire); break;
 		} else {
 			ands[0][index]->Connect(PORTS::B, wire); break;
 		}
 	case PORTS::O:
-		if (index == (num_adders_per_level - 1)) {
+		if (index == (num_bits_O - 1)) {
 			// MSB is the sign bit.
 			sign->Connect(PORTS::O, wire); break;
 		} else {
@@ -194,7 +224,7 @@ void Multiplier_Smag::Connect(PORTS port, wire_t wire, size_t index) {
 		}
 	default:
 		cout << "[Error] Trying to connect to undefined port of Multiplier_Smag "
-			 << "\"" << name << "\"n";
+			 << "\"" << name << "\"\n";
 		exit(1);
 	}
 }

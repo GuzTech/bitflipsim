@@ -159,9 +159,19 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 		if (value) {
 			if (value.IsScalar()) {
 				comp_name = value.as<string>();
-			} else if (value.IsSequence() && value.size() == 2) {
+			} else if (value.IsSequence()) {
 				comp_name = value[0].as<string>();
-				num_bits_A = value[1].as<size_t>();
+
+				if (value.size() <= 3) {
+					num_bits_A = value[1].as<size_t>();
+
+					if (value.size() == 3) {
+						num_bits_B = value[2].as<size_t>();
+					}
+				} else {
+					cout << "[Error] Component \"" << comp_name << "\" can have at most two arguments.\n";
+					exit(1);
+				}
 			} else {
 				cout << "[Error] Component name must be a scalar or sequence.\n";
 				exit(1);
