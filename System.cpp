@@ -70,9 +70,9 @@ void System::FindLongestPathInSystem() {
 // when all inputs are 0.
 void System::FindInitialState() {
 	for (std::size_t i = 0; i < longest_path; ++i) {
-		for (auto &c : components) {
-			if (c.second) {
-				c.second->Update(false);
+		for (auto &[name, component] : components) {
+			if (component) {
+				component->Update(false);
 			}
 		}
 	}
@@ -80,16 +80,16 @@ void System::FindInitialState() {
 
 void System::Update() {
 	for (std::size_t i = 0; i < longest_path - 1; ++i) {
-		for (auto &c : components) {
-			if (c.second) {
-				c.second->Update(true);
+		for (auto &[name, component] : components) {
+			if (component) {
+				component->Update(true);
 			}
 		}
 	}
 
-	for (auto &c : components) {
-		if (c.second) {
-			c.second->Update(false);
+	for (auto &[name, component] : components) {
+		if (component) {
+			component->Update(false);
 		}
 	}
 }
@@ -97,15 +97,15 @@ void System::Update() {
 std::size_t System::GetNumToggles() {
 	std::size_t toggle_count = 0;
 
-	for (auto &c : components) {
-		if (c.second) {
-			toggle_count += c.second->GetNumToggles();
+	for (auto &[name, component] : components) {
+		if (component) {
+			toggle_count += component->GetNumToggles();
 		}
 	}
 
-	for (auto &w : wires) {
-		if (w.second) {
-			toggle_count += w.second->GetNumToggles();
+	for (auto &[name, wire] : wires) {
+		if (wire) {
+			toggle_count += wire->GetNumToggles();
 		}
 	}
 
@@ -123,8 +123,8 @@ wire_t System::GetWire(std::string wire_name) {
 std::vector<wire_t> System::GetWires() {
 	std::vector<wire_t> w;
 
-	for (auto &wire : wires) {
-		w.push_back(wire.second);
+	for (auto &[name, wire] : wires) {
+		w.push_back(wire);
 	}
 
 	return w;
