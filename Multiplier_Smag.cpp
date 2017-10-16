@@ -71,6 +71,8 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 		and_gate->Connect(PORTS::O, and_wire);
 		adders[0][a-1]->Connect(PORTS::A, and_wire);
 		ands_row.push_back(and_gate);
+
+		internal_wires.push_back(and_wire);
 	}
 	ands.push_back(ands_row);
 	ands_row.clear();
@@ -87,6 +89,8 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 			and_gate->Connect(PORTS::O, and_wire);
 			adders[b-1][a]->Connect(PORTS::B, and_wire);
 			ands_row.push_back(and_gate);
+
+			internal_wires.push_back(and_wire);
 		}
 
 		ands.push_back(ands_row);
@@ -108,6 +112,7 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 
 				auto wire = make_shared<Wire>(row_name);
 				adders[b][a]->Connect(PORTS::Cout, wire);
+				internal_wires.push_back(wire);
 
 				if (last_a) {
 					adders[b+1][a]->Connect(PORTS::A, wire);
@@ -131,6 +136,7 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 				if (!(last_a && last_b)) {
 					auto wire = make_shared<Wire>(row_name);
 					adders[b][a]->Connect(PORTS::Cout, wire);
+					internal_wires.push_back(wire);
 
 					if (last_a) {
 						// The last FullAdder connects to the A input of the
@@ -167,18 +173,21 @@ void Multiplier_Smag::Connect(PORTS port, wire_t wire, size_t index) {
 	switch(port) {
 	case PORTS::A:
 		if (index == (num_adders_per_level - 1)) {
+			// MSB is the sign bit.
 			sign->Connect(PORTS::A, wire); break;
 		} else {
 			ands[0][index]->Connect(PORTS::A, wire); break;
 		}
 	case PORTS::B:
 		if (index == (num_adders_per_level - 1)) {
+			// MSB is the sign bit.
 			sign->Connect(PORTS::B, wire); break;
 		} else {
 			ands[0][index]->Connect(PORTS::B, wire); break;
 		}
 	case PORTS::O:
 		if (index == (num_adders_per_level - 1)) {
+			// MSB is the sign bit.
 			sign->Connect(PORTS::O, wire); break;
 		} else {
 			adders[num_adder_levels - 1][index]->Connect(PORTS::O, wire); break;
@@ -191,17 +200,81 @@ void Multiplier_Smag::Connect(PORTS port, wire_t wire, size_t index) {
 }
 
 size_t Multiplier_Smag::GetNumToggles() {
-	return 0;
+	toggle_count = 0;
+
+	for (auto &w : internal_wires) {
+		toggle_count += w->GetNumToggles();
+	}
+	
+	return toggle_count;
 }
 
 vector<wire_t> Multiplier_Smag::GetWires() {
-	return vector<wire_t>(1, nullptr);
+	vector<wire_t> wires;
+
+	// Add all internal wires.
+	wires.insert(wires.end(),
+				 internal_wires.begin(),
+				 internal_wires.end());
+
+	return wires;
 }
 
 vector<wire_t> Multiplier_Smag::GetInputWires() {
-	return vector<wire_t>(1, nullptr);
+	vector<wire_t> input_wires;
+
+	// Add the A and B inputs of the first level of AND gates.
+	for (size_t i = 0; i < num_ands_per_level; ++i) {
+		const auto and_i = ands[0][i];
+		const auto wire_A = and_i->GetWire(PORTS::A);
+		const auto wire_B = and_i->GetWire(PORTS::B);
+
+		input_wires.push_back(wire_A);
+		input_wires.push_back(wire_B);
+	}
+
+	// Add the inputs to the sign bit XOR gate.
+	const auto wire_A = sign->GetWire(PORTS::A);
+	const auto wire_B = sign->GetWire(PORTS::B);
+
+	input_wires.push_back(wire_A);
+	input_wires.push_back(wire_B);
+
+	return input_wires;
 }
 
 vector<wire_t> Multiplier_Smag::GetOutputWires() {
-	return vector<wire_t>(1, nullptr);
+	vector<wire_t> output_wires;
+
+	// First output bit is the output of the first AND gate.
+	const auto wire = ands[0][0]->GetWire(PORTS::O);
+	output_wires.push_back(wire);
+
+	for (size_t y = 0; y < num_adder_levels; ++y) {
+		if (y != (num_adder_levels - 1)) {
+			// For each level except the last one, add sum output of the
+			// first full adder.
+			const auto wire = adders[y][0]->GetWire(PORTS::S);
+			output_wires.push_back(wire);
+		} else {
+			// Add the sum outputs of all the full adders of the last level.
+			for (size_t x = 0; x < num_adders_per_level; ++x) {
+				const auto wire = adders[y][x]->GetWire(PORTS::S);
+				output_wires.push_back(wire);
+			}
+
+			// Also add the carry out output of the last full adder.
+			const auto wire = adders[y][num_adders_per_level - 1]->GetWire(PORTS::Cout);
+			output_wires.push_back(wire);
+		}
+	}
+
+	// The last output bit is the output of the XOR gate.
+	output_wires.push_back(sign->GetWire(PORTS::O));
+
+	return output_wires;
+}
+
+wire_t Multiplier_Smag::GetWire(PORTS port, size_t index) {
+	return nullptr;
 }

@@ -27,7 +27,7 @@ void Not::Update(bool propagating) {
 }
 
 void Not::Connect(PORTS port, wire_t wire, size_t index) {
-	switch(port) {
+	switch (port) {
 	case PORTS::I: I = wire; wire->AddOutput(this->shared_from_base<Not>()); break;
 	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Not>()); break;
 	default:
@@ -47,4 +47,15 @@ vector<wire_t> Not::GetInputWires() {
 
 vector<wire_t> Not::GetOutputWires() {
 	return {O};
+}
+
+wire_t Not::GetWire(PORTS port, size_t index) {
+	switch (port) {
+	case PORTS::I: return I;
+	case PORTS::O: return O;
+	default:
+		cout << "[Error] Trying to retrieve undefined port of Not "
+			 << "\"" << name << "\"n";
+		exit(1);
+	}
 }

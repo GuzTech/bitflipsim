@@ -50,3 +50,15 @@ vector<wire_t> And::GetInputWires() {
 vector<wire_t> And::GetOutputWires() {
 	return {O};
 }
+
+wire_t And::GetWire(PORTS port, size_t index) {
+	switch (port) {
+	case PORTS::A: return A;
+	case PORTS::B: return B;
+	case PORTS::O: return O;
+	default:
+		cout << "[Error] Trying to retrieve undefined port of And "
+			 << "\"" << name << "\"n";
+		exit(1);
+	}
+}

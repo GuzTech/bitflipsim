@@ -167,3 +167,7 @@ vector<wire_t> Multiplier_2C::GetInputWires() {
 vector<wire_t> Multiplier_2C::GetOutputWires() {
 	return vector<wire_t>(1, nullptr);
 }
+
+wire_t Multiplier_2C::GetWire(PORTS port, size_t index) {
+	return nullptr;
+}

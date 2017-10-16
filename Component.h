@@ -23,6 +23,7 @@ public:
 	virtual vector<wire_t> GetWires() =0;
 	virtual vector<wire_t> GetInputWires() =0;
 	virtual vector<wire_t> GetOutputWires() =0;
+	virtual wire_t GetWire(PORTS port, size_t index = 0) =0;
 protected:
 	template <typename Derived> shared_ptr<Derived> shared_from_base() {
 		return static_pointer_cast<Derived>(shared_from_this());

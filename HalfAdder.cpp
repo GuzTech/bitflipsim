@@ -56,3 +56,16 @@ vector<wire_t> HalfAdder::GetInputWires() {
 vector<wire_t> HalfAdder::GetOutputWires() {
 	return {S, Cout};
 }
+
+wire_t HalfAdder::GetWire(PORTS port, size_t index) {
+	switch (port) {
+	case PORTS::A:    return A;
+	case PORTS::B:    return B;
+	case PORTS::S:    return S;
+	case PORTS::Cout: return Cout;
+	default:
+		cout << "[Error] Trying to retrieve undefined port of HalfAdder "
+			 << "\"" << name << "\"n";
+		exit(1);
+	}
+}

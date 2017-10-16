@@ -30,7 +30,7 @@ void Mux::Update(bool propagating) {
 }
 
 void Mux::Connect(PORTS port, wire_t wire, size_t index) {
-	switch(port) {
+	switch (port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<Mux>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<Mux>()); break;
 	case PORTS::S: S = wire; wire->SetInput(this->shared_from_base<Mux>()); break;
@@ -52,4 +52,17 @@ vector<wire_t> Mux::GetInputWires() {
 
 vector<wire_t> Mux::GetOutputWires() {
 	return {S, O};
+}
+
+wire_t Mux::GetWire(PORTS port, size_t index) {
+	switch (port) {
+	case PORTS::A: return A;
+	case PORTS::B: return B;
+	case PORTS::S: return S;
+	case PORTS::O: return O;
+	default:
+		cout << "[Error] Trying to retrieve undefined port of Mux "
+			 << "\"" << name << "\"n";
+		exit(1);
+	}
 }

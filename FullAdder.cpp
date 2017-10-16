@@ -91,3 +91,17 @@ vector<wire_t> FullAdder::GetInputWires() {
 vector<wire_t> FullAdder::GetOutputWires() {
 	return {S, Cout};
 }
+
+wire_t FullAdder::GetWire(PORTS port, size_t index) {
+	switch (port) {
+	case PORTS::A:    return A;
+	case PORTS::B:    return B;
+	case PORTS::Cin:  return Cin;
+	case PORTS::S:    return S;
+	case PORTS::Cout: return Cout;
+	default:
+		cout << "[Error] Trying to retrieve an undefined port of FullAdder "
+			 << "\"" << name << "\"n";
+		exit(1);
+	}
+}

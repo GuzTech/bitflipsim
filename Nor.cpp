@@ -26,7 +26,7 @@ void Nor::Update(bool propagating) {
 }
 
 void Nor::Connect(PORTS port, wire_t wire, size_t index) {
-	switch(port) {
+	switch (port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<Nor>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<Nor>()); break;
 	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Nor>()); break;
@@ -47,4 +47,16 @@ vector<wire_t> Nor::GetInputWires() {
 
 vector<wire_t> Nor::GetOutputWires() {
 	return {O};
+}
+
+wire_t Nor::GetWire(PORTS port, size_t index) {
+	switch (port) {
+	case PORTS::A: return A;
+	case PORTS::B: return B;
+	case PORTS::O: return O;
+	default:
+		cout << "[Error] Trying to retrieve undefined port of Nor "
+			 << "\"" << name << "\"n";
+		exit(1);
+	}
 }

@@ -17,6 +17,7 @@ public:
 	vector<wire_t> GetWires() override;
 	vector<wire_t> GetInputWires() override;
 	vector<wire_t> GetOutputWires() override;
+	wire_t GetWire(PORTS port, size_t index = 0) override;
 
 private:
 	wire_t I;
