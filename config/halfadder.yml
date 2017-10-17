@@ -21,7 +21,7 @@ wires:
     - to: output
   Sha:
     - from: *ha
-      port: S
+      port: O
     - to: output
   Cha:
     - from: *ha

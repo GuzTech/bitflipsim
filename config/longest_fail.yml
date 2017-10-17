@@ -31,12 +31,12 @@ wires:
       port: Cin
   S0:
     - from: fa1
-      port: S
+      port: O
     - to: and
       port: A
   S1:
     - from: fa2
-      port: S
+      port: O
     - to: and
       port: B
   C2:

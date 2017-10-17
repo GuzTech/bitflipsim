@@ -17,11 +17,11 @@ wires:
       port: Cin
   S0:
     - from: *fa1
-      port: S
+      port: O
     - to: output
   S1:
     - from: *fa2
-      port: S
+      port: O
     - to: output
   &C2 C2:
     - from: *fa2

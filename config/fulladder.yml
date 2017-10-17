@@ -32,7 +32,7 @@ wires:
     - to: output
   &S1 S1:
     - from: *fa
-      port: S
+      port: O
     - to: output
   &I0 I0:
     - from: *x1

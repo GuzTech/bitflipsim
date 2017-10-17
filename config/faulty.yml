@@ -17,16 +17,16 @@ wires:
       port: Cin
   S0:
     - from: *fa1
-      port: S
+      port: O
 
-      #oirt: S
+      #oirt: O
       #port: 
-      #port: [S]
-      #port: {S}
+      #port: [O]
+      #port: {O}
     - to: output
   S1:
     - from: *fa2
-      port: S
+      port: O
     - to: output
 
     #- to: {}

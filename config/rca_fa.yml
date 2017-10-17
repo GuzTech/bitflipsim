@@ -24,11 +24,11 @@ wires:
       port: [B 0, B]
   S0:
     - from: rca
-      port: S 0
+      port: O 0
     - to: output
   S0_fa:
     - from: fa
-      port: S
+      port: O
     - to: output
   A1:
     - from: input
@@ -40,8 +40,8 @@ wires:
       port: B 1
   S1:
     - from: rca
-      port: S 1
-      #port: S 0
+      port: O 1
+      #port: O 0
       # This crashes!
     - to: output
 stimuli:

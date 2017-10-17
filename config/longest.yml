@@ -21,7 +21,7 @@ wires:
     - to: output
   AndA:
     - from: fa
-      port: S
+      port: O
     - to: and
       port: A
   AndB:

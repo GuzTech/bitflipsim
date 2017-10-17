@@ -19,7 +19,7 @@ wires:
       port: B 0
   S0:
     - from: rca
-      port: S 0
+      port: O 0
     - to: output
   A1:
     - from: input
@@ -31,8 +31,8 @@ wires:
       port: B 1
   S1:
     - from: rca
-      port: S 1
-      #port: S 0
+      port: O 1
+      #port: O 0
       # This crashes!
     - to: output
   A2:
@@ -45,7 +45,7 @@ wires:
       port: B 2
   S2:
     - from: rca
-      port: S 2
+      port: O 2
     - to: output
 stimuli:
   - Cin: 0
