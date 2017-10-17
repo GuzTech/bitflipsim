@@ -341,8 +341,8 @@ vector<wire_t> Multiplier_Smag::GetInputWires() {
 	}
 
 	// Add the inputs to the sign bit XOR gate.
-	const auto wire_A = sign->GetWire(PORTS::A);
-	const auto wire_B = sign->GetWire(PORTS::B);
+	const auto &wire_A = sign->GetWire(PORTS::A);
+	const auto &wire_B = sign->GetWire(PORTS::B);
 
 	input_wires.push_back(wire_A);
 	input_wires.push_back(wire_B);
