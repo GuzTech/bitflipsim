@@ -195,7 +195,24 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 }
 
 void Multiplier_Smag::Update(bool propagating) {
-	
+	if (needs_update || !propagating) {
+		for (size_t i = 0; i < longest_path; ++i) {
+			for (const auto &and_row : ands) {
+				for (const auto &a : and_row) {
+					a->Update(propagating);
+				}
+			}
+			for (const auto &adder_row : adders) {
+				for (const auto &a : adder_row) {
+					a->Update(propagating);
+				}
+			}
+		}
+
+		sign->Update(propagating);
+
+		needs_update = false;
+	}
 }
 
 void Multiplier_Smag::Connect(PORTS port, wire_t wire, size_t index) {
@@ -235,9 +252,6 @@ void Multiplier_Smag::Connect(PORTS port, wire_t wire, size_t index) {
 			for (size_t i = 0; i < num_ands_per_level; ++i) {
 				ands[index][i]->Connect(PORTS::B, wire);
 			}
-			//for (auto &a : ands[index]) {
-			//	a->Connect(PORTS::B, wire);
-			//}
 			break;
 		}
 	case PORTS::O:
