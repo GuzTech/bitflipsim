@@ -3,24 +3,24 @@
 
 using namespace std;
 
-bool IsComponentDeclared(map<string, comp_t> &comps, string &name) {
+bool IsComponentDeclared(const map<string, comp_t> &comps, const string &name) {
 	return comps.find(name) != comps.end();
 }
 
 void Connect(comp_t component, string port_name, wire_t wire, size_t index = 0) {
-	auto fa_comp   = dynamic_pointer_cast<FullAdder>(component);
-	auto ha_comp   = dynamic_pointer_cast<HalfAdder>(component);
-	auto and_comp  = dynamic_pointer_cast<And>(component);
-	auto or_comp   = dynamic_pointer_cast<Or>(component);
-	auto xor_comp  = dynamic_pointer_cast<Xor>(component);
-	auto nand_comp = dynamic_pointer_cast<Nand>(component);
-	auto nor_comp  = dynamic_pointer_cast<Nor>(component);
-	auto xnor_comp = dynamic_pointer_cast<Xnor>(component);
-	auto not_comp  = dynamic_pointer_cast<Not>(component);
-	auto mux_comp  = dynamic_pointer_cast<Mux>(component);
-	auto rca_comp  = dynamic_pointer_cast<RippleCarryAdder>(component);
-	auto m2C_comp  = dynamic_pointer_cast<Multiplier_2C>(component);
-	auto smag_comp = dynamic_pointer_cast<Multiplier_Smag>(component);
+	const auto &fa_comp   = dynamic_pointer_cast<FullAdder>(component);
+	const auto &ha_comp   = dynamic_pointer_cast<HalfAdder>(component);
+	const auto &and_comp  = dynamic_pointer_cast<And>(component);
+	const auto &or_comp   = dynamic_pointer_cast<Or>(component);
+	const auto &xor_comp  = dynamic_pointer_cast<Xor>(component);
+	const auto &nand_comp = dynamic_pointer_cast<Nand>(component);
+	const auto &nor_comp  = dynamic_pointer_cast<Nor>(component);
+	const auto &xnor_comp = dynamic_pointer_cast<Xnor>(component);
+	const auto &not_comp  = dynamic_pointer_cast<Not>(component);
+	const auto &mux_comp  = dynamic_pointer_cast<Mux>(component);
+	const auto &rca_comp  = dynamic_pointer_cast<RippleCarryAdder>(component);
+	const auto &m2C_comp  = dynamic_pointer_cast<Multiplier_2C>(component);
+	const auto &smag_comp = dynamic_pointer_cast<Multiplier_Smag>(component);
 
 	if (fa_comp != nullptr) {
 		if (port_name.compare("A") == 0)         fa_comp->Connect(PORTS::A, wire);
@@ -102,7 +102,7 @@ error:
 	exit(1);
 }
 
-void ParsePortAndIndex(string wire_name, string port_string, string &port_name, size_t &index) {
+void ParsePortAndIndex(const string &wire_name, string port_string, string &port_name, size_t &index) {
 	// Check if the name contains a space to indicate that the name
 	// consists of the name of the port and the index of that port.
 	size_t pos = port_string.find(" ");
@@ -141,8 +141,8 @@ void ParsePortAndIndex(string wire_name, string port_string, string &port_name, 
 	}
 }
 
-void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
-	auto components = config["components"];
+void ParseComponents(map<string, comp_t> &comps, const YAML::Node &config) {
+	const auto &components = config["components"];
 
 	if (components.size() == 0) {
 		cout << "[Error] No components found.\n";
@@ -150,12 +150,12 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 	}
 
 	for (YAML::const_iterator it = components.begin(); it != components.end(); ++it) {
-		string comp_type = it->first.as<string>();
+		const string &comp_type = it->first.as<string>();
 		string comp_name;
 
 		size_t num_bits_A = 0;
 		size_t num_bits_B = 0;
-		auto value = it->second;
+		const auto &value = it->second;
 		if (value) {
 			if (value.IsScalar()) {
 				comp_name = value.as<string>();
@@ -181,19 +181,19 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 			exit(1);
 		}
 
-		if (comp_type.compare("FullAdder") == 0) comps[comp_name] = make_shared<FullAdder>(comp_name);
-		else if (comp_type.compare("HalfAdder") == 0) comps[comp_name] = make_shared<HalfAdder>(comp_name);
-		else if (comp_type.compare("And") == 0) comps[comp_name] = make_shared<And>(comp_name);
-		else if (comp_type.compare("Or") == 0) comps[comp_name] = make_shared<Or>(comp_name);
-		else if (comp_type.compare("Xor") == 0) comps[comp_name] = make_shared<Xor>(comp_name);
-		else if (comp_type.compare("Nand") == 0) comps[comp_name] = make_shared<Nand>(comp_name);
-		else if (comp_type.compare("Nor") == 0) comps[comp_name] = make_shared<Nor>(comp_name);
-		else if (comp_type.compare("Xnor") == 0) comps[comp_name] = make_shared<Xnor>(comp_name);
-		else if (comp_type.compare("Not") == 0) comps[comp_name] = make_shared<Not>(comp_name);
-		else if (comp_type.compare("Mux") == 0) comps[comp_name] = make_shared<Mux>(comp_name);
+		if (comp_type.compare("FullAdder") == 0)             comps[comp_name] = make_shared<FullAdder>(comp_name);
+		else if (comp_type.compare("HalfAdder") == 0)        comps[comp_name] = make_shared<HalfAdder>(comp_name);
+		else if (comp_type.compare("And") == 0)              comps[comp_name] = make_shared<And>(comp_name);
+		else if (comp_type.compare("Or") == 0)               comps[comp_name] = make_shared<Or>(comp_name);
+		else if (comp_type.compare("Xor") == 0)              comps[comp_name] = make_shared<Xor>(comp_name);
+		else if (comp_type.compare("Nand") == 0)             comps[comp_name] = make_shared<Nand>(comp_name);
+		else if (comp_type.compare("Nor") == 0)              comps[comp_name] = make_shared<Nor>(comp_name);
+		else if (comp_type.compare("Xnor") == 0)             comps[comp_name] = make_shared<Xnor>(comp_name);
+		else if (comp_type.compare("Not") == 0)              comps[comp_name] = make_shared<Not>(comp_name);
+		else if (comp_type.compare("Mux") == 0)              comps[comp_name] = make_shared<Mux>(comp_name);
 		else if (comp_type.compare("RippleCarryAdder") == 0) comps[comp_name] = make_shared<RippleCarryAdder>(comp_name, num_bits_A);
-		else if (comp_type.compare("Multiplier_2C") == 0) comps[comp_name] = make_shared<Multiplier_2C>(comp_name, num_bits_A, num_bits_B);
-		else if (comp_type.compare("Multiplier_Smag") == 0) comps[comp_name] = make_shared<Multiplier_Smag>(comp_name, num_bits_A, num_bits_B);
+		else if (comp_type.compare("Multiplier_2C") == 0)    comps[comp_name] = make_shared<Multiplier_2C>(comp_name, num_bits_A, num_bits_B);
+		else if (comp_type.compare("Multiplier_Smag") == 0)  comps[comp_name] = make_shared<Multiplier_Smag>(comp_name, num_bits_A, num_bits_B);
 		else {
 			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
 			exit(1);
@@ -202,7 +202,7 @@ void ParseComponents(map<string, comp_t> &comps, YAML::Node config) {
 }
 
 void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
-	auto wires = config["wires"];
+	const auto &wires = config["wires"];
 
 	if (wires.size() == 0) {
 		cout << "[Error] \"wires\" section is empty.\n";
@@ -210,13 +210,13 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 	}
 
 	for (YAML::const_iterator it = wires.begin(); it != wires.end(); ++it) {
-		auto wire_name = it->first.as<string>();
+		const auto &wire_name = it->first.as<string>();
 
 		if (it->second.size() == 2) {
-			auto wire = make_shared<Wire>(wire_name);
+			const auto &wire = make_shared<Wire>(wire_name);
 
 			// There is always a single source for a Wire.
-			auto from = it->second[0];
+			const auto &from = it->second[0];
 
 			// Check for consistency of the "from:" section.
 			if (from.IsNull()) {
@@ -245,8 +245,8 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 				}
 			}
 
-			auto from_name = from["from"].as<string>();
-			bool from_is_input = from_name.compare("input") == 0;
+			const auto &from_name = from["from"].as<string>();
+			const bool from_is_input = from_name.compare("input") == 0;
 			
 			// Check if a component with this name exists.
 			if (!from_is_input && !IsComponentDeclared(comps, from_name)) {
@@ -255,7 +255,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 				exit(1);
 			}
 
-			auto from_port_node = from["port"];
+			const auto &from_port_node = from["port"];
 
 			// Check for consistency of the "port:" section if the wire input is not "input".
 			if (!from_is_input) {
@@ -274,7 +274,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 			}
 
 			// There can be multiple sinks for a Wire.
-			auto to = it->second[1];
+			const auto &to = it->second[1];
 
 			// Check for consistency of the "to:" section.
 			if (to.IsNull()) {
@@ -290,7 +290,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 				exit(1);
 			}
 			if (to.IsMap()) {
-				auto to_node = to["to"];
+				const auto &to_node = to["to"];
 				if (!to_node.IsDefined()) {
 					cout << "[Error] No \"to:\" section found for wire \"" << wire_name << "\".\n";
 					exit(1);
@@ -309,17 +309,17 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 			vector<string> to_port_names; // Names of the sink ports.
 			vector<comp_t> to_components; // Sink Components.
 
-			auto to_comp_node = to["to"];
-			auto to_port_node = to["port"];
+			const auto &to_comp_node = to["to"];
+			const auto &to_port_node = to["port"];
 			bool output = false;
 
-			bool comp_node_def = to_comp_node.IsDefined();
-			bool port_node_def = to_port_node.IsDefined();
+			const bool comp_node_def = to_comp_node.IsDefined();
+			const bool port_node_def = to_port_node.IsDefined();
 
 			// If both "to:" and "port:" keys exist and have a scalar value.
 			if (comp_node_def && to_comp_node.IsScalar() &&
 				port_node_def && to_port_node.IsScalar()) {
-				auto comp_name = to_comp_node.as<string>();
+				const auto &comp_name = to_comp_node.as<string>();
 
 				if (comp_name.compare("output") == 0) {
 					cout << "[Error] Wire \"" << wire_name << "\" is an \"output\" wire, but has a port declared.\n";
@@ -329,10 +329,6 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 
 				if (IsComponentDeclared(comps, comp_name)) {
 					to_components.push_back(comps[comp_name]);
-
-					//string port_name;
-					//ParsePortAndIndex(wire_name, to_port_node.as<string>(), port_name, index);
-					//to_port_names.push_back(port_name);
 					to_port_names.push_back(to_port_node.as<string>());
 				} else {
 					cout << "[Error] Wire \"" << wire_name << "\" refers to component \""
@@ -344,7 +340,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 			else if (comp_node_def && to_comp_node.IsSequence() &&
 					 port_node_def && to_port_node.IsSequence()) {
 				for (YAML::const_iterator it = to_comp_node.begin(); it != to_comp_node.end(); ++it) {
-					auto comp_name = (*it).as<string>();
+					const auto &comp_name = (*it).as<string>();
 
 					if (IsComponentDeclared(comps, comp_name)) {
 						to_components.push_back(comps[comp_name]);
@@ -374,7 +370,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 			}
 			// If only the "to:" key exists.
 			else if (!port_node_def && comp_node_def && to_comp_node.IsScalar()) {
-				auto comp_name = to_comp_node.as<string>();
+				const auto &comp_name = to_comp_node.as<string>();
 
 				// Node value must be "output".
 				if (comp_name.compare("output") == 0) {
@@ -411,8 +407,8 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 				}
 			} else {
 				if (from.size() == 2) {
-					auto from_comp = comps[from_name];
-					auto from_port = from["port"].as<string>();
+					const auto &from_comp = comps[from_name];
+					const auto &from_port = from["port"].as<string>();
 
 					string from_port_name;
 					size_t from_index = 0;
@@ -422,8 +418,8 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 					if (IsComponentDeclared(comps, from_name)) {
 						for (std::size_t i = 0; i < to_components.size(); ++i) {
 							if (comps.find(to_components[i]->GetName()) != comps.end()) {
-								auto to_comp = to_components[i];
-								auto to_port = to_port_names[i];
+								const auto &to_comp = to_components[i];
+								const auto &to_port = to_port_names[i];
 								
 								string to_port_name;
 								size_t to_index = 0;
@@ -459,12 +455,12 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 }
 
 void ParseStimuli(System &system, YAML::Node config) {
-	auto stimuli = config["stimuli"];
+	const auto &stimuli = config["stimuli"];
 
 	for (size_t i = 0; i < stimuli.size(); ++i) {
-		for (auto step : stimuli[i]) {
-			auto wire_name = step.first.as<string>();
-			auto value_name = step.second.as<string>();
+		for (const auto &step : stimuli[i]) {
+			const auto &wire_name = step.first.as<string>();
+			const auto &value_name = step.second.as<string>();
 			auto value = false;
 
 			if (value_name.compare("1") == 0 || value_name.compare("true") == 0) {
@@ -477,7 +473,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 				exit(1);
 			}
 
-			auto wire = system.GetWire(wire_name);
+			const auto &wire = system.GetWire(wire_name);
 			if (wire) {
 				wire->SetValue(value, false);
 			} else {
@@ -546,7 +542,7 @@ int main(int argc, char **argv) {
 		ParseComponents(comps, config);
 		ParseWires(comps, config);
 
-		for (auto &c : comps) {
+		for (const auto &c : comps) {
 			system.AddComponent(c.second);
 		}
 
@@ -562,13 +558,11 @@ int main(int argc, char **argv) {
 		cout << "\nNumber of toggles: " << system.GetNumToggles() << '\n';
 
 		cout << "\nValue of all wires:\n";
-		for (auto &ow : system.GetWires()) {
+		for (const auto &ow : system.GetWires()) {
 			cout << "Wire \"" << ow->GetName()
 				 << "\": " << ow->GetValue() << '\n';
 		}
 	}
-
-	auto mul = Multiplier_Smag("mul", 6, 4);
 
 	return 0;
 }
