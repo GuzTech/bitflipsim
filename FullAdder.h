@@ -21,7 +21,7 @@ private:
 	wire_t A;
 	wire_t B;
 	wire_t Cin;
-	wire_t S;
+	wire_t O;
 	wire_t Cout;
 
 	// Internal wires

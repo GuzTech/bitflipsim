@@ -20,7 +20,7 @@ public:
 private:
 	wire_t A;
 	wire_t B;
-	wire_t S;
+	wire_t O;
 	wire_t Cout;
 };
 

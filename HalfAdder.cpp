@@ -6,7 +6,7 @@
   Schematic:
 
   A ----+-|X|
-        | |O|------ S
+        | |O|------ O
   B --+---|R|
       | |
       | |-|A|
@@ -21,8 +21,8 @@ void HalfAdder::Update(bool propagating) {
 		inA = A ? A->GetValue() : false;
 		inB = B ? B->GetValue() : false;
 
-		if (S) {
-			S->SetValue(inA ^ inB, propagating);
+		if (O) {
+			O->SetValue(inA ^ inB, propagating);
 		}
 		if (Cout) {
 			Cout->SetValue(inA & inB, propagating);
@@ -36,7 +36,7 @@ void HalfAdder::Connect(PORTS port, wire_t wire, size_t index) {
 	switch (port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<HalfAdder>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<HalfAdder>()); break;
-	case PORTS::S: S = wire; wire->SetInput(this->shared_from_base<HalfAdder>()); break;
+	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<HalfAdder>()); break;
 	case PORTS::Cout: Cout = wire; wire->SetInput(this->shared_from_base<HalfAdder>()); break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of HalfAdder "
@@ -46,7 +46,7 @@ void HalfAdder::Connect(PORTS port, wire_t wire, size_t index) {
 }
 
 vector<wire_t> HalfAdder::GetWires() {
-	return {A, B, S, Cout};
+	return {A, B, O, Cout};
 }
 
 vector<wire_t> HalfAdder::GetInputWires() {
@@ -54,14 +54,14 @@ vector<wire_t> HalfAdder::GetInputWires() {
 }
 
 vector<wire_t> HalfAdder::GetOutputWires() {
-	return {S, Cout};
+	return {O, Cout};
 }
 
 wire_t HalfAdder::GetWire(PORTS port, size_t index) {
 	switch (port) {
 	case PORTS::A:    return A;
 	case PORTS::B:    return B;
-	case PORTS::S:    return S;
+	case PORTS::O:    return O;
 	case PORTS::Cout: return Cout;
 	default:
 		cout << "[Error] Trying to retrieve undefined port of HalfAdder "

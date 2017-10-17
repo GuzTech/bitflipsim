@@ -26,13 +26,13 @@ void Connect(comp_t component, string port_name, wire_t wire, size_t index = 0) 
 		if (port_name.compare("A") == 0)         fa_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0)    fa_comp->Connect(PORTS::B, wire);
 		else if (port_name.compare("Cin") == 0)  fa_comp->Connect(PORTS::Cin, wire);
-		else if (port_name.compare("S") == 0)    fa_comp->Connect(PORTS::S, wire);
+		else if (port_name.compare("O") == 0)    fa_comp->Connect(PORTS::O, wire);
 		else if (port_name.compare("Cout") == 0) fa_comp->Connect(PORTS::Cout, wire);
 		else goto error;
 	} else if (ha_comp != nullptr) {
 		if (port_name.compare("A") == 0)         ha_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0)    ha_comp->Connect(PORTS::B, wire);
-		else if (port_name.compare("S") == 0)    ha_comp->Connect(PORTS::S, wire);
+		else if (port_name.compare("O") == 0)    ha_comp->Connect(PORTS::O, wire);
 		else if (port_name.compare("Cout") == 0) ha_comp->Connect(PORTS::Cout, wire);
 		else goto error;
 	} else if (and_comp != nullptr) {
@@ -78,7 +78,7 @@ void Connect(comp_t component, string port_name, wire_t wire, size_t index = 0) 
 	} else if (rca_comp != nullptr) {
 		if (port_name.compare("A") == 0)         rca_comp->Connect(PORTS::A, wire, index);
 		else if (port_name.compare("B") == 0)    rca_comp->Connect(PORTS::B, wire, index);
-		else if (port_name.compare("S") == 0)    rca_comp->Connect(PORTS::S, wire, index);
+		else if (port_name.compare("O") == 0)    rca_comp->Connect(PORTS::O, wire, index);
 		else if (port_name.compare("Cin") == 0)  rca_comp->Connect(PORTS::Cin, wire, index);
 		else if (port_name.compare("Cout") == 0) rca_comp->Connect(PORTS::Cout, wire, index);
 		else goto error;

@@ -92,7 +92,7 @@ void RippleCarryAdder::Connect(PORTS port, wire_t wire, size_t index) {
 	switch (port) {
 	case PORTS::A:	  full_adders[index]->Connect(PORTS::A, wire); break;
 	case PORTS::B:    full_adders[index]->Connect(PORTS::B, wire); break;
-	case PORTS::S:    full_adders[index]->Connect(PORTS::S, wire); break;
+	case PORTS::O:    full_adders[index]->Connect(PORTS::O, wire); break;
 	case PORTS::Cin:  full_adders[0]->Connect(PORTS::Cin, wire); break;
 	case PORTS::Cout: full_adders[num_bits - 1]->Connect(PORTS::Cout, wire); break;
 	default:
@@ -158,7 +158,7 @@ vector<wire_t> RippleCarryAdder::GetOutputWires() {
 
 	// Get the sum outputs of all the full adders.
 	for (size_t i = 0; i < num_bits; ++i) {
-		const auto &wire = full_adders[i]->GetWire(PORTS::S);
+		const auto &wire = full_adders[i]->GetWire(PORTS::O);
 		output_wires.push_back(wire);
 	}
 
@@ -178,7 +178,7 @@ wire_t RippleCarryAdder::GetWire(PORTS port, size_t index) {
 	switch (port) {
 	case PORTS::A:
 	case PORTS::B:
-	case PORTS::S:
+	case PORTS::O:
 	case PORTS::Cin:
 	case PORTS::Cout:
 		return full_adders[index]->GetWire(port);
