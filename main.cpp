@@ -83,12 +83,12 @@ void Connect(comp_t component, string port_name, wire_t wire, size_t index = 0) 
 		else if (port_name.compare("Cout") == 0) rca_comp->Connect(PORTS::Cout, wire, index);
 		else goto error;
 	} else if (m2C_comp != nullptr) {
-		if (port_name.compare("A") == 0) m2C_comp->Connect(PORTS::A, wire, index);
+		if (port_name.compare("A") == 0)      m2C_comp->Connect(PORTS::A, wire, index);
 		else if (port_name.compare("B") == 0) m2C_comp->Connect(PORTS::B, wire, index);
 		else if (port_name.compare("O") == 0) m2C_comp->Connect(PORTS::O, wire, index);
 		else goto error;
 	}else if (smag_comp != nullptr) {
-		if (port_name.compare("A") == 0) smag_comp->Connect(PORTS::A, wire, index);
+		if (port_name.compare("A") == 0)      smag_comp->Connect(PORTS::A, wire, index);
 		else if (port_name.compare("B") == 0) smag_comp->Connect(PORTS::B, wire, index);
 		else if (port_name.compare("O") == 0) smag_comp->Connect(PORTS::O, wire, index);
 		else goto error;
