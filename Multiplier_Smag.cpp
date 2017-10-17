@@ -26,7 +26,7 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 		exit(1);
 	}
 
-	sign = make_shared<Xor>(_name + "sign");
+	sign = make_shared<Xor>(_name + "_sign");
 
 	// Names for the adders.
 	string row_name_prefix = string(_name) + "_S_0_";
@@ -37,13 +37,11 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 
 	adders_row.push_back(make_shared<HalfAdder>(row_name));
 	for (size_t a = 1; a < num_adders_per_level - 1; ++a) {
-		row_name = row_name_prefix;
-		row_name += to_string(a);
+		row_name = row_name_prefix + to_string(a);
 		
 		adders_row.push_back(make_shared<FullAdder>(row_name));
 	}
-	row_name = row_name_prefix;
-	row_name += to_string(num_adders_per_level - 1);
+	row_name = row_name_prefix + to_string(num_adders_per_level - 1);
 	adders_row.push_back(make_shared<HalfAdder>(row_name));
 
 	adders.push_back(adders_row);
@@ -62,6 +60,20 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 
 		adders.push_back(adders_row);
 		adders_row.clear();
+	}
+
+	// Connect the O outputs of the full adders.
+	for (size_t y = 0; y < num_adder_levels - 1; ++y) {
+		row_name_prefix = _name + "_S_" + to_string(y);
+
+		for (size_t x = 1; x < num_adders_per_level; ++x) {
+			row_name = row_name_prefix + "_" + to_string(x) + "_O";
+
+			auto wire = make_shared<Wire>(row_name);
+			adders[y][x]->Connect(PORTS::O, wire);
+			adders[y+1][x-1]->Connect(PORTS::A, wire);
+			internal_wires.push_back(wire);
+		}
 	}
 
 	// Create the AND gates that connect to the inputs of the adders.
@@ -104,6 +116,7 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 		}
 
 		ands.push_back(ands_row);
+		ands_row.clear();
 	}
 
 	// Create the connections between Cout and Cin of the adders.
@@ -206,21 +219,43 @@ void Multiplier_Smag::Connect(PORTS port, wire_t wire, size_t index) {
 			// MSB is the sign bit.
 			sign->Connect(PORTS::A, wire); break;
 		} else {
-			ands[0][index]->Connect(PORTS::A, wire); break;
+			// Connect to the AND gates at the given index for
+			// each level of AND gates.
+			for (size_t level = 0; level < num_and_levels; ++level) {
+				ands[level][index]->Connect(PORTS::A, wire);
+			}
+			break;
 		}
 	case PORTS::B:
 		if (index == num_adders_per_level) {
 			// MSB is the sign bit.
 			sign->Connect(PORTS::B, wire); break;
 		} else {
-			ands[0][index]->Connect(PORTS::B, wire); break;
+			// Connect to all AND gates at level "index".
+			for (size_t i = 0; i < num_ands_per_level; ++i) {
+				ands[index][i]->Connect(PORTS::B, wire);
+			}
+			//for (auto &a : ands[index]) {
+			//	a->Connect(PORTS::B, wire);
+			//}
+			break;
 		}
 	case PORTS::O:
 		if (index == (num_bits_O - 1)) {
 			// MSB is the sign bit.
 			sign->Connect(PORTS::O, wire); break;
 		} else {
-			adders[num_adder_levels - 1][index]->Connect(PORTS::O, wire); break;
+			if (index == (num_bits_O - 2)) {
+				// One bit less than the sign bit is de carry out of the last full adder.
+				adders[num_adder_levels - 1][num_adders_per_level - 1]->Connect(PORTS::Cout, wire);
+			} else if (index > (num_bits_O - num_adders_per_level - 2)) {
+				adders[num_adder_levels - 1][index - num_adders_per_level + 1]->Connect(PORTS::O, wire);
+			} else if (index == 0) {
+				ands[0][0]->Connect(PORTS::O, wire);
+			} else {
+				adders[index - 1][0]->Connect(PORTS::O, wire);
+			}
+			break;
 		}
 	default:
 		cout << "[Error] Trying to connect to undefined port of Multiplier_Smag "
@@ -242,10 +277,22 @@ size_t Multiplier_Smag::GetNumToggles() {
 vector<wire_t> Multiplier_Smag::GetWires() {
 	vector<wire_t> wires;
 
+	// Add all input wires.
+	const vector<wire_t> &input = GetInputWires();
+	wires.insert(wires.end(),
+				 input.begin(),
+				 input.end());
+
 	// Add all internal wires.
 	wires.insert(wires.end(),
 				 internal_wires.begin(),
 				 internal_wires.end());
+
+	// Add all output wires.
+	const vector<wire_t> &output = GetOutputWires();
+	wires.insert(wires.end(),
+				 output.begin(),
+				 output.end());
 
 	return wires;
 }
@@ -254,10 +301,21 @@ vector<wire_t> Multiplier_Smag::GetInputWires() {
 	vector<wire_t> input_wires;
 
 	// Add the A and B inputs of the first level of AND gates.
-	for (size_t i = 0; i < num_ands_per_level; ++i) {
-		const auto and_i = ands[0][i];
-		const auto wire_A = and_i->GetWire(PORTS::A);
-		const auto wire_B = and_i->GetWire(PORTS::B);
+	for (size_t x = 0; x < num_ands_per_level; ++x) {
+		const auto and_i = ands[0][x];
+		const auto &wire_A = and_i->GetWire(PORTS::A);
+		const auto &wire_B = and_i->GetWire(PORTS::B);
+
+		input_wires.push_back(wire_A);
+		input_wires.push_back(wire_B);
+	}
+
+	// Add the A and B inputs of last AND gate of each
+	// subsequent level.
+	for (size_t y = 1; y < num_and_levels; ++y) {
+		const auto and_i = ands[y][num_ands_per_level - 1];
+		const auto &wire_A = and_i->GetWire(PORTS::A);
+		const auto &wire_B = and_i->GetWire(PORTS::B);
 
 		input_wires.push_back(wire_A);
 		input_wires.push_back(wire_B);
@@ -277,24 +335,24 @@ vector<wire_t> Multiplier_Smag::GetOutputWires() {
 	vector<wire_t> output_wires;
 
 	// First output bit is the output of the first AND gate.
-	const auto wire = ands[0][0]->GetWire(PORTS::O);
+	const auto &wire = ands[0][0]->GetWire(PORTS::O);
 	output_wires.push_back(wire);
 
 	for (size_t y = 0; y < num_adder_levels; ++y) {
 		if (y != (num_adder_levels - 1)) {
 			// For each level except the last one, add sum output of the
 			// first full adder.
-			const auto wire = adders[y][0]->GetWire(PORTS::S);
+			const auto &wire = adders[y][0]->GetWire(PORTS::O);
 			output_wires.push_back(wire);
 		} else {
 			// Add the sum outputs of all the full adders of the last level.
 			for (size_t x = 0; x < num_adders_per_level; ++x) {
-				const auto wire = adders[y][x]->GetWire(PORTS::S);
+				const auto &wire = adders[y][x]->GetWire(PORTS::O);
 				output_wires.push_back(wire);
 			}
 
 			// Also add the carry out output of the last full adder.
-			const auto wire = adders[y][num_adders_per_level - 1]->GetWire(PORTS::Cout);
+			const auto &wire = adders[y][num_adders_per_level - 1]->GetWire(PORTS::Cout);
 			output_wires.push_back(wire);
 		}
 	}
