@@ -1,0 +1,52 @@
+components:
+  RippleCarryAdder: [rca, 2]
+  FullAdder: fa
+wires:
+  Cin:
+    - from: input
+    - to: [rca, fa]
+      port: [Cin, Cin]
+  Cout:
+    - from: rca
+      port: Cout
+    - to: output
+  Cout_fa:
+    - from: fa
+      port: Cout
+    - to: output
+  A0:
+    - from: input
+    - to: [rca, fa]
+      port: [A 0, A]
+  B0:
+    - from: input
+    - to: [rca, fa]
+      port: [B 0, B]
+  S0:
+    - from: rca
+      port: S 0
+    - to: output
+  S0_fa:
+    - from: fa
+      port: S
+    - to: output
+  A1:
+    - from: input
+    - to: rca
+      port: A 1
+  B1:
+    - from: input
+    - to: rca
+      port: B 1
+  S1:
+    - from: rca
+      port: S 1
+      #port: S 0
+      # This crashes!
+    - to: output
+stimuli:
+  - Cin: 1
+    A0: 1
+    B0: 1
+    A1: 1
+    B1: 1

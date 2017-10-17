@@ -1,0 +1,72 @@
+components:
+  Multiplier_Smag: [smag, 4, 4]
+wires:
+  A0:
+    - from: input
+    - to: smag
+      port: A 0
+  B0:
+    - from: input
+    - to: smag
+      port: B 0
+  A1:
+    - from: input
+    - to: smag
+      port: A 1
+  B1:
+    - from: input
+    - to: smag
+      port: B 1
+  A2:
+    - from: input
+    - to: smag
+      port: A 2
+  B2:
+    - from: input
+    - to: smag
+      port: B 2
+  A3:
+    - from: input
+    - to: smag
+      port: A 3
+  B3:
+    - from: input
+    - to: smag
+      port: B 3
+  O0:
+    - from: smag
+      port: O 0
+    - to: output
+  O1:
+    - from: smag
+      port: O 1
+    - to: output
+  O2:
+    - from: smag
+      port: O 2
+    - to: output
+  O3:
+    - from: smag
+      port: O 3
+    - to: output
+  O4:
+    - from: smag
+      port: O 4
+    - to: output
+  O5:
+    - from: smag
+      port: O 5
+    - to: output
+  O6:
+    - from: smag
+      port: O 6
+    - to: output
+stimuli:
+  - A3: 1
+    A2: 0
+    A1: 1
+    A0: 1
+    B3: 0
+    B2: 1
+    B1: 1
+    B0: 1
