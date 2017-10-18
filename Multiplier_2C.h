@@ -23,8 +23,8 @@ public:
 	wire_t GetWire(PORTS port, size_t index) override;
 
 private:
-	void GenerateArraySignExtendHardware();
-	void GenerateArrayInversionHardware();
+	void GenerateSignExtendHardware();
+	void GenerateInversionHardware();
 
 	size_t num_bits_A = 0;
 	size_t num_bits_B = 0;
@@ -36,7 +36,15 @@ private:
 
 	vector<vector<comp_t>> adders;
 	vector<vector<and_t>> ands;
+	vector<xor_t> input_2C_xors_A;
+	vector<xor_t> input_2C_xors_B;
+	vector<ha_t> input_2C_adders_A;
+	vector<ha_t> input_2C_adders_B;
+	vector<xor_t> output_xors;
+	xor_t same_sign = nullptr;
 	vector<wire_t> internal_wires;
+
+	MUL_TYPE type = MUL_TYPE::ARRAY_SIGN_EXTEND;
 };
 
 #endif // MULTIPLIER_2C_H
