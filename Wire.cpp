@@ -23,8 +23,8 @@ void Wire::SetValue(bool val, bool propagating) {
 			toggle_count += num_outputs;
 		}
 
-		for (auto &c : outputs) {
-			if (auto spt = c.lock()) {
+		for (const auto &c : outputs) {
+			if (const auto &spt = c.lock()) {
 				spt->MarkUpdate();
 			}
 		}
