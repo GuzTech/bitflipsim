@@ -37,6 +37,8 @@ private:
 	vector<vector<and_t>> ands;
 	vector<wire_t> internal_wires;
 	xor_t sign = nullptr;
+
+	MUL_TYPE type = MUL_TYPE::ARRAY;
 };
 
 #endif // MULTIPLIER_SMAG_H

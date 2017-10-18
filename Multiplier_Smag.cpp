@@ -7,7 +7,7 @@
 Multiplier_Smag::Multiplier_Smag(string _name,
 								 size_t _num_bits_A,
 								 size_t _num_bits_B,
-								 MUL_TYPE type)
+								 MUL_TYPE _type)
 	: Component(_name)
 	, num_bits_A(_num_bits_A - 1)
 	, num_bits_B(_num_bits_B - 1)
@@ -16,6 +16,7 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 	, num_and_levels(num_bits_B)
 	, num_adders_per_level(num_bits_A)
 	, num_ands_per_level(num_bits_A)
+	, type(_type)
 {
 	if (num_bits_A < 2) {
 		cout << "[Error] Size of port A of Multiplier_Smag \"" << _name
@@ -39,20 +40,24 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 
 void Multiplier_Smag::Update(bool propagating) {
 	if (needs_update || !propagating) {
-		for (size_t i = 0; i < longest_path; ++i) {
-			for (const auto &and_row : ands) {
-				for (const auto &a : and_row) {
-					a->Update(propagating);
+		switch (type) {
+		case MUL_TYPE::ARRAY:
+			for (size_t i = 0; i < longest_path; ++i) {
+				for (const auto &and_row : ands) {
+					for (const auto &a : and_row) {
+						a->Update(propagating);
+					}
+				}
+				for (const auto &adder_row : adders) {
+					for (const auto &a : adder_row) {
+						a->Update(propagating);
+					}
 				}
 			}
-			for (const auto &adder_row : adders) {
-				for (const auto &a : adder_row) {
-					a->Update(propagating);
-				}
-			}
-		}
 
-		sign->Update(propagating);
+			sign->Update(propagating);
+			break;
+		}
 
 		needs_update = false;
 	}
