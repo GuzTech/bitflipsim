@@ -281,9 +281,9 @@ void Multiplier_Smag::Connect(PORTS port, wire_t wire, size_t index) {
 size_t Multiplier_Smag::GetNumToggles() {
 	toggle_count = 0;
 
-	// Only full adders have internal state, and can therefore
-	// increase the toggle count. Internal wires are handled
-	// by System.
+	// Only full adders have internal state, and therefore only
+	// they can increase the toggle count. Internal wires are
+	// handled by System.
 	for (const auto &add_row : adders) {
 		for (const auto &add : add_row) {
 			toggle_count += add->GetNumToggles();
