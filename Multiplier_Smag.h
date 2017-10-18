@@ -5,9 +5,12 @@
 
 class Multiplier_Smag : public Component {
 public:
+	enum class MUL_TYPE {ARRAY};
+	
 	Multiplier_Smag(string _name,
 					size_t _num_bits_A,
-					size_t _num_bits_B);
+					size_t _num_bits_B,
+					MUL_TYPE type = MUL_TYPE::ARRAY);
 	~Multiplier_Smag() = default;
 
 	void Update(bool propagating) override;
@@ -19,10 +22,8 @@ public:
 	vector<wire_t> GetOutputWires() override;
 	wire_t GetWire(PORTS port, size_t index) override;
 
-	enum class MUL_TYPE {ARRAY};
-
 private:
-	void GenerateMultiplier();
+	void GenerateArrayHardware();
 
 	size_t num_bits_A = 0;
 	size_t num_bits_B = 0;

@@ -6,7 +6,8 @@
 
 Multiplier_2C::Multiplier_2C(string _name,
 							 size_t _num_bits_A,
-							 size_t _num_bits_B)
+							 size_t _num_bits_B,
+							 MUL_TYPE type)
 	: Component(_name, _num_bits_B)
 	, num_bits_A(_num_bits_A)
 	, num_bits_B(_num_bits_B)
@@ -26,8 +27,15 @@ Multiplier_2C::Multiplier_2C(string _name,
 		exit(1);
 	}
 
-	// Generate the hardware.
-	GenerateMultiplier();
+	// Generate the requested hardware.
+	switch (type) {
+	case MUL_TYPE::ARRAY_SIGN_EXTEND: GenerateArraySignExtendHardware(); break;
+	case MUL_TYPE::ARRAY_INVERSION:   GenerateArrayInversionHardware(); break;
+	default:
+		cout << "[Error] Unknown type supplied for generating Multiplier_2C \""
+			 << name << "\"\n";
+		exit(1);
+	}
 }
 
 void Multiplier_2C::Update(bool propagating) {
@@ -116,7 +124,7 @@ wire_t Multiplier_2C::GetWire(PORTS port, size_t index) {
 	return nullptr;
 }
 
-void Multiplier_2C::GenerateMultiplier() {
+void Multiplier_2C::GenerateArraySignExtendHardware() {
 	num_bits_O = num_adder_levels + 1 + num_and_levels - 1 + num_adders_per_level - num_ands_per_level;
 
 	// Names for the adders.
@@ -228,4 +236,8 @@ void Multiplier_2C::GenerateMultiplier() {
 			}
 		}
 	}
+}
+
+void Multiplier_2C::GenerateArrayInversionHardware() {
+
 }

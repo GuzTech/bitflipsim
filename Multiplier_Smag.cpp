@@ -6,7 +6,8 @@
 
 Multiplier_Smag::Multiplier_Smag(string _name,
 								 size_t _num_bits_A,
-								 size_t _num_bits_B)
+								 size_t _num_bits_B,
+								 MUL_TYPE type)
 	: Component(_name)
 	, num_bits_A(_num_bits_A - 1)
 	, num_bits_B(_num_bits_B - 1)
@@ -26,8 +27,14 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 		exit(1);
 	}
 
-	// Generate the hardware.
-	GenerateMultiplier();
+	// Generate the requested hardware.
+	switch (type) {
+	case MUL_TYPE::ARRAY: GenerateArrayHardware(); break;
+	default:
+		cout << "[Error] Unknown type supplied for generating Multiplier_Smag \""
+			 << name << "\"\n";
+		exit(1);
+	}
 }
 
 void Multiplier_Smag::Update(bool propagating) {
@@ -222,7 +229,7 @@ wire_t Multiplier_Smag::GetWire(PORTS port, size_t index) {
 	return nullptr;
 }
 
-void Multiplier_Smag::GenerateMultiplier() {
+void Multiplier_Smag::GenerateArrayHardware() {
 	sign = make_shared<Xor>(name + "_sign");
 
 	// Names for the adders.
