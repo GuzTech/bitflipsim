@@ -20,11 +20,19 @@ public:
 	wire_t GetWire(PORTS port, size_t index) override;
 
 private:
+	void GenerateMultiplier();
+
 	size_t num_bits_A = 0;
 	size_t num_bits_B = 0;
+	size_t num_bits_O = 0;
+	size_t num_adder_levels = 0;
+	size_t num_and_levels = 0;
+	size_t num_adders_per_level = 0;
+	size_t num_ands_per_level = 0;
 
 	vector<vector<comp_t>> adders;
 	vector<vector<and_t>> ands;
+	vector<wire_t> internal_wires;
 };
 
 #endif // MULTIPLIER_2C_H

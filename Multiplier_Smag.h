@@ -19,7 +19,11 @@ public:
 	vector<wire_t> GetOutputWires() override;
 	wire_t GetWire(PORTS port, size_t index) override;
 
+	enum class MUL_TYPE {ARRAY};
+
 private:
+	void GenerateMultiplier();
+
 	size_t num_bits_A = 0;
 	size_t num_bits_B = 0;
 	size_t num_bits_O = 0;
