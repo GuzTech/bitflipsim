@@ -120,7 +120,8 @@ void Multiplier_Smag::Connect(PORTS port, wire_t wire, size_t index) {
 			break;
 		}
 	default:
-		cout << "[Error] Trying to connect to undefined port of Multiplier_Smag "
+		cout << "[Error] Trying to connect wire \"" << wire->GetName()
+			 << "\" to undefined port of Multiplier_Smag "
 			 << "\"" << name << "\"\n";
 		exit(1);
 	}
