@@ -85,7 +85,7 @@ void Multiplier_2C::Update(bool propagating) {
 	}
 }
 
-void Multiplier_2C::Connect(PORTS port, wire_t wire, size_t index) {
+void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 	if (port == PORTS::A && index >= num_bits_A) {
 		cout << "[Error] Index " << index << " of port A is out of "
 			 << "bounds for Multiplier_2C \"" << name << "\"\n";
@@ -143,6 +143,18 @@ void Multiplier_2C::Connect(PORTS port, wire_t wire, size_t index) {
 		}
 		break;
 	}
+}
+
+void Multiplier_2C::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_idx) {
+	if (wire_idx >= wires->GetSize()) {
+		cout << "[Error] Wire bundle \"" << wires->GetName()
+			 << " accessed with index " << wire_idx
+			 << " but has size " << wires->GetSize() << '\n';
+		exit(1);
+	}
+
+	const wire_t &wire = (*wires.get())[wire_idx];
+	Connect(port, wire, port_idx);
 }
 
 size_t Multiplier_2C::GetNumToggles() {

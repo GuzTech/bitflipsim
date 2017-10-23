@@ -24,12 +24,14 @@ class Nor;
 class Xnor;
 class Not;
 class Mux;
+class WireBundle;
 class Wire;
 class System;
 
 enum class PORTS {A, B, Cin, Cout, I, O, S};
 
 using wire_t  = shared_ptr<Wire>;
+using wb_t    = shared_ptr<WireBundle>;
 using comp_t  = shared_ptr<Component>;
 using comp_wt = weak_ptr<Component>;
 using ha_t    = shared_ptr<HalfAdder>;
@@ -60,6 +62,7 @@ using msmag_t = shared_ptr<Multiplier_Smag>;
 #include "Xnor.h"
 #include "Not.h"
 #include "Mux.h"
+#include "WireBundle.h"
 #include "Wire.h"
 #include "System.h"
 

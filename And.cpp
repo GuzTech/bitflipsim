@@ -27,7 +27,7 @@ void And::Update(bool propagating) {
 	}
 }
 
-void And::Connect(PORTS port, wire_t wire, size_t index) {
+void And::Connect(PORTS port, const wire_t &wire, size_t index) {
 	switch(port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<And>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<And>()); break;
@@ -37,6 +37,18 @@ void And::Connect(PORTS port, wire_t wire, size_t index) {
 			 << "\"" << name << "\"\n";
 		exit(1);
 	}
+}
+
+void And::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_idx) {
+	if (wire_idx >= wires->GetSize()) {
+		cout << "[Error] Wire bundle \"" << wires->GetName()
+			 << " accessed with index " << wire_idx
+			 << " but has size " << wires->GetSize() << '\n';
+		exit(1);
+	}
+
+	const wire_t &wire = (*wires.get())[wire_idx];
+	Connect(port, wire, port_idx);
 }
 
 vector<wire_t> And::GetWires() {
