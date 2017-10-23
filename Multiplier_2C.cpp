@@ -548,11 +548,8 @@ void Multiplier_2C::GenerateInversionHardware() {
 	// We create one more XOR gate than half adders, because
 	// instead of an extra half adder, we only need an XOR gate.
 	output_2C_adder_xor = make_shared<Xor>(conv_name_prefix + "XOR");
-	auto wire = make_shared<Wire>(
-		conv_name_prefix + to_string(num_bits_O - 1));
-	output_2C_xors.back()->Connect(PORTS::O, wire);
-	output_2C_adder_xor->Connect(PORTS::B, wire);
-	internal_wires.push_back(wire);
+	const auto &xor_wire = output_2C_xors.back()->GetWire(PORTS::O);
+	output_2C_adder_xor->Connect(PORTS::B, xor_wire);
 
 	// Connect the carry out of the half adders to the
 	// B input of the next half adder.
@@ -566,7 +563,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 
 	// Connect the carry out of the last half adder to
 	// the A input of the output adder XOR gate.
-	wire = make_shared<Wire>(
+	auto wire = make_shared<Wire>(
 		conv_name_prefix + to_string(num_bits_O - 2) + "_Cout");
 	output_2C_adders.back()->Connect(PORTS::Cout, wire);
 	output_2C_adder_xor->Connect(PORTS::A, wire);
