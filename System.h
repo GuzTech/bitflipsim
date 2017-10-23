@@ -13,6 +13,8 @@ public:
 
 	size_t         GetNumToggles();
 	size_t         GetNumComponents() {return components.size();}
+	comp_t         GetComponent(string comp_name);
+	vector<comp_t> GetComponents();
 	size_t         GetNumWires() {return wires.size();}
 	wire_t         GetWire(string wire_name);
 	vector<wire_t> GetWires();

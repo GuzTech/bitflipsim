@@ -112,6 +112,24 @@ size_t System::GetNumToggles() {
 	return toggle_count;
 }
 
+comp_t System::GetComponent(string comp_name) {
+	if (components.find(comp_name) != components.end()) {
+		return components[comp_name];
+	} else {
+		return nullptr;
+	}
+}
+
+vector<comp_t> System::GetComponents() {
+	vector<comp_t> c;
+
+	for (auto &[name, comp] : components) {
+		c.push_back(comp);
+	}
+
+	return c;
+}
+
 wire_t System::GetWire(string wire_name) {
 	if (wires.find(wire_name) != wires.end()) {
 		return wires[wire_name];
