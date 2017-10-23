@@ -220,7 +220,7 @@ vector<wire_t> Multiplier_Smag::GetOutputWires() {
 			}
 
 			// Also add the carry out output of the last full adder.
-			const auto &wire = adders[y][num_adders_per_level - 1]->GetWire(PORTS::Cout);
+			const auto &wire = adders[y].back()->GetWire(PORTS::Cout);
 			output_wires.push_back(wire);
 		}
 	}
