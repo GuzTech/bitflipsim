@@ -514,27 +514,31 @@ int main(int argc, char **argv) {
 
 	if (!config.IsNull()) {
 		// First check for obvious errors.
-		if (!config["components"]) {
+		const auto &components = config["components"];
+		const auto &wires = config["wires"];
+		const auto &stimuli = config["stimuli"];
+
+		if (!components) {
 			cout << "[Error] No \"components\" section found in \"" << config_file_name << "\"\n";
 			exit(1);
 		}
-		if (config["components"].size() == 0) {
+		if (components.size() == 0) {
 			cout << "[Error] \"components\" section in \"" << config_file_name << "\" is empty.\n";
 			exit(1);
 		}
-		if (!config["wires"]) {
+		if (!wires) {
 			cout << "[Error] No \"wires\" section found in \"" << config_file_name << "\"\n";
 			exit(1);
 		}
-		if (config["wires"].size() == 0) {
+		if (wires.size() == 0) {
 			cout << "[Error] \"wires\" section in \"" << config_file_name << "\" is empty.\n";
 			exit(1);
 		}
-		if (!config["stimuli"]) {
+		if (!stimuli) {
 			cout << "[Error] No \"stimuli\" section found in \"" << config_file_name << "\"\n";
 			exit(1);
 		}
-		if (config["stimuli"].size() == 0) {
+		if (stimuli.size() == 0) {
 			cout << "[Error] \"stimuli\" section in \"" << config_file_name << "\" is empty.\n";
 			exit(1);
 		}
