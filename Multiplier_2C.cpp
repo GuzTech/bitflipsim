@@ -45,6 +45,8 @@ void Multiplier_2C::Update(bool propagating) {
 		case MUL_TYPE::ARRAY_SIGN_EXTEND:
 		case MUL_TYPE::ARRAY_INVERSION:
 			for (size_t i = 0; i < longest_path; ++i) {
+				different_sign->Update(propagating);
+				
 				for (const auto &xor_A : input_2C_xors_A) {
 					xor_A->Update(propagating);
 				}
@@ -75,7 +77,6 @@ void Multiplier_2C::Update(bool propagating) {
 				}
 
 				output_2C_adder_xor->Update(propagating);
-				different_sign->Update(propagating);
 			}
 			break;
 		}
