@@ -560,7 +560,10 @@ int main(int argc, char **argv) {
 		cout << "\nValue of all wires:\n";
 		for (const auto &ow : system.GetWires()) {
 			cout << "Wire \"" << ow->GetName()
-				 << "\": " << ow->GetValue() << '\n';
+				 << "\": " << ow->GetValue()
+				 << "\t#outputs: " << ow->GetNumOutputs()
+				 << "\t#toggles: " << ow->GetNumToggles()
+				 << '\n';
 		}
 	}
 
