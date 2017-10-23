@@ -4,7 +4,7 @@ void System::AddComponent(comp_t component) {
 	components.insert(pair<string, comp_t>(component->GetName(), component));
 
 	// Add all wires of this component.
-	for (auto &w : component->GetWires()) {
+	for (const auto &w : component->GetWires()) {
 		if (!w) {
 			cout << "[Warning] Component \"" << component->GetName()
 				 << "\" has one or more ports that are not connected.\n";
@@ -34,9 +34,9 @@ void System::FindLongestPathInSystem() {
 		components_to_process.clear();
 		
 		// Find all the components that the wires to be processed are connected to.
-		for (auto &w : wires_to_process) {
-			for (auto &c : w->GetOutputs()) {
-				auto comp = c.lock();
+		for (const auto &w : wires_to_process) {
+			for (const auto &c : w->GetOutputs()) {
+				const auto comp = c.lock();
 
 				if (find(components_to_process.begin(),
 						 components_to_process.end(),
@@ -54,8 +54,8 @@ void System::FindLongestPathInSystem() {
 		// the components to process.
 		wires_to_process.clear();
 
-		for (auto &c : components_to_process) {
-			for (auto &w : c->GetOutputWires()) {
+		for (const auto &c : components_to_process) {
+			for (const auto &w : c->GetOutputWires()) {
 				if (find(wires_to_process.begin(),
 						 wires_to_process.end(),
 						 w) == wires_to_process.end()) {
@@ -70,7 +70,7 @@ void System::FindLongestPathInSystem() {
 // when all inputs are 0.
 void System::FindInitialState() {
 	for (size_t i = 0; i < longest_path; ++i) {
-		for (auto &[name, component] : components) {
+		for (const auto &[name, component] : components) {
 			if (component) {
 				component->Update(false);
 			}
@@ -80,14 +80,14 @@ void System::FindInitialState() {
 
 void System::Update() {
 	for (size_t i = 0; i < longest_path - 1; ++i) {
-		for (auto &[name, component] : components) {
+		for (const auto &[name, component] : components) {
 			if (component) {
 				component->Update(true);
 			}
 		}
 	}
 
-	for (auto &[name, component] : components) {
+	for (const auto &[name, component] : components) {
 		if (component) {
 			component->Update(false);
 		}
@@ -97,13 +97,13 @@ void System::Update() {
 size_t System::GetNumToggles() {
 	size_t toggle_count = 0;
 
-	for (auto &[name, component] : components) {
+	for (const auto &[name, component] : components) {
 		if (component) {
 			toggle_count += component->GetNumToggles();
 		}
 	}
 
-	for (auto &[name, wire] : wires) {
+	for (const auto &[name, wire] : wires) {
 		if (wire) {
 			toggle_count += wire->GetNumToggles();
 		}
@@ -123,7 +123,7 @@ comp_t System::GetComponent(string comp_name) {
 vector<comp_t> System::GetComponents() {
 	vector<comp_t> c;
 
-	for (auto &[name, comp] : components) {
+	for (const auto &[name, comp] : components) {
 		c.push_back(comp);
 	}
 
@@ -141,7 +141,7 @@ wire_t System::GetWire(string wire_name) {
 vector<wire_t> System::GetWires() {
 	vector<wire_t> w;
 
-	for (auto &[name, wire] : wires) {
+	for (const auto &[name, wire] : wires) {
 		w.push_back(wire);
 	}
 
