@@ -21,6 +21,7 @@ public:
 	size_t          GetNumToggles() {return toggle_count;}
 	comp_wt         GetInput() {return input;}
 	vector<comp_wt> GetOutputs() {return outputs;}
+	size_t          GetNumOutputs() {return num_outputs;};
 	const bool      IsInputWire() {return is_input_wire;}
 	const bool      IsOutputWire() {return is_output_wire;}
 
