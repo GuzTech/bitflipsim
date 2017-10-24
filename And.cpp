@@ -47,7 +47,7 @@ void And::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_id
 		exit(1);
 	}
 
-	const wire_t &wire = (*wires.get())[wire_idx];
+	const wire_t &wire = (*wires)[wire_idx];
 	Connect(port, wire, port_idx);
 }
 
