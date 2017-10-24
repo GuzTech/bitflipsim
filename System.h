@@ -26,6 +26,7 @@ protected:
 private:
 	map<string, comp_t> components;
 	map<string, wire_t> wires;
+	map<string, wb_t> wire_bundles;
 
 	vector<wire_t> input_wires;
 	vector<wire_t> output_wires;

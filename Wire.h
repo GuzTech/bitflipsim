@@ -5,8 +5,9 @@
 
 class Wire {
 public:
-	Wire(string _name)
-		: name(_name) {}
+	Wire(string _name, wb_t bundle = nullptr)
+		: name(_name)
+		, part_of_bundle(bundle) {}
 	~Wire() = default;
 
 	void SetValue(bool val, bool propagating = true);
@@ -21,6 +22,7 @@ public:
 	size_t          GetNumToggles() {return toggle_count;}
 	comp_wt         GetInput() {return input;}
 	vector<comp_wt> GetOutputs() {return outputs;}
+	optional<wb_t>  GetWireBundle();
 	size_t          GetNumOutputs() {return num_outputs;};
 	const bool      IsInputWire() {return is_input_wire;}
 	const bool      IsOutputWire() {return is_output_wire;}
@@ -38,6 +40,7 @@ private:
 	comp_wt input; // The component that drives this wire.
 	vector<comp_wt> outputs; // The components that are driven by this wire.
 	size_t num_outputs = 1; // The number of components that are driven by this wire.
+	weak_ptr<WireBundle> part_of_bundle; // Indicates whether this wire is part of a bundle.
 };
 
 #endif // WIRE_H

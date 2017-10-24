@@ -102,9 +102,47 @@ error:
 	exit(1);
 }
 
-void ParsePortAndIndex(const string &wire_name, string port_string, string &port_name, size_t &index) {
-	// Check if the name contains a space to indicate that the name
-	// consists of the name of the port and the index of that port.
+void ParseWireAndSize(string wire_string, string &wire_name, size_t &size) {
+	// Check if the wire name contains a space to indicate that it
+	// consists of the name and size of the wire bundle.
+	size_t pos = wire_string.find(" ");
+	if (pos != string::npos) {
+		// We assume the first value is the name.
+		wire_name = wire_string.substr(0, pos);
+
+		// We remove the name + " " part from the string, and search again.
+		// There should be a second part which should be a number to indicate the size.
+		wire_string.erase(0, pos + 1);
+
+		pos = wire_string.find(" ");
+		if (wire_string.length() != 0 && pos == string::npos) {
+			try {
+				size = stoul(wire_string.substr(0, pos));
+			} catch (invalid_argument e) {
+				cout << "[Error] Size for wire \"" << wire_name << "\" is not a number.\n";
+				exit(1);
+			} catch (out_of_range e ) {
+				cout << "[Error] Size for wire \"" << wire_name << "\" is too large.\n";
+				exit(1);
+			}
+		} else {
+			cout << "[Error] A numeric size should be given after wire name \"" << wire_name
+				 << '\n';
+			exit(1);
+		}
+	} else {
+		// The name is just the wire name and does not contain a size.
+		wire_name = wire_string;
+	}
+}
+
+void ParsePortAndIndex(const string &wire_name,
+					   string port_string,
+					   string &port_name,
+					   size_t &begin_idx,
+					   size_t &end_idx) {
+	// Check if the name contains a space to indicate that it consists of
+	// the name of the port and the beginning and end index of that port.
 	size_t pos = port_string.find(" ");
 	if (pos != string::npos) {
 		// We assume the first value is the name.
@@ -115,25 +153,51 @@ void ParsePortAndIndex(const string &wire_name, string port_string, string &port
 		port_string.erase(0, pos + 1);
 
 		pos = port_string.find(" ");
-		if (port_string.length() != 0 && pos == string::npos) {
-			try {
-				index = stoul(port_string.substr(0, pos));
-			} catch (invalid_argument e) {
-				cout << "[Error] Index for port \"" << port_name << "\" of wire \""
-					 << wire_name << "\" is not a number.\n";
-				exit(1);
-			} catch (out_of_range e) {
-				cout << "[Error] Index number for port \"" << port_name << "\" of wire \""
-					 << wire_name << "\" is too large.\n";
-				exit(1);
-			}
-		} else {
-			cout << "[Error] One index should be given after port name \"" << port_name
-				 << "\" for wire \"" << wire_name << "\".\n";
-			exit(1);
 
-			// This only happens if the user enters a port name with at least one space after it
-			// in double quotation marks like so "A ". Else the YAML parser removes whitespace.
+		if (port_string.length() != 0) {
+			if (pos == string::npos) {
+				// There is one argument after the name.
+				try {
+					begin_idx = stoul(port_string.substr(0, pos));
+					port_string.erase(0, pos + 1);
+					pos = port_string.find(" ");
+				} catch (invalid_argument e) {
+					cout << "[Error] Index for port \"" << port_name << "\" of wire \""
+						 << wire_name << "\" is not a number.\n";
+					exit(1);
+				} catch (out_of_range e) {
+					cout << "[Error] Index number for port \"" << port_name << "\" of wire \""
+						 << wire_name << "\" is too large.\n";
+					exit(1);
+				}
+			} else {
+				// There are at least two arguments after the name.
+				try {
+					begin_idx = stoul(port_string.substr(0, pos));
+					port_string.erase(0, pos + 1);
+					pos = port_string.find(" ");
+
+					if (port_string.length() != 0 && pos == string::npos) {
+						// There is a second argument, which is the end index.
+						end_idx = stoul(port_string.substr(0, pos));
+					} else {
+						cout << "[Error] At most two indices can be given after port name \""
+							 << port_name << "\" for wire \"" << wire_name << "\".\n";
+						exit(1);
+
+						// This only happens if the user enters a port name with at least one space after it
+						// in double quotation marks like so "A ". Else the YAML parser removes whitespace.
+					}
+				} catch (invalid_argument e) {
+					cout << "[Error] Index for port \"" << port_name << "\" of wire \""
+						 << wire_name << "\" is not a number.\n";
+					exit(1);
+				} catch (out_of_range e) {
+					cout << "[Error] Index number for port \"" << port_name << "\" of wire \""
+						 << wire_name << "\" is too large.\n";
+					exit(1);
+				}
+			}
 		}
 	} else {
 		// The name is just the port and does not contain an index.
@@ -210,242 +274,264 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 	}
 
 	for (YAML::const_iterator it = wires.begin(); it != wires.end(); ++it) {
-		const auto &wire_name = it->first.as<string>();
+		const auto &wire_string = it->first.as<string>();
+
+		string wire_name;
+		size_t bundle_size = 0;
+		ParseWireAndSize(wire_string, wire_name, bundle_size);
 
 		if (it->second.size() == 2) {
-			const auto &wire = make_shared<Wire>(wire_name);
+			wire_t wire;
+			wb_t wire_bundle = nullptr;
+			size_t size = 1;
 
-			// There is always a single source for a Wire.
-			const auto &from = it->second[0];
+			if (bundle_size > 0) {
+				wire_bundle = make_shared<WireBundle>(wire_name, bundle_size);
+				size = bundle_size;
+			}
 
-			// Check for consistency of the "from:" section.
-			if (from.IsNull()) {
-				cout << "[Error] No \"from:\" section found for wire \"" << wire_name << "\".\n";
-				exit(1);
-			}
-			if (from.IsScalar()) {
-				cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" is a scalar, but it must be a map.\n";
-				exit(1);
-			}
-			if (from.IsSequence()) {
-				cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" is a sequence, but it must be a map.\n";
-				exit(1);
-			}
-			if (from.IsMap()) {
-				auto from_node = from["from"];
-				if (!from_node.IsDefined()) {
+			for (size_t b_idx = 0; b_idx < size; ++b_idx) {
+				if (bundle_size > 0) {
+					wire = (*wire_bundle)[b_idx];
+				} else {
+					wire = make_shared<Wire>(wire_name);
+				}
+
+				// There is always a single source for a Wire.
+				const auto &from = it->second[0];
+
+				// Check for consistency of the "from:" section.
+				if (from.IsNull()) {
 					cout << "[Error] No \"from:\" section found for wire \"" << wire_name << "\".\n";
 					exit(1);
-				} else if (from_node.IsNull()) {
-					cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" is empty.\n";
-					exit(1);
-				} else if (!from_node.IsScalar()) {
-					cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" must be a scalar.\n";
+				}
+				if (from.IsScalar()) {
+					cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" is a scalar, but it must be a map.\n";
 					exit(1);
 				}
-			}
+				if (from.IsSequence()) {
+					cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" is a sequence, but it must be a map.\n";
+					exit(1);
+				}
+				if (from.IsMap()) {
+					auto from_node = from["from"];
+					if (!from_node.IsDefined()) {
+						cout << "[Error] No \"from:\" section found for wire \"" << wire_name << "\".\n";
+						exit(1);
+					} else if (from_node.IsNull()) {
+						cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" is empty.\n";
+						exit(1);
+					} else if (!from_node.IsScalar()) {
+						cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" must be a scalar.\n";
+						exit(1);
+					}
+				}
 
-			const auto &from_name = from["from"].as<string>();
-			const bool from_is_input = from_name.compare("input") == 0;
+				const auto &from_name = from["from"].as<string>();
+				const bool from_is_input = from_name.compare("input") == 0;
 			
-			// Check if a component with this name exists.
-			if (!from_is_input && !IsComponentDeclared(comps, from_name)) {
-				cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" points to component \""
-					 << from_name << "\" which does not exist.\n";
-				exit(1);
-			}
-
-			const auto &from_port_node = from["port"];
-
-			// Check for consistency of the "port:" section if the wire input is not "input".
-			if (!from_is_input) {
-				if (!from_port_node.IsDefined()) {
-					cout << "[Error] No \"port:\" section found for wire \"" << wire_name << "\".\n";
+				// Check if a component with this name exists.
+				if (!from_is_input && !IsComponentDeclared(comps, from_name)) {
+					cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" points to component \""
+						 << from_name << "\" which does not exist.\n";
 					exit(1);
 				}
-				if (from_port_node.IsNull()) {
-					cout << "[Error] \"port:\" section of wire \"" << wire_name << "\" is empty.\n";
-					exit(1);
-				}
-				if (!from_port_node.IsScalar()) {
-					cout << "[Error] \"port:\" section of wire \"" << wire_name << "\" must be a scalar.\n";
-					exit(1);
-				}
-			}
 
-			// There can be multiple sinks for a Wire.
-			const auto &to = it->second[1];
+				const auto &from_port_node = from["port"];
 
-			// Check for consistency of the "to:" section.
-			if (to.IsNull()) {
-				cout << "[Error] No \"to:\" section found for wire \"" << wire_name << "\".\n";
-				exit(1);
-			}
-			if (to.IsScalar()) {
-				cout << "[Error] \"to:\" section for wire \"" << wire_name << "\" is a scalar, but it must be a map.\n";
-				exit(1);
-			}
-			if (to.IsSequence()) {
-				cout << "[Error] \"to:\" section for wire \"" << wire_name << "\" is a sequence, but it must be a map.\n";
-				exit(1);
-			}
-			if (to.IsMap()) {
-				const auto &to_node = to["to"];
-				if (!to_node.IsDefined()) {
+				// Check for consistency of the "port:" section if the wire input is not "input".
+				if (!from_is_input) {
+					if (!from_port_node.IsDefined()) {
+						cout << "[Error] No \"port:\" section found for wire \"" << wire_name << "\".\n";
+						exit(1);
+					}
+					if (from_port_node.IsNull()) {
+						cout << "[Error] \"port:\" section of wire \"" << wire_name << "\" is empty.\n";
+						exit(1);
+					}
+					if (!from_port_node.IsScalar()) {
+						cout << "[Error] \"port:\" section of wire \"" << wire_name << "\" must be a scalar.\n";
+						exit(1);
+					}
+				}
+
+				// There can be multiple sinks for a Wire.
+				const auto &to = it->second[1];
+
+				// Check for consistency of the "to:" section.
+				if (to.IsNull()) {
 					cout << "[Error] No \"to:\" section found for wire \"" << wire_name << "\".\n";
 					exit(1);
-				} else if (to_node.IsNull()) {
-					cout << "[Error] \"to:\" section is empty for wire \"" << wire_name << "\".\n";
-					exit(1);
-				} else if (to_node.IsSequence() && to_node.begin() == to_node.end()) {
-					cout << "[Error] \"to:\" section contains empty sequence for wire \"" << wire_name << "\".\n";
-					exit(1);
-				} else if (to_node.IsMap() && to_node.begin() == to_node.end()) {
-					cout << "[Error] \"to:\" section contains empty map for wire \"" << wire_name << "\".\n";
+				}
+				if (to.IsScalar()) {
+					cout << "[Error] \"to:\" section for wire \"" << wire_name << "\" is a scalar, but it must be a map.\n";
 					exit(1);
 				}
-			}
-
-			vector<string> to_port_names; // Names of the sink ports.
-			vector<comp_t> to_components; // Sink Components.
-
-			const auto &to_comp_node = to["to"];
-			const auto &to_port_node = to["port"];
-			bool output = false;
-
-			const bool comp_node_def = to_comp_node.IsDefined();
-			const bool port_node_def = to_port_node.IsDefined();
-
-			// If both "to:" and "port:" keys exist and have a scalar value.
-			if (comp_node_def && to_comp_node.IsScalar() &&
-				port_node_def && to_port_node.IsScalar()) {
-				const auto &comp_name = to_comp_node.as<string>();
-
-				if (comp_name.compare("output") == 0) {
-					cout << "[Error] Wire \"" << wire_name << "\" is an \"output\" wire, but has a port declared.\n";
-					cout << "Either remove the \"port:\" key, or connect the port to an existing component.\n";
+				if (to.IsSequence()) {
+					cout << "[Error] \"to:\" section for wire \"" << wire_name << "\" is a sequence, but it must be a map.\n";
 					exit(1);
 				}
-
-				if (IsComponentDeclared(comps, comp_name)) {
-					to_components.push_back(comps[comp_name]);
-					to_port_names.push_back(to_port_node.as<string>());
-				} else {
-					cout << "[Error] Wire \"" << wire_name << "\" refers to component \""
-						 << comp_name << "\" which does not exist.\n";
-					exit(1);
+				if (to.IsMap()) {
+					const auto &to_node = to["to"];
+					if (!to_node.IsDefined()) {
+						cout << "[Error] No \"to:\" section found for wire \"" << wire_name << "\".\n";
+						exit(1);
+					} else if (to_node.IsNull()) {
+						cout << "[Error] \"to:\" section is empty for wire \"" << wire_name << "\".\n";
+						exit(1);
+					} else if (to_node.IsSequence() && to_node.begin() == to_node.end()) {
+						cout << "[Error] \"to:\" section contains empty sequence for wire \"" << wire_name << "\".\n";
+						exit(1);
+					} else if (to_node.IsMap() && to_node.begin() == to_node.end()) {
+						cout << "[Error] \"to:\" section contains empty map for wire \"" << wire_name << "\".\n";
+						exit(1);
+					}
 				}
-			}
-			// If both "to:" and "port:" keys exist and have sequence values.
-			else if (comp_node_def && to_comp_node.IsSequence() &&
-					 port_node_def && to_port_node.IsSequence()) {
-				for (YAML::const_iterator it = to_comp_node.begin(); it != to_comp_node.end(); ++it) {
-					const auto &comp_name = (*it).as<string>();
+
+				vector<string> to_port_names; // Names of the sink ports.
+				vector<comp_t> to_components; // Sink Components.
+
+				const auto &to_comp_node = to["to"];
+				const auto &to_port_node = to["port"];
+				bool output = false;
+
+				const bool comp_node_def = to_comp_node.IsDefined();
+				const bool port_node_def = to_port_node.IsDefined();
+
+				// If both "to:" and "port:" keys exist and have a scalar value.
+				if (comp_node_def && to_comp_node.IsScalar() &&
+					port_node_def && to_port_node.IsScalar()) {
+					const auto &comp_name = to_comp_node.as<string>();
+
+					if (comp_name.compare("output") == 0) {
+						cout << "[Error] Wire \"" << wire_name << "\" is an \"output\" wire, but has a port declared.\n";
+						cout << "Either remove the \"port:\" key, or connect the port to an existing component.\n";
+						exit(1);
+					}
 
 					if (IsComponentDeclared(comps, comp_name)) {
 						to_components.push_back(comps[comp_name]);
-					} else if (comp_name.compare("output") == 0) {
-						if (!output) {
-							output = true;
-						} else {
-							cout << "[Error] \"to:\" section of wire \"" << wire_name
-								 << "\" has multiple \"output\" items configured.\n";
-							exit(1);
-						}
+						to_port_names.push_back(to_port_node.as<string>());
 					} else {
 						cout << "[Error] Wire \"" << wire_name << "\" refers to component \""
 							 << comp_name << "\" which does not exist.\n";
 						exit(1);
 					}
 				}
+				// If both "to:" and "port:" keys exist and have sequence values.
+				else if (comp_node_def && to_comp_node.IsSequence() &&
+						 port_node_def && to_port_node.IsSequence()) {
+					for (YAML::const_iterator it = to_comp_node.begin(); it != to_comp_node.end(); ++it) {
+						const auto &comp_name = (*it).as<string>();
 
-				for (YAML::const_iterator it = to_port_node.begin(); it != to_port_node.end(); ++it) {
-					to_port_names.push_back((*it).as<string>());
-				}
-
-				if (to_components.size() != to_port_names.size()) {
-					cout << "[Error] Wire \"" << wire_name << "\" output component and port sequences must be same length.\n";
-					exit(1);
-				}
-			}
-			// If only the "to:" key exists.
-			else if (!port_node_def && comp_node_def && to_comp_node.IsScalar()) {
-				const auto &comp_name = to_comp_node.as<string>();
-
-				// Node value must be "output".
-				if (comp_name.compare("output") == 0) {
-					output = true;
-				} else {
-					cout << "[Error] Wire \"" << wire_name << "\" has only a \"to:\" section without \"port:\".\n"
-						 << "In that case, the only valid value for \"to:\" is \"output\", but is now \""
-						 << comp_name << "\".\n";
-					exit(1);
-				}
-			}
-			// Something is configured incorrectly if we are here.
-			else {
-				if ((comp_node_def && port_node_def) &&
-					(to_comp_node.Type() != to_port_node.Type())) {
-					cout << "[Error] Wire \"" << wire_name
-						 << "\" output \"to:\" and \"port:\" must both be scalars or sequences.\n";
-					exit(1);
-				}
-			}
-
-			if (from_name.compare("input") == 0) {
-				if (to.size() == 2) {
-					for (std::size_t i = 0; i < to_components.size(); ++i) {
-						string port_name;
-						size_t index = 0;
-						ParsePortAndIndex(wire_name, to_port_names[i], port_name, index);
-
-						Connect(to_components[i], port_name, wire, index);
-					}
-				} else {
-					cout << "[Error] Input wire \"" << wire_name << "\" has incomplete declared output.\n";
-					exit(1);
-				}
-			} else {
-				if (from.size() == 2) {
-					const auto &from_comp = comps[from_name];
-					const auto &from_port = from["port"].as<string>();
-
-					string from_port_name;
-					size_t from_index = 0;
-					ParsePortAndIndex(wire_name, from_port, from_port_name, from_index);
-					Connect(from_comp, from_port_name, wire, from_index);
-
-					if (IsComponentDeclared(comps, from_name)) {
-						for (std::size_t i = 0; i < to_components.size(); ++i) {
-							if (comps.find(to_components[i]->GetName()) != comps.end()) {
-								const auto &to_comp = to_components[i];
-								const auto &to_port = to_port_names[i];
-								
-								string to_port_name;
-								size_t to_index = 0;
-								
-								ParsePortAndIndex(wire_name, to_port, to_port_name, to_index);
-								Connect(to_comp, to_port_name, wire, to_index);
+						if (IsComponentDeclared(comps, comp_name)) {
+							to_components.push_back(comps[comp_name]);
+						} else if (comp_name.compare("output") == 0) {
+							if (!output) {
+								output = true;
 							} else {
-								cout << "[Error] Wire \"" << wire_name << "\" input component does not exist.\n";
+								cout << "[Error] \"to:\" section of wire \"" << wire_name
+									 << "\" has multiple \"output\" items configured.\n";
 								exit(1);
 							}
+						} else {
+							cout << "[Error] Wire \"" << wire_name << "\" refers to component \""
+								 << comp_name << "\" which does not exist.\n";
+							exit(1);
+						}
+					}
+
+					for (YAML::const_iterator it = to_port_node.begin(); it != to_port_node.end(); ++it) {
+						to_port_names.push_back((*it).as<string>());
+					}
+
+					if (to_components.size() != to_port_names.size()) {
+						cout << "[Error] Wire \"" << wire_name << "\" output component and port sequences must be same length.\n";
+						exit(1);
+					}
+				}
+				// If only the "to:" key exists.
+				else if (!port_node_def && comp_node_def && to_comp_node.IsScalar()) {
+					const auto &comp_name = to_comp_node.as<string>();
+
+					// Node value must be "output".
+					if (comp_name.compare("output") == 0) {
+						output = true;
+					} else {
+						cout << "[Error] Wire \"" << wire_name << "\" has only a \"to:\" section without \"port:\".\n"
+							 << "In that case, the only valid value for \"to:\" is \"output\", but is now \""
+							 << comp_name << "\".\n";
+						exit(1);
+					}
+				}
+				// Something is configured incorrectly if we are here.
+				else {
+					if ((comp_node_def && port_node_def) &&
+						(to_comp_node.Type() != to_port_node.Type())) {
+						cout << "[Error] Wire \"" << wire_name
+							 << "\" output \"to:\" and \"port:\" must both be scalars or sequences.\n";
+						exit(1);
+					}
+				}
+
+				if (from_name.compare("input") == 0) {
+					if (to.size() == 2) {
+						for (std::size_t i = 0; i < to_components.size(); ++i) {
+							string port_name;
+							size_t begin_idx = 0;
+							size_t end_idx = 0;
+							ParsePortAndIndex(wire_name, to_port_names[i], port_name, begin_idx, end_idx);
+
+							Connect(to_components[i], port_name, wire, b_idx + begin_idx);
 						}
 					} else {
-						cout << "[Error] Output component of wire \"" << wire_name << "\" does not exist.\n";
+						cout << "[Error] Input wire \"" << wire_name << "\" has incomplete declared output.\n";
 						exit(1);
 					}
 				} else {
-					cout << "[Error] Output wire \"" << wire_name << "\" input declaration needs one \"from:\" and "
-						 << "one \"to:\" section.\n";
-					exit(1);
-				}
-			}
+					if (from.size() == 2) {
+						const auto &from_comp = comps[from_name];
+						const auto &from_port = from["port"].as<string>();
 
-			if (from_is_input) {
-				wire->SetAsInputWire();
-			} else if (output) {
-				wire->SetAsOutputWire();
+						string from_port_name;
+						size_t from_begin_idx = 0;
+						size_t from_end_idx = 0;
+						ParsePortAndIndex(wire_name, from_port, from_port_name, from_begin_idx, from_end_idx);
+						Connect(from_comp, from_port_name, wire, b_idx + from_begin_idx);
+
+						if (IsComponentDeclared(comps, from_name)) {
+							for (std::size_t i = 0; i < to_components.size(); ++i) {
+								if (comps.find(to_components[i]->GetName()) != comps.end()) {
+									const auto &to_comp = to_components[i];
+									const auto &to_port = to_port_names[i];
+								
+									string to_port_name;
+									size_t to_begin_idx = 0;
+									size_t to_end_idx = 0;
+								
+									ParsePortAndIndex(wire_name, to_port, to_port_name, to_begin_idx, to_end_idx);
+									Connect(to_comp, to_port_name, wire, b_idx + to_begin_idx);
+								} else {
+									cout << "[Error] Wire \"" << wire_name << "\" input component does not exist.\n";
+									exit(1);
+								}
+							}
+						} else {
+							cout << "[Error] Output component of wire \"" << wire_name << "\" does not exist.\n";
+							exit(1);
+						}
+					} else {
+						cout << "[Error] Output wire \"" << wire_name << "\" input declaration needs one \"from:\" and "
+							 << "one \"to:\" section.\n";
+						exit(1);
+					}
+				}
+
+				if (from_is_input) {
+					wire->SetAsInputWire();
+				} else if (output) {
+					wire->SetAsOutputWire();
+				}
 			}
 		} else {
 			cout << "[Error] Wire \"" << wire_name << "\" declaration needs exactly 1 \"from\" section and 1 \"to\" section.\n";
