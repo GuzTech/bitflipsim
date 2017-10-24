@@ -8,7 +8,7 @@ public:
 	WireBundle(string _name, size_t _size);
 	~WireBundle() = default;
 
-	const string GetName() {return name;}
+	const string &GetName() {return name;}
 	const size_t GetSize() {return wires.size();}
 	const size_t GetAllocatedSize() {return wires.capacity();}
 	const vector<wire_t> &GetWires() {return wires;}

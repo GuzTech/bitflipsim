@@ -18,7 +18,7 @@ public:
 
 	const bool      GetValue();
 	const bool      HasChanged();
-	string          GetName() {return name;}
+	const string   &GetName() {return name;}
 	size_t          GetNumToggles() {return toggle_count;}
 	comp_wt         GetInput() {return input;}
 	vector<comp_wt> GetOutputs() {return outputs;}

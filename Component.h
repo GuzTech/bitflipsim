@@ -18,7 +18,7 @@ public:
 	void MarkUpdate() {needs_update = true;}
 	void Reset() {needs_update = false; toggle_count = 0;}
 
-	string GetName() {return name;}
+	const string &GetName() {return name;}
 	virtual size_t GetNumToggles() {return toggle_count;}
 	size_t GetLongestPath() {return longest_path;}
 	virtual vector<wire_t> GetWires() =0;

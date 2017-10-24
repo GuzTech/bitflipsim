@@ -10,6 +10,7 @@ void System::AddComponent(comp_t component) {
 				 << "\" has one or more ports that are not connected.\n";
 		} else {
 			wires.insert(pair<string, wire_t>(w->GetName(), w));
+			all_wires.push_back(w);
 
 			if (w->IsInputWire()) {
 				if (find(input_wires.begin(),
@@ -123,7 +124,7 @@ size_t System::GetNumToggles() {
 	return toggle_count;
 }
 
-comp_t System::GetComponent(string comp_name) {
+comp_t System::GetComponent(const string &comp_name) {
 	if (components.find(comp_name) != components.end()) {
 		return components[comp_name];
 	} else {
@@ -141,20 +142,10 @@ vector<comp_t> System::GetComponents() {
 	return c;
 }
 
-wire_t System::GetWire(string wire_name) {
+wire_t System::GetWire(const string &wire_name) {
 	if (wires.find(wire_name) != wires.end()) {
 		return wires[wire_name];
 	} else {
 		return nullptr;
 	}
-}
-
-vector<wire_t> System::GetWires() {
-	vector<wire_t> w;
-
-	for (const auto &[name, wire] : wires) {
-		w.push_back(wire);
-	}
-
-	return w;
 }
