@@ -1,0 +1,19 @@
+components:
+  Multiplier_2C: [2c_mag, 3, 3]
+wires:
+  A 3:
+    - from: input
+    - to: 2c_mag
+      port: A 0 2
+  B 3:
+    - from: input
+    - to: 2c_mag
+      port: B 0 2
+  O 6:
+    - from: 2c_mag
+      port: O 0 5
+    - to: output
+stimuli:
+  - A: 011
+#   A: 0x3
+    B: 111
