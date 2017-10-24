@@ -16,16 +16,16 @@ public:
 	void SetAsInputWire() {is_input_wire = true;}
 	void SetAsOutputWire() {is_output_wire = true;}
 
-	const bool      GetValue();
-	const bool      HasChanged();
-	const string   &GetName() {return name;}
-	size_t          GetNumToggles() {return toggle_count;}
-	comp_wt         GetInput() {return input;}
+	const bool GetValue();
+	const bool  HasChanged();
+	const string &GetName() {return name;}
+	size_t GetNumToggles() {return toggle_count;}
+	comp_wt GetInput() {return input;}
 	vector<comp_wt> GetOutputs() {return outputs;}
-	optional<wb_t>  GetWireBundle();
-	size_t          GetNumOutputs() {return num_outputs;};
-	const bool      IsInputWire() {return is_input_wire;}
-	const bool      IsOutputWire() {return is_output_wire;}
+	optional<wb_t> GetWireBundle();
+	size_t GetNumOutputs() {return num_outputs;};
+	const bool IsInputWire() {return is_input_wire;}
+	const bool IsOutputWire() {return is_output_wire;}
 
 private:
 	bool curr_value = false; // The current value on the wire.
