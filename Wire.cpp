@@ -8,14 +8,6 @@ const bool Wire::HasChanged() {
 	return has_changed;
 }
 
-optional<wb_t> Wire::GetWireBundle() {
-	if (const auto &spt = part_of_bundle.lock()) {
-		return part_of_bundle.lock();
-	}
-
-	return nullopt;
-}
-
 void Wire::SetValue(bool val, bool propagating) {
 	if (propagating) {
 		has_changed = curr_value ^ val;
