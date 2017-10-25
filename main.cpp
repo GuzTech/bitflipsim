@@ -22,84 +22,83 @@ void Connect(comp_t component, string port_name, wire_t wire, size_t index = 0) 
 	const auto &m2C_comp  = dynamic_pointer_cast<Multiplier_2C>(component);
 	const auto &smag_comp = dynamic_pointer_cast<Multiplier_Smag>(component);
 
+	auto error_non_existent_port = [&]() {
+		cout << "[Error] Wire \"" << wire->GetName() << "\" wants to connect to non-existent port \""
+		 << port_name << "\" of component \"" << component->GetName() << "\".\n";
+		exit(1);
+	};
+
 	if (fa_comp != nullptr) {
 		if (port_name.compare("A") == 0)         fa_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0)    fa_comp->Connect(PORTS::B, wire);
 		else if (port_name.compare("Cin") == 0)  fa_comp->Connect(PORTS::Cin, wire);
 		else if (port_name.compare("O") == 0)    fa_comp->Connect(PORTS::O, wire);
 		else if (port_name.compare("Cout") == 0) fa_comp->Connect(PORTS::Cout, wire);
-		else goto error;
+		else error_non_existent_port();
 	} else if (ha_comp != nullptr) {
 		if (port_name.compare("A") == 0)         ha_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0)    ha_comp->Connect(PORTS::B, wire);
 		else if (port_name.compare("O") == 0)    ha_comp->Connect(PORTS::O, wire);
 		else if (port_name.compare("Cout") == 0) ha_comp->Connect(PORTS::Cout, wire);
-		else goto error;
+		else error_non_existent_port();
 	} else if (and_comp != nullptr) {
 		if (port_name.compare("A") == 0)      and_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0) and_comp->Connect(PORTS::B, wire);
 		else if (port_name.compare("O") == 0) and_comp->Connect(PORTS::O, wire);
-		else goto error;
+		else error_non_existent_port();
 	} else if (or_comp != nullptr) {
 		if (port_name.compare("A") == 0)      or_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0) or_comp->Connect(PORTS::B, wire);
 		else if (port_name.compare("O") == 0) or_comp->Connect(PORTS::O, wire);
-		else goto error;
+		else error_non_existent_port();
 	} else if (xor_comp != nullptr) {
 		if (port_name.compare("A") == 0)      xor_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0) xor_comp->Connect(PORTS::B, wire);
 		else if (port_name.compare("O") == 0) xor_comp->Connect(PORTS::O, wire);
-		else goto error;
+		else error_non_existent_port();
 	} else if (nand_comp != nullptr) {
 		if (port_name.compare("A") == 0)      nand_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0) nand_comp->Connect(PORTS::B, wire);
 		else if (port_name.compare("O") == 0) nand_comp->Connect(PORTS::O, wire);
-		else goto error;
+		else error_non_existent_port();
 	} else if (nor_comp != nullptr) {
 		if (port_name.compare("A") == 0)      nor_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0) nor_comp->Connect(PORTS::B, wire);
 		else if (port_name.compare("O") == 0) nor_comp->Connect(PORTS::O, wire);
-		else goto error;
+		else error_non_existent_port();
 	} else if (xnor_comp != nullptr) {
 		if (port_name.compare("A") == 0)      xnor_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0) xnor_comp->Connect(PORTS::B, wire);
 		else if (port_name.compare("O") == 0) xnor_comp->Connect(PORTS::O, wire);
-		else goto error;
+		else error_non_existent_port();
 	} else if (not_comp != nullptr) {
 		if (port_name.compare("I") == 0)      not_comp->Connect(PORTS::I, wire);
 		else if (port_name.compare("O") == 0) not_comp->Connect(PORTS::O, wire);
-		else goto error;
+		else error_non_existent_port();
 	} else if (mux_comp != nullptr) {
 		if (port_name.compare("A") == 0)      mux_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0) mux_comp->Connect(PORTS::B, wire);
 		else if (port_name.compare("S") == 0) mux_comp->Connect(PORTS::S, wire);
 		else if (port_name.compare("O") == 0) mux_comp->Connect(PORTS::O, wire);
-		else goto error;
+		else error_non_existent_port();
 	} else if (rca_comp != nullptr) {
 		if (port_name.compare("A") == 0)         rca_comp->Connect(PORTS::A, wire, index);
 		else if (port_name.compare("B") == 0)    rca_comp->Connect(PORTS::B, wire, index);
 		else if (port_name.compare("O") == 0)    rca_comp->Connect(PORTS::O, wire, index);
 		else if (port_name.compare("Cin") == 0)  rca_comp->Connect(PORTS::Cin, wire, index);
 		else if (port_name.compare("Cout") == 0) rca_comp->Connect(PORTS::Cout, wire, index);
-		else goto error;
+		else error_non_existent_port();
 	} else if (m2C_comp != nullptr) {
 		if (port_name.compare("A") == 0)      m2C_comp->Connect(PORTS::A, wire, index);
 		else if (port_name.compare("B") == 0) m2C_comp->Connect(PORTS::B, wire, index);
 		else if (port_name.compare("O") == 0) m2C_comp->Connect(PORTS::O, wire, index);
-		else goto error;
+		else error_non_existent_port();
 	}else if (smag_comp != nullptr) {
 		if (port_name.compare("A") == 0)      smag_comp->Connect(PORTS::A, wire, index);
 		else if (port_name.compare("B") == 0) smag_comp->Connect(PORTS::B, wire, index);
 		else if (port_name.compare("O") == 0) smag_comp->Connect(PORTS::O, wire, index);
-		else goto error;
+		else error_non_existent_port();
 	}
-
-	return;
-
-error:
-	cout << "[Error] Wire \"" << wire->GetName() << "\" wants to connect to non-existent port \""
-		 << port_name << "\" of component \"" << component->GetName() << "\".\n";
-	exit(1);
 }
 
 void ParseWireAndSize(string wire_string, string &wire_name, size_t &size) {
