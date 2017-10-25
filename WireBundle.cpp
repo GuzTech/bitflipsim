@@ -15,7 +15,7 @@ void WireBundle::Init() {
 	}
 }
 
-void WireBundle::SetValue(int value, bool propagating) {
+void WireBundle::SetValue(int64_t value, bool propagating) {
 	for (int i = size - 1; i >= 0; --i) {
 		if (value & (1 << i)) {
 			wires[i]->SetValue(true, propagating);

@@ -579,6 +579,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 					// A wire bundle value begins with either:
 					// * "0b" for binary representation
 					// * "0x" for hexadecimal representation
+					// * "0d" for decimal representation
 					if (value_string.length() > 2) {
 						const auto &prefix = value_string.substr(0, 2);
 						if (prefix.compare("0b") == 0 || prefix.compare("0B") == 0) {
@@ -586,6 +587,9 @@ void ParseStimuli(System &system, YAML::Node config) {
 							value_string.erase(0, 2);
 						} else if (prefix.compare("0x") == 0 || prefix.compare("0X") == 0) {
 							base = 16;
+							value_string.erase(0, 2);
+						} else if (prefix.compare("0d") == 0 || prefix.compare("0D") == 0) {
+							base = 10;
 							value_string.erase(0, 2);
 						} else {
 							error_invalid_value(value_string);
@@ -595,7 +599,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 					}
 
 					try {
-						const auto value = stoi(value_string, 0, base);
+						const int64_t value = stol(value_string, 0, base);
 						wb->SetValue(value, false);
 					} catch (invalid_argument e) {
 						error_invalid_value(value_string);
