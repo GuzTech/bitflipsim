@@ -1,0 +1,27 @@
+components:
+  Multiplier_Smag: [smag, 32, 32]
+wires:
+  A 32:
+    - from: input
+    - to: smag
+      port: A 0 31
+  B 32:
+    - from: input
+    - to: smag
+      port: B 0 31
+  O 63:
+    - from: smag
+      port: O 0 63
+    - to: output
+stimuli:
+  - A: 0x5
+    B: 0x7
+  - A: 0xA
+  - A: 0x2
+  - A: 0x6
+#  - A: 0x80000005
+#    B: 0x80000007
+#  - A: 0x5
+#    B: 0x7
+#  - A: 0x80000005
+#    B: 0x80000007
