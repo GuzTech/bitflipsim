@@ -180,25 +180,20 @@ vector<wire_t> Multiplier_Smag::GetWires() {
 vector<wire_t> Multiplier_Smag::GetInputWires() {
 	vector<wire_t> input_wires;
 
-	// Add the A and B inputs of the first level of AND gates.
+	// Add the A inputs of the first level of AND gates.
+	// These are all the A inputs (except for the sign bit
+	// XOR gate).
 	for (size_t x = 0; x < num_ands_per_level; ++x) {
 		const auto and_i = ands[0][x];
-		const auto &wire_A = and_i->GetWire(PORTS::A);
-		const auto &wire_B = and_i->GetWire(PORTS::B);
-
-		input_wires.push_back(wire_A);
-		input_wires.push_back(wire_B);
+		const auto &wire = and_i->GetWire(PORTS::A);
+		input_wires.push_back(wire);
 	}
 
-	// Add the A and B inputs of last AND gate of each
-	// subsequent level.
-	for (size_t y = 1; y < num_and_levels; ++y) {
-		const auto and_i = ands[y][num_ands_per_level - 1];
-		const auto &wire_A = and_i->GetWire(PORTS::A);
-		const auto &wire_B = and_i->GetWire(PORTS::B);
-
-		input_wires.push_back(wire_A);
-		input_wires.push_back(wire_B);
+	// Add the wires of the B inputs.
+	for (size_t y = 0; y < num_and_levels; ++y) {
+		const auto &and_i = ands[y].front();
+		const auto &wire = and_i->GetWire(PORTS::B);
+		input_wires.push_back(wire);
 	}
 
 	// Add the inputs to the sign bit XOR gate.

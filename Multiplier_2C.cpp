@@ -205,19 +205,19 @@ vector<wire_t> Multiplier_2C::GetInputWires() {
 		// Add the A and B inputs of the 2C XOR gates
 		for (const auto &xor_i : input_2C_xors_A) {
 			const auto &wire_A = xor_i->GetWire(PORTS::A);
-			const auto &wire_B = xor_i->GetWire(PORTS::B);
-
 			input_wires.push_back(wire_A);
-			input_wires.push_back(wire_B);
 		}
+		// The MSB input is connected to all the B ports, so to prevent
+		// duplicates, just take the wire from the first XOR.
+		input_wires.push_back(input_2C_xors_A.front()->GetWire(PORTS::B));
 
 		for (const auto &xor_i : input_2C_xors_B) {
 			const auto &wire_A = xor_i->GetWire(PORTS::A);
-			const auto &wire_B = xor_i->GetWire(PORTS::B);
-
 			input_wires.push_back(wire_A);
-			input_wires.push_back(wire_B);
 		}
+		// The MSB input is connected to all the B ports, so to prevent
+		// duplicates, just take the wire from the first XOR.
+		input_wires.push_back(input_2C_xors_B.front()->GetWire(PORTS::B));
 		break;
 	}
 	
