@@ -540,6 +540,28 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 	}
 }
 
+const string ValueToBinaryString(int64_t value, size_t size) {
+	stringstream stream;
+	stream << "0b";
+
+	for (size_t i = 0; i < size; ++i) {
+		const size_t sv = size - i - 1;
+
+		stream << (((1ul << sv) & value) > 0);
+		if (sv % 4 == 0 && sv != 0) {
+			stream << '_';
+		}
+	}
+
+	return stream.str();
+}
+
+const string ValueToHexString(int64_t value) {
+	stringstream stream;
+	stream << "0x" << hex << value;
+	return stream.str();
+}
+
 void ParseStimuli(System &system, YAML::Node config) {
 	const auto &stimuli = config["stimuli"];
 
@@ -551,7 +573,10 @@ void ParseStimuli(System &system, YAML::Node config) {
 		exit(1);
 	};
 
+	size_t prev_toggles = 0;
+
 	for (size_t i = 0; i < stimuli.size(); ++i) {
+		cout << "\nStimulus " << i << '\n';
 		for (const auto &step : stimuli[i]) {
 			const auto &wire_name = step.first.as<string>();
 			const auto &value_name = step.second.as<string>();
@@ -570,6 +595,9 @@ void ParseStimuli(System &system, YAML::Node config) {
 					exit(1);
 				}
 				wire->SetValue(value, false);
+
+				// Print the wire name and value.
+				cout << wire_name << ": " << value << '\n';
 			} else {
 				const auto &wb = system.GetWireBundle(wire_name);
 				if (wb) {
@@ -601,6 +629,12 @@ void ParseStimuli(System &system, YAML::Node config) {
 					try {
 						const int64_t value = stol(value_string, 0, base);
 						wb->SetValue(value, false);
+
+						// Print the bundle name and value in hex and binary.
+						cout << wb->GetName() << ": "
+							 << value << " "
+							 << ValueToHexString(value) << " "
+							 << ValueToBinaryString(value, wb->GetSize()) << '\n';
 					} catch (invalid_argument e) {
 						error_invalid_value(value_string);
 					} catch (out_of_range e) {
@@ -615,6 +649,10 @@ void ParseStimuli(System &system, YAML::Node config) {
 		}
 
 		system.Update();
+
+		const size_t curr_toggles = system.GetNumToggles();
+		cout << "#toggles: " << (curr_toggles - prev_toggles) << "\n";
+		prev_toggles = curr_toggles;
 	}
 }
 
@@ -691,8 +729,10 @@ int main(int argc, char **argv) {
 
 		ParseStimuli(system, config);
 
-		cout << "\nNumber of toggles: " << system.GetNumToggles() << '\n';
+		cout << "\nSimulation done!\n";
+		cout << "Number of toggles: " << system.GetNumToggles() << '\n';
 
+#if 0
 		cout << "\nValue of all wires:\n";
 		for (const auto &ow : system.GetWires()) {
 			cout << "Wire \"" << ow->GetName()
@@ -708,6 +748,53 @@ int main(int argc, char **argv) {
 				 << "\" #toggles: " << c->GetNumToggles()
 				 << '\n';
 		}
+#else
+		cout << "\nInputs:\n";
+		vector<wb_t> processed_wire_bundles;
+
+		for (const auto &iw : system.GetInputWires()) {
+			const auto &wb = iw->GetWireBundle();
+			if (wb) {
+				if (find(processed_wire_bundles.begin(),
+						 processed_wire_bundles.end(),
+						 wb) == processed_wire_bundles.end())
+				{
+					const auto value = wb->GetValue();
+					cout << wb->GetName() << ": "
+						 << value << " "
+						 << ValueToHexString(value) << " "
+						 << ValueToBinaryString(value, wb->GetSize()) << '\n';
+
+					processed_wire_bundles.push_back(wb);
+				}
+			} else {
+				cout << iw->GetName() << ": " << iw->GetValue() << '\n';
+			}
+		}
+
+		cout << "\nOutputs:\n";
+		processed_wire_bundles.clear();
+
+		for (const auto &ow : system.GetOutputWires()) {
+			const auto &wb = ow->GetWireBundle();
+			if (wb) {
+				if (find(processed_wire_bundles.begin(),
+						 processed_wire_bundles.end(),
+						 wb) == processed_wire_bundles.end())
+				{
+					const auto value = wb->GetValue();
+					cout << wb->GetName() << ": "
+						 << value << " "
+						 << ValueToHexString(value) << " "
+						 << ValueToBinaryString(value, wb->GetSize()) << '\n';
+
+					processed_wire_bundles.push_back(wb);
+				}
+			} else {
+				cout << ow->GetName() << ": " << ow->GetValue() << '\n';
+			}
+		}
+#endif
 	}
 
 	return 0;
