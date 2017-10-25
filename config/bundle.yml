@@ -14,6 +14,5 @@ wires:
       port: O 0 5
     - to: output
 stimuli:
-  - A: 011
-#   A: 0x3
-    B: 111
+  - A: 0b011
+    B: 0x7
