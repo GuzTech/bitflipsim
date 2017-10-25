@@ -15,10 +15,10 @@ void WireBundle::Init() {
 	}
 }
 
-void WireBundle::SetValue(int value) {
+void WireBundle::SetValue(int value, bool propagating) {
 	for (int i = size - 1; i >= 0; --i) {
 		if (value & (1 << i)) {
-			wires[i]->SetValue(true);
+			wires[i]->SetValue(true, propagating);
 		}
 	}
 }

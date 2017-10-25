@@ -596,7 +596,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 
 					try {
 						const auto value = stoi(value_string, 0, base);
-						wb->SetValue(value);
+						wb->SetValue(value, false);
 					} catch (invalid_argument e) {
 						error_invalid_value(value_string);
 					} catch (out_of_range e) {

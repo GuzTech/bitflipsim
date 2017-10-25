@@ -16,7 +16,7 @@ public:
 	const wire_t &operator [] (size_t i) const {return wires[i];}
 
 	void Init();
-	void SetValue(int value);
+	void SetValue(int value, bool propagating = true);
 private:
 	string name;
 	size_t size;
