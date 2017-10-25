@@ -584,19 +584,19 @@ void ParseStimuli(System &system, YAML::Node config) {
 						const auto &prefix = value_string.substr(0, 2);
 						if (prefix.compare("0b") == 0 || prefix.compare("0B") == 0) {
 							base = 2;
-							value_string.erase(0, 2);
 						} else if (prefix.compare("0x") == 0 || prefix.compare("0X") == 0) {
 							base = 16;
-							value_string.erase(0, 2);
 						} else if (prefix.compare("0d") == 0 || prefix.compare("0D") == 0) {
 							base = 10;
-							value_string.erase(0, 2);
 						} else {
 							error_invalid_value(value_string);
 						}
 					} else {
 						error_invalid_value(value_string);
 					}
+
+					// Remove the prefix
+					value_string.erase(0, 2);
 
 					try {
 						const int64_t value = stol(value_string, 0, base);
