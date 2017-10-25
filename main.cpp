@@ -287,6 +287,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 
 			if (bundle_size > 0) {
 				wire_bundle = make_shared<WireBundle>(wire_name, bundle_size);
+				wire_bundle->Init();
 				size = bundle_size;
 			}
 
@@ -543,28 +544,70 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 void ParseStimuli(System &system, YAML::Node config) {
 	const auto &stimuli = config["stimuli"];
 
+	auto error_invalid_value = [](const auto &val) {
+		cout << "[Error] Value \"" << val << "\" in stimuli section "
+		 << "is invalid. It should begin with either '0b'/'0B' or '0x'/'0X' "
+		 << "for binary and hexadecimal representations respectively, then "
+		 << "followed by a value.\n";
+		exit(1);
+	};
+
 	for (size_t i = 0; i < stimuli.size(); ++i) {
 		for (const auto &step : stimuli[i]) {
 			const auto &wire_name = step.first.as<string>();
 			const auto &value_name = step.second.as<string>();
-			auto value = false;
-
-			if (value_name.compare("1") == 0 || value_name.compare("true") == 0) {
-				value = true;
-			} else if (value_name.compare("0") == 0 || value_name.compare("false") == 0) {
-				value = false;
-			} else {
-				cout << "[Error] stimulus value of wire \"" << wire_name <<
-					"\" has to be one of the following: 0, 1, true, false.\n";
-				exit(1);
-			}
 
 			const auto &wire = system.GetWire(wire_name);
 			if (wire) {
+				auto value = false;
+
+				if (value_name.compare("1") == 0 || value_name.compare("true") == 0) {
+					value = true;
+				} else if (value_name.compare("0") == 0 || value_name.compare("false") == 0) {
+					value = false;
+				} else {
+					cout << "[Error] stimulus value of wire \"" << wire_name <<
+						"\" has to be one of the following: 0, 1, true, false.\n";
+					exit(1);
+				}
 				wire->SetValue(value, false);
 			} else {
-				cout << "[Error] Non-existent wire \"" << wire_name << "\" found in stimuli section.\n";
-				exit(1);
+				const auto &wb = system.GetWireBundle(wire_name);
+				if (wb) {
+					auto value_string = value_name;
+					auto base = 2;
+
+					// A wire bundle value begins with either:
+					// * "0b" for binary representation
+					// * "0x" for hexadecimal representation
+					if (value_string.length() > 2) {
+						const auto &prefix = value_string.substr(0, 2);
+						if (prefix.compare("0b") == 0 || prefix.compare("0B") == 0) {
+							base = 2;
+							value_string.erase(0, 2);
+						} else if (prefix.compare("0x") == 0 || prefix.compare("0X") == 0) {
+							base = 16;
+							value_string.erase(0, 2);
+						} else {
+							error_invalid_value(value_string);
+						}
+					} else {
+						error_invalid_value(value_string);
+					}
+
+					try {
+						const auto value = stoi(value_string, 0, base);
+						wb->SetValue(value);
+					} catch (invalid_argument e) {
+						error_invalid_value(value_string);
+					} catch (out_of_range e) {
+						cout << "[Error] Value \"" << value_string << "\" is too large.\n";
+						exit(1);
+					}
+				} else {
+					cout << "[Error] Non-existent wire or wire bundle \"" << wire_name << "\" found in stimuli section.\n";
+					exit(1);
+				}
 			}
 		}
 
