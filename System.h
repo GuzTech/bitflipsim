@@ -17,6 +17,7 @@ public:
 	vector<comp_t> GetComponents();
 	size_t GetNumWires() {return wires.size();}
 	wire_t GetWire(const string &wire_name);
+	wb_t GetWireBundle(const string &bundle_name);
 	const vector<wire_t> &GetWires() {return all_wires;}
 	const vector<wire_t> &GetInputWires() {return input_wires;}
 	const vector<wire_t> &GetOutputWires() {return output_wires;}

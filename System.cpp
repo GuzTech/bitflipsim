@@ -23,9 +23,8 @@ void System::AddComponent(comp_t component) {
 				output_wires.push_back(w);
 			}
 
-			const auto &wb_o = w->GetWireBundle();
-			if (wb_o) {
-				const auto &wb = *wb_o;
+			const auto &wb = w->GetWireBundle();
+			if (wb) {
 				const auto wb_name = wb->GetName();
 
 				if (wire_bundles.find(wb_name) == wire_bundles.end())
@@ -145,6 +144,14 @@ vector<comp_t> System::GetComponents() {
 wire_t System::GetWire(const string &wire_name) {
 	if (wires.find(wire_name) != wires.end()) {
 		return wires[wire_name];
+	} else {
+		return nullptr;
+	}
+}
+
+wb_t System::GetWireBundle(const string &bundle_name) {
+	if (wire_bundles.find(bundle_name) != wire_bundles.end()) {
+		return wire_bundles[bundle_name];
 	} else {
 		return nullptr;
 	}
