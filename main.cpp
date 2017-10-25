@@ -545,9 +545,9 @@ void ParseStimuli(System &system, YAML::Node config) {
 
 	auto error_invalid_value = [](const auto &val) {
 		cout << "[Error] Value \"" << val << "\" in stimuli section "
-		 << "is invalid. It should begin with either '0b'/'0B' or '0x'/'0X' "
-		 << "for binary and hexadecimal representations respectively, then "
-		 << "followed by a value.\n";
+			 << "is invalid. It should begin with either '0b'/'0B', '0x'/'0X', "
+			 << "or '0d'/'0D' for binary, hexadecimal, and decimal "
+			 << "representations respectively, then followed by a value.\n";
 		exit(1);
 	};
 
@@ -565,8 +565,8 @@ void ParseStimuli(System &system, YAML::Node config) {
 				} else if (value_name.compare("0") == 0 || value_name.compare("false") == 0) {
 					value = false;
 				} else {
-					cout << "[Error] stimulus value of wire \"" << wire_name <<
-						"\" has to be one of the following: 0, 1, true, false.\n";
+					cout << "[Error] stimulus value of wire \"" << wire_name
+						 <<	"\" has to be one of the following: 0, 1, true, false.\n";
 					exit(1);
 				}
 				wire->SetValue(value, false);
