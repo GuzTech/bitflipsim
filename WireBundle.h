@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-class WireBundle {
+class WireBundle : public enable_shared_from_this<WireBundle> {
 public:
 	WireBundle(string _name, size_t _size);
 	~WireBundle() = default;
@@ -14,6 +14,9 @@ public:
 	const vector<wire_t> &GetWires() {return wires;}
 
 	const wire_t &operator [] (size_t i) const {return wires[i];}
+
+	void Init();
+	void SetValue(int value);
 private:
 	string name;
 	size_t size;
