@@ -12,6 +12,7 @@ public:
 	const size_t GetSize() {return wires.size();}
 	const size_t GetAllocatedSize() {return wires.capacity();}
 	const vector<wire_t> &GetWires() {return wires;}
+	const int64_t GetValue();
 
 	const wire_t &operator [] (size_t i) const {return wires[i];}
 

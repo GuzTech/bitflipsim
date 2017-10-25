@@ -6,6 +6,21 @@ WireBundle::WireBundle(string _name, size_t _size)
 	wires.reserve(size);
 }
 
+const int64_t WireBundle::GetValue() {
+	int64_t result = 0;
+
+	for (size_t i = 0; i < size; ++i) {
+		const size_t sv = size - i - 1;
+		bool val = wires[sv]->GetValue();
+
+		if (val) {
+			result |= (1ul << sv);
+		}
+	}
+
+	return result;
+}
+
 void WireBundle::Init() {
 	for (size_t i = 0; i < size; ++i) {
 		wires.push_back(
