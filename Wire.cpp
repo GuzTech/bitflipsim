@@ -1,13 +1,5 @@
 #include "main.h"
 
-const bool Wire::GetValue() {
-	return curr_value;
-}
-
-const bool Wire::HasChanged() {
-	return has_changed;
-}
-
 void Wire::SetValue(bool val, bool propagating) {
 	if (propagating) {
 		has_changed = curr_value ^ val;
