@@ -92,13 +92,13 @@ void RippleCarryAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
 	switch (port) {
 	case PORTS::A:   full_adders[index]->Connect(PORTS::A, wire); break;
 	case PORTS::B:   full_adders[index]->Connect(PORTS::B, wire); break;
-	case PORTS::Cin: full_adders[0]->Connect(PORTS::Cin, wire); break;
+	case PORTS::Cin: full_adders.front()->Connect(PORTS::Cin, wire); break;
 	case PORTS::O:
 		full_adders[index]->Connect(PORTS::O, wire);
 		output_wires.emplace_back(wire);
 		break;
 	case PORTS::Cout:
-		full_adders[num_bits - 1]->Connect(PORTS::Cout, wire);
+		full_adders.back()->Connect(PORTS::Cout, wire);
 		output_wires.emplace_back(wire);
 		break;
 	default:
