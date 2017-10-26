@@ -7,7 +7,7 @@ bool IsComponentDeclared(const map<string, comp_t> &comps, const string &name) {
 	return comps.find(name) != comps.end();
 }
 
-void Connect(comp_t component, string port_name, wire_t wire, size_t index = 0) {
+void Connect(const comp_t &component, const string &port_name, const wire_t &wire, size_t index = 0) {
 	const auto &fa_comp   = dynamic_pointer_cast<FullAdder>(component);
 	const auto &ha_comp   = dynamic_pointer_cast<HalfAdder>(component);
 	const auto &and_comp  = dynamic_pointer_cast<And>(component);
