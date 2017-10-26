@@ -12,11 +12,10 @@ public:
 	void Connect(PORTS port, const wire_t &wire, size_t index) override;
 	void Connect(PORTS port, const wb_t &wires, size_t port_idx = 0, size_t wire_idx = 0) override;
 
-	size_t GetNumToggles() final;
-	vector<wire_t> GetWires() override;
-	vector<wire_t> GetInputWires() override;
-	vector<wire_t> GetOutputWires() override;
-	wire_t GetWire(PORTS port, size_t index) override;
+	const size_t GetNumToggles() final;
+	const vector<wire_t> GetWires() const override;
+	const vector<wire_t> GetInputWires() const override;
+	const wire_t GetWire(PORTS port, size_t index) const override;
 
 private:
 	size_t num_bits = 0;

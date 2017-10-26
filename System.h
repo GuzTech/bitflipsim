@@ -11,17 +11,17 @@ public:
 	void FindInitialState();
 	void Update();
 
-	size_t GetNumToggles();
-	size_t GetNumComponents() {return components.size();}
-	comp_t GetComponent(const string &comp_name);
-	vector<comp_t> GetComponents();
-	size_t GetNumWires() {return wires.size();}
-	wire_t GetWire(const string &wire_name);
-	wb_t GetWireBundle(const string &bundle_name);
-	const vector<wire_t> &GetWires() {return all_wires;}
-	const vector<wire_t> &GetInputWires() {return input_wires;}
-	const vector<wire_t> &GetOutputWires() {return output_wires;}
-	size_t GetLongestPath() {return longest_path;}
+	const size_t GetNumToggles() const;
+	const size_t GetNumComponents() const {return components.size();}
+	const comp_t GetComponent(const string &comp_name) const;
+	const vector<comp_t> GetComponents() const;
+	const size_t GetNumWires() const {return wires.size();}
+	const wire_t GetWire(const string &wire_name) const;
+	const wb_t GetWireBundle(const string &bundle_name) const;
+	const vector<wire_t> &GetWires() const {return all_wires;}
+	const vector<wire_t> &GetInputWires() const {return input_wires;}
+	const vector<wire_t> &GetOutputWires() const {return output_wires;}
+	const size_t GetLongestPath() const {return longest_path;}
 protected:
 
 private:

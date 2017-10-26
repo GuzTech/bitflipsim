@@ -30,7 +30,10 @@ void Nand::Connect(PORTS port, const wire_t &wire, size_t index) {
 	switch (port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<Nand>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<Nand>()); break;
-	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Nand>()); break;
+	case PORTS::O:
+		O = wire; wire->SetInput(this->shared_from_base<Nand>());
+		output_wires.emplace_back(O);
+		break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of Nand "
 			 << "\"" << name << "\"\n";
@@ -50,19 +53,15 @@ void Nand::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_i
 	Connect(port, wire, port_idx);
 }
 
-vector<wire_t> Nand::GetWires() {
+const vector<wire_t> Nand::GetWires() const {
 	return {A, B, O};
 }
 
-vector<wire_t> Nand::GetInputWires() {
+const vector<wire_t> Nand::GetInputWires() const {
 	return {A, B};
 }
 
-vector<wire_t> Nand::GetOutputWires() {
-	return {O};
-}
-
-wire_t Nand::GetWire(PORTS port, size_t index) {
+const wire_t Nand::GetWire(PORTS port, size_t index) const {
 	switch (port) {
 	case PORTS::A: return A;
 	case PORTS::B: return B;

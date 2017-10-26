@@ -105,7 +105,7 @@ void Multiplier_Smag::Connect(PORTS port, const wire_t &wire, size_t index) {
 	case PORTS::O:
 		if (index == (num_bits_O - 1)) {
 			// MSB is the sign bit.
-			sign->Connect(PORTS::O, wire); break;
+			sign->Connect(PORTS::O, wire);
 		} else {
 			if (index == (num_bits_O - 2)) {
 				// One bit less than the sign bit is de carry out of the last full adder.
@@ -117,8 +117,9 @@ void Multiplier_Smag::Connect(PORTS port, const wire_t &wire, size_t index) {
 			} else {
 				adders[index - 1][0]->Connect(PORTS::O, wire);
 			}
-			break;
 		}
+		output_wires.emplace_back(wire);
+		break;
 	default:
 		cout << "[Error] Trying to connect wire \"" << wire->GetName()
 			 << "\" to undefined port of Multiplier_Smag "
@@ -139,7 +140,7 @@ void Multiplier_Smag::Connect(PORTS port, const wb_t &wires, size_t port_idx, si
 	Connect(port, wire, port_idx);
 }
 
-size_t Multiplier_Smag::GetNumToggles() {
+const size_t Multiplier_Smag::GetNumToggles() {
 	toggle_count = 0;
 
 	// Only full adders have internal state, and therefore only
@@ -154,7 +155,7 @@ size_t Multiplier_Smag::GetNumToggles() {
 	return toggle_count;
 }
 
-vector<wire_t> Multiplier_Smag::GetWires() {
+const vector<wire_t> Multiplier_Smag::GetWires() const {
 	vector<wire_t> wires;
 
 	// Add all input wires.
@@ -177,7 +178,7 @@ vector<wire_t> Multiplier_Smag::GetWires() {
 	return wires;
 }
 
-vector<wire_t> Multiplier_Smag::GetInputWires() {
+const vector<wire_t> Multiplier_Smag::GetInputWires() const {
 	vector<wire_t> input_wires;
 
 	// Add the A inputs of the first level of AND gates.
@@ -206,39 +207,7 @@ vector<wire_t> Multiplier_Smag::GetInputWires() {
 	return input_wires;
 }
 
-vector<wire_t> Multiplier_Smag::GetOutputWires() {
-	vector<wire_t> output_wires;
-
-	// First output bit is the output of the first AND gate.
-	const auto &wire = ands[0][0]->GetWire(PORTS::O);
-	output_wires.push_back(wire);
-
-	for (size_t y = 0; y < num_adder_levels; ++y) {
-		if (y != (num_adder_levels - 1)) {
-			// For each level except the last one, add sum output of the
-			// first full adder.
-			const auto &wire = adders[y][0]->GetWire(PORTS::O);
-			output_wires.push_back(wire);
-		} else {
-			// Add the sum outputs of all the full adders of the last level.
-			for (size_t x = 0; x < num_adders_per_level; ++x) {
-				const auto &wire = adders[y][x]->GetWire(PORTS::O);
-				output_wires.push_back(wire);
-			}
-
-			// Also add the carry out output of the last full adder.
-			const auto &wire = adders[y].back()->GetWire(PORTS::Cout);
-			output_wires.push_back(wire);
-		}
-	}
-
-	// The last output bit is the output of the XOR gate.
-	output_wires.push_back(sign->GetWire(PORTS::O));
-
-	return output_wires;
-}
-
-wire_t Multiplier_Smag::GetWire(PORTS port, size_t index) {
+const wire_t Multiplier_Smag::GetWire(PORTS port, size_t index) const {
 	return nullptr;
 }
 

@@ -33,8 +33,11 @@ void Mux::Connect(PORTS port, const wire_t &wire, size_t index) {
 	switch (port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<Mux>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<Mux>()); break;
-	case PORTS::S: S = wire; wire->SetInput(this->shared_from_base<Mux>()); break;
-	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<Mux>()); break;
+	case PORTS::S: S = wire; wire->AddOutput(this->shared_from_base<Mux>()); break;
+	case PORTS::O:
+		O = wire; wire->SetInput(this->shared_from_base<Mux>());
+		output_wires.emplace_back(O);
+		break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of Mux "
 			 << "\"" << name << "\"\n";
@@ -54,19 +57,15 @@ void Mux::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_id
 	Connect(port, wire, port_idx);
 }
 
-vector<wire_t> Mux::GetWires() {
+const vector<wire_t> Mux::GetWires() const {
 	return {A, B, S, O};
 }
 
-vector<wire_t> Mux::GetInputWires() {
+const vector<wire_t> Mux::GetInputWires() const {
 	return {A, B};
 }
 
-vector<wire_t> Mux::GetOutputWires() {
-	return {S, O};
-}
-
-wire_t Mux::GetWire(PORTS port, size_t index) {
+const wire_t Mux::GetWire(PORTS port, size_t index) const {
 	switch (port) {
 	case PORTS::A: return A;
 	case PORTS::B: return B;

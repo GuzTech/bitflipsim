@@ -36,8 +36,14 @@ void HalfAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
 	switch (port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<HalfAdder>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<HalfAdder>()); break;
-	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<HalfAdder>()); break;
-	case PORTS::Cout: Cout = wire; wire->SetInput(this->shared_from_base<HalfAdder>()); break;
+	case PORTS::O:
+		O = wire; wire->SetInput(this->shared_from_base<HalfAdder>());
+		output_wires.emplace_back(O);
+		break;
+	case PORTS::Cout:
+		Cout = wire; wire->SetInput(this->shared_from_base<HalfAdder>());
+		output_wires.emplace_back(Cout);
+		break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of HalfAdder "
 			 << "\"" << name << "\"\n";
@@ -57,19 +63,15 @@ void HalfAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t w
 	Connect(port, wire, port_idx);
 }
 
-vector<wire_t> HalfAdder::GetWires() {
+const vector<wire_t> HalfAdder::GetWires() const {
 	return {A, B, O, Cout};
 }
 
-vector<wire_t> HalfAdder::GetInputWires() {
+const vector<wire_t> HalfAdder::GetInputWires() const {
 	return {A, B};
 }
 
-vector<wire_t> HalfAdder::GetOutputWires() {
-	return {O, Cout};
-}
-
-wire_t HalfAdder::GetWire(PORTS port, size_t index) {
+const wire_t HalfAdder::GetWire(PORTS port, size_t index) const {
 	switch (port) {
 	case PORTS::A:    return A;
 	case PORTS::B:    return B;

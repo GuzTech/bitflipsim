@@ -31,7 +31,10 @@ void And::Connect(PORTS port, const wire_t &wire, size_t index) {
 	switch(port) {
 	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<And>()); break;
 	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<And>()); break;
-	case PORTS::O: O = wire; wire->SetInput(this->shared_from_base<And>()); break;
+	case PORTS::O:
+		O = wire; wire->SetInput(this->shared_from_base<And>());
+		output_wires.emplace_back(O);
+		break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of And "
 			 << "\"" << name << "\"\n";
@@ -51,19 +54,15 @@ void And::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_id
 	Connect(port, wire, port_idx);
 }
 
-vector<wire_t> And::GetWires() {
+const vector<wire_t> And::GetWires() const {
 	return {A, B, O};
 }
 
-vector<wire_t> And::GetInputWires() {
+const vector<wire_t> And::GetInputWires() const {
 	return {A, B};
 }
 
-vector<wire_t> And::GetOutputWires() {
-	return {O};
-}
-
-wire_t And::GetWire(PORTS port, size_t index) {
+const wire_t And::GetWire(PORTS port, size_t index) const {
 	switch (port) {
 	case PORTS::A: return A;
 	case PORTS::B: return B;

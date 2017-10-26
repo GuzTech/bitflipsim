@@ -43,7 +43,7 @@ void System::FindLongestPathInSystem() {
 
 	do {
 		components_to_process.clear();
-		
+
 		// Find all the components that the wires to be processed are connected to.
 		for (const auto &w : wires_to_process) {
 			for (const auto &c : w->GetOutputs()) {
@@ -105,7 +105,7 @@ void System::Update() {
 	}
 }
 
-size_t System::GetNumToggles() {
+const size_t System::GetNumToggles() const {
 	size_t toggle_count = 0;
 
 	for (const auto &[name, component] : components) {
@@ -123,15 +123,15 @@ size_t System::GetNumToggles() {
 	return toggle_count;
 }
 
-comp_t System::GetComponent(const string &comp_name) {
+const comp_t System::GetComponent(const string &comp_name) const {
 	if (components.find(comp_name) != components.end()) {
-		return components[comp_name];
+		return components.at(comp_name);
 	} else {
 		return nullptr;
 	}
 }
 
-vector<comp_t> System::GetComponents() {
+const vector<comp_t> System::GetComponents() const {
 	vector<comp_t> c;
 
 	for (const auto &[name, comp] : components) {
@@ -141,17 +141,17 @@ vector<comp_t> System::GetComponents() {
 	return c;
 }
 
-wire_t System::GetWire(const string &wire_name) {
+const wire_t System::GetWire(const string &wire_name) const {
 	if (wires.find(wire_name) != wires.end()) {
-		return wires[wire_name];
+		return wires.at(wire_name);
 	} else {
 		return nullptr;
 	}
 }
 
-wb_t System::GetWireBundle(const string &bundle_name) {
+const wb_t System::GetWireBundle(const string &bundle_name) const {
 	if (wire_bundles.find(bundle_name) != wire_bundles.end()) {
-		return wire_bundles[bundle_name];
+		return wire_bundles.at(bundle_name);
 	} else {
 		return nullptr;
 	}

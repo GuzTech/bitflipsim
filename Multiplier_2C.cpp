@@ -134,6 +134,7 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 			} else {
 				output_2C_adders[index]->Connect(PORTS::O, wire);
 			}
+			output_wires.emplace_back(wire);
 			break;
 		default:
 			cout << "[Error] Trying to connect wire \"" << wire->GetName()
@@ -157,7 +158,7 @@ void Multiplier_2C::Connect(PORTS port, const wb_t &wires, size_t port_idx, size
 	Connect(port, wire, port_idx);
 }
 
-size_t Multiplier_2C::GetNumToggles() {
+const size_t Multiplier_2C::GetNumToggles() {
 	toggle_count = 0;
 
 	// Only full adders have internal state, and therefore only
@@ -173,7 +174,7 @@ size_t Multiplier_2C::GetNumToggles() {
 	return toggle_count;
 }
 
-vector<wire_t> Multiplier_2C::GetWires() {
+const vector<wire_t> Multiplier_2C::GetWires() const {
 	vector<wire_t> wires;
 
 	// Add all input wires.
@@ -196,7 +197,7 @@ vector<wire_t> Multiplier_2C::GetWires() {
 	return wires;
 }
 
-vector<wire_t> Multiplier_2C::GetInputWires() {
+const vector<wire_t> Multiplier_2C::GetInputWires() const {
 	vector<wire_t> input_wires;
 
 	switch (type) {
@@ -224,20 +225,7 @@ vector<wire_t> Multiplier_2C::GetInputWires() {
 	return input_wires;
 }
 
-vector<wire_t> Multiplier_2C::GetOutputWires() {
-	vector<wire_t> output_wires;
-
-	// Add all the output port wires of the half adders.
-	for (const auto &o : output_2C_adders) {
-		output_wires.push_back(o->GetWire(PORTS::O));
-	}
-
-	output_wires.push_back(output_2C_adder_xor->GetWire(PORTS::O));
-
-	return output_wires;
-}
-
-wire_t Multiplier_2C::GetWire(PORTS port, size_t index) {
+const wire_t Multiplier_2C::GetWire(PORTS port, size_t index) const {
 	return nullptr;
 }
 

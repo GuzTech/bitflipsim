@@ -71,8 +71,14 @@ void FullAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
 	case PORTS::A:    A    = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
 	case PORTS::B:    B    = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
 	case PORTS::Cin:  Cin  = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
-	case PORTS::O:    O    = wire; wire->SetInput(this->shared_from_base<FullAdder>()); break;
-	case PORTS::Cout: Cout = wire; wire->SetInput(this->shared_from_base<FullAdder>()); break;
+	case PORTS::O:
+		O = wire; wire->SetInput(this->shared_from_base<FullAdder>());
+		output_wires.emplace_back(O);
+		break;
+	case PORTS::Cout:
+		Cout = wire; wire->SetInput(this->shared_from_base<FullAdder>());
+		output_wires.emplace_back(Cout);
+		break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of FullAdder "
 			 << "\"" << name << "\"\n";
@@ -92,19 +98,15 @@ void FullAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t w
 	Connect(port, wire, port_idx);
 }
 
-vector<wire_t> FullAdder::GetWires() {
+const vector<wire_t> FullAdder::GetWires() const {
 	return {A, B, Cin, O, Cout};
 }
 
-vector<wire_t> FullAdder::GetInputWires() {
+const vector<wire_t> FullAdder::GetInputWires() const {
 	return {A, B, Cin};
 }
 
-vector<wire_t> FullAdder::GetOutputWires() {
-	return {O, Cout};
-}
-
-wire_t FullAdder::GetWire(PORTS port, size_t index) {
+const wire_t FullAdder::GetWire(PORTS port, size_t index) const {
 	switch (port) {
 	case PORTS::A:    return A;
 	case PORTS::B:    return B;
