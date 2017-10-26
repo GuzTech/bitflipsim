@@ -562,6 +562,61 @@ const string ValueToHexString(int64_t value) {
 	return stream.str();
 }
 
+void ParseConstraint(const YAML::Node &node,
+					 string &wire_name,
+					 size_t &beg_idx,
+					 size_t &end_idx,
+					 string &type,
+					 size_t &seed) {
+	if (node["wire"]) {
+		wire_name = node["wire"].as<string>();
+	} else {
+	    cout << "[Error] A constraint needs at least a \"wire\", but none was given.\n";
+		exit(1);
+	}
+
+	if (node["begin_index"]) {
+		try {
+			beg_idx = node["begin_index"].as<size_t>();
+		} catch (YAML::TypedBadConversion<size_t> e) {
+			cout << "[Error] \"begin_index\" is not a number: " << e.msg << '\n';
+			exit(1);
+		}
+	} else {
+		cout << "[Error] \"begin_index\" is mandatory in a constraint, but none was given.\n";
+		exit(1);
+	}
+
+	if (node["end_index"]) {
+		try {
+			end_idx = node["end_index"].as<size_t>();
+		} catch (YAML::TypedBadConversion<size_t> e) {
+			cout << "[Error] \"end_index\" is not a number: " << e.msg << '\n';
+			exit(1);
+		}
+	}
+
+	if (node["type"]) {
+		type = node["type"].as<string>();
+	} else {
+		cout << "[Error] A constraint needs at least a \"type\", but none was given.\n";
+		exit(1);
+	}
+
+	if (node["seed"]) {
+		if (type.compare("rng") != 0) {
+			cout << "[Warning] Contraint type is not \"rng\", so \"seed\" is ignored.\n";
+		} else {
+			try {
+				seed = node["seed"].as<size_t>();
+			} catch (YAML::TypedBadConversion<size_t> e) {
+				cout << "[Error] \"seed\" is not a number: " << e.msg << '\n';
+				exit(1);
+			}
+		}
+	}
+}
+
 void ParseStimuli(System &system, YAML::Node config) {
 	const auto &stimuli = config["stimuli"];
 
@@ -573,77 +628,106 @@ void ParseStimuli(System &system, YAML::Node config) {
 		exit(1);
 	};
 
+	auto error_constraint_map = []() {
+		cout << "[Error] A \"constraint\" needs to be a map that has at least the "
+			 << "\"wire\", \"begin_index\", and \"type\" keys.\n";
+		exit(1);
+	};
+
 	size_t prev_toggles = 0;
 
 	for (size_t i = 0; i < stimuli.size(); ++i) {
 		cout << "\nStimulus " << i << '\n';
 		for (const auto &step : stimuli[i]) {
-			const auto &wire_name = step.first.as<string>();
-			const auto &value_name = step.second.as<string>();
+			const auto &key_name = step.first.as<string>();
+			const auto &value = step.second;
 
-			const auto &wire = system.GetWire(wire_name);
-			if (wire) {
-				auto value = false;
+			if (key_name.compare("constraint") == 0) {
+				if (value.IsMap()) {
+					string wire_name;
+					size_t beg_idx = UINT_MAX;
+					size_t end_idx = UINT_MAX;
+					string type;
+					size_t seed = 0;
 
-				if (value_name.compare("1") == 0 || value_name.compare("true") == 0) {
-					value = true;
-				} else if (value_name.compare("0") == 0 || value_name.compare("false") == 0) {
-					value = false;
+					ParseConstraint(value, wire_name, beg_idx, end_idx, type, seed);
+
+					cout << "Wire: " << wire_name << '\n';
+					cout << "Begin index: " << beg_idx << '\n';
+					cout << "End index: " << end_idx << '\n';
+					cout << "Type: " << type << '\n';
+					cout << "Seed: " << seed << '\n';
 				} else {
-					cout << "[Error] stimulus value of wire \"" << wire_name
-						 <<	"\" has to be one of the following: 0, 1, true, false.\n";
-					exit(1);
+					error_constraint_map();
 				}
-				wire->SetValue(value, false);
 
-				// Print the wire name and value.
-				cout << wire_name << ": " << value << '\n';
+				continue;
 			} else {
-				const auto &wb = system.GetWireBundle(wire_name);
-				if (wb) {
-					auto value_string = value_name;
-					auto base = 2;
+				const auto &value_name = value.as<string>();
+				const auto &wire = system.GetWire(key_name);
+				if (wire) {
+					auto value = false;
 
-					// A wire bundle value begins with either:
-					// * "0b" for binary representation
-					// * "0x" for hexadecimal representation
-					// * "0d" for decimal representation
-					if (value_string.length() > 2) {
-						const auto &prefix = value_string.substr(0, 2);
-						if (prefix.compare("0b") == 0 || prefix.compare("0B") == 0) {
-							base = 2;
-						} else if (prefix.compare("0x") == 0 || prefix.compare("0X") == 0) {
-							base = 16;
-						} else if (prefix.compare("0d") == 0 || prefix.compare("0D") == 0) {
-							base = 10;
+					if (value_name.compare("1") == 0 || value_name.compare("true") == 0) {
+						value = true;
+					} else if (value_name.compare("0") == 0 || value_name.compare("false") == 0) {
+						value = false;
+					} else {
+						cout << "[Error] stimulus value of wire \"" << key_name
+							 <<	"\" has to be one of the following: 0, 1, true, false.\n";
+						exit(1);
+					}
+					wire->SetValue(value, false);
+
+					// Print the wire name and value.
+					cout << key_name << ": " << value << '\n';
+				} else {
+					const auto &wb = system.GetWireBundle(key_name);
+					if (wb) {
+						auto value_string = value_name;
+						auto base = 2;
+
+						// A wire bundle value begins with either:
+						// * "0b" for binary representation
+						// * "0x" for hexadecimal representation
+						// * "0d" for decimal representation
+						if (value_string.length() > 2) {
+							const auto &prefix = value_string.substr(0, 2);
+							if (prefix.compare("0b") == 0 || prefix.compare("0B") == 0) {
+								base = 2;
+							} else if (prefix.compare("0x") == 0 || prefix.compare("0X") == 0) {
+								base = 16;
+							} else if (prefix.compare("0d") == 0 || prefix.compare("0D") == 0) {
+								base = 10;
+							} else {
+								error_invalid_value(value_string);
+							}
 						} else {
 							error_invalid_value(value_string);
 						}
+
+						// Remove the prefix
+						value_string.erase(0, 2);
+
+						try {
+							const int64_t value = stol(value_string, 0, base);
+							wb->SetValue(value, false);
+
+							// Print the bundle name and value in hex and binary.
+							cout << wb->GetName() << ": "
+								 << value << " "
+								 << ValueToHexString(value) << " "
+								 << ValueToBinaryString(value, wb->GetSize()) << '\n';
+						} catch (invalid_argument e) {
+							error_invalid_value(value_string);
+						} catch (out_of_range e) {
+							cout << "[Error] Value \"" << value_string << "\" is too large.\n";
+							exit(1);
+						}
 					} else {
-						error_invalid_value(value_string);
-					}
-
-					// Remove the prefix
-					value_string.erase(0, 2);
-
-					try {
-						const int64_t value = stol(value_string, 0, base);
-						wb->SetValue(value, false);
-
-						// Print the bundle name and value in hex and binary.
-						cout << wb->GetName() << ": "
-							 << value << " "
-							 << ValueToHexString(value) << " "
-							 << ValueToBinaryString(value, wb->GetSize()) << '\n';
-					} catch (invalid_argument e) {
-						error_invalid_value(value_string);
-					} catch (out_of_range e) {
-						cout << "[Error] Value \"" << value_string << "\" is too large.\n";
+						cout << "[Error] Non-existent wire or wire bundle \"" << key_name << "\" found in stimuli section.\n";
 						exit(1);
 					}
-				} else {
-					cout << "[Error] Non-existent wire or wire bundle \"" << wire_name << "\" found in stimuli section.\n";
-					exit(1);
 				}
 			}
 		}
