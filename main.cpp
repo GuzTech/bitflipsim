@@ -571,13 +571,15 @@ struct Constraint {
 			   const size_t _end_index,
 			   const TYPE _type,
 			   const size_t _seed,
-			   const float _sigma)
+			   const float _sigma,
+			   const size_t _times)
 		: wire_name(_wire_name)
 		, begin_index(_begin_index)
 		, end_index(_end_index)
 		, type(_type)
 		, seed(_seed)
 		, sigma(_sigma)
+		, times(_times)
 	{
 		generator = default_random_engine(seed);
 		distribution = normal_distribution<float>(0.0f, sigma);
@@ -591,6 +593,7 @@ struct Constraint {
 	float  sigma;
 	default_random_engine generator;
 	normal_distribution<float> distribution;
+	size_t times;
 };
 
 using constr_t = shared_ptr<Constraint>;
@@ -602,6 +605,7 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 	Constraint::TYPE type;
 	size_t seed = 0;
 	float sigma = 1.0f;
+	size_t times = 1;
 
 	if (node["wire"]) {
 		wire_name = node["wire"].as<string>();
@@ -674,7 +678,16 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 		}
 	}
 
-	return make_shared<Constraint>(wire_name, beg_idx, end_idx, type, seed, sigma);
+	if (node["times"]) {
+		try {
+			times = node["times"].as<size_t>();
+		} catch (YAML::TypedBadConversion<size_t> e) {
+			cout << "[Error] \"times\" is not a number: " << e.mag << '\n';
+			exit(1);
+		}
+	}
+
+	return make_shared<Constraint>(wire_name, beg_idx, end_idx, type, seed, sigma, times);
 }
 
 void ParseStimuli(System &system, YAML::Node config) {
