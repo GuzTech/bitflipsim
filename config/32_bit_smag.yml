@@ -11,17 +11,15 @@ wires:
       port: B 0 31
   O 63:
     - from: smag
-      port: O 0 63
+      port: O 0 62
     - to: output
 stimuli:
-  - constraint: {wire: A, begin_index: 0, end_index: 5, type: rng, seed: 4}
-    A: 0x40000005
+  - constraint: {wire: A, begin_index: 0, end_index: 5, type: rng, sigma: 0.00000001, seed: 3}
+    constraint: {wire: B, begin_index: 0, end_index: 5, type: rng, sigma: 0.00000003, seed: 5}
+    A: 0x5
     B: 0x7
-  - A: 0x4000000A
-  - A: 0x40000002
-  - A: 0x40000006
-#  - A: 0x80000005
-#    B: 0x80000007
+  - A: 0x80000005
+    B: 0x80000007
 #  - A: 0x5
 #    B: 0x7
 #  - A: 0x80000005

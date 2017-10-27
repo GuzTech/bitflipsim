@@ -1,5 +1,6 @@
 #include "main.h"
 #include <yaml-cpp/yaml.h>
+#include <random>
 
 using namespace std;
 
@@ -562,12 +563,46 @@ const string ValueToHexString(int64_t value) {
 	return stream.str();
 }
 
-void ParseConstraint(const YAML::Node &node,
-					 string &wire_name,
-					 size_t &beg_idx,
-					 size_t &end_idx,
-					 string &type,
-					 size_t &seed) {
+struct Constraint {
+	enum class TYPE {NONE, RNG};
+
+	Constraint(const string _wire_name,
+			   const size_t _begin_index,
+			   const size_t _end_index,
+			   const TYPE _type,
+			   const size_t _seed,
+			   const float _sigma)
+		: wire_name(_wire_name)
+		, begin_index(_begin_index)
+		, end_index(_end_index)
+		, type(_type)
+		, seed(_seed)
+		, sigma(_sigma)
+	{
+		generator = default_random_engine(seed);
+		distribution = normal_distribution<float>(0.0f, sigma);
+	}
+
+	string wire_name;
+	size_t begin_index;
+	size_t end_index;
+	TYPE type;
+	size_t seed;
+	float  sigma;
+	default_random_engine generator;
+	normal_distribution<float> distribution;
+};
+
+using constr_t = shared_ptr<Constraint>;
+
+const constr_t ParseConstraint(const YAML::Node &node) {
+	string wire_name;
+	size_t beg_idx = UINT_MAX;
+	size_t end_idx = UINT_MAX;
+	Constraint::TYPE type;
+	size_t seed = 0;
+	float sigma = 1.0f;
+
 	if (node["wire"]) {
 		wire_name = node["wire"].as<string>();
 	} else {
@@ -597,15 +632,21 @@ void ParseConstraint(const YAML::Node &node,
 	}
 
 	if (node["type"]) {
-		type = node["type"].as<string>();
+		const auto &type_string = node["type"].as<string>();
+
+		if (type_string.compare("rng") == 0) {
+			type = Constraint::TYPE::RNG;
+		} else {
+			type = Constraint::TYPE::NONE;
+		}
 	} else {
 		cout << "[Error] A constraint needs at least a \"type\", but none was given.\n";
 		exit(1);
 	}
 
 	if (node["seed"]) {
-		if (type.compare("rng") != 0) {
-			cout << "[Warning] Contraint type is not \"rng\", so \"seed\" is ignored.\n";
+		if (type != Constraint::TYPE::RNG) {
+			cout << "[Warning] Constraint type is not \"rng\", so \"seed\" is ignored.\n";
 		} else {
 			try {
 				seed = node["seed"].as<size_t>();
@@ -615,6 +656,25 @@ void ParseConstraint(const YAML::Node &node,
 			}
 		}
 	}
+
+	if (node["sigma"]) {
+		if (type != Constraint::TYPE::RNG) {
+			cout << "[Warning] Constraint type is not \"rng\", so \"sigma\" is ignored.\n";
+		} else {
+			try {
+				sigma = node["sigma"].as<float>();
+				if (sigma <= 0.0f) {
+					cout << "[Error] \"sigma\" must be larger than 0.0.\n";
+					exit(1);
+				}
+			} catch (YAML::TypedBadConversion<float> e) {
+				cout << "[Error] \"sigma\" is not a number: " << e.msg << '\n';
+				exit(1);
+			}
+		}
+	}
+
+	return make_shared<Constraint>(wire_name, beg_idx, end_idx, type, seed, sigma);
 }
 
 void ParseStimuli(System &system, YAML::Node config) {
@@ -636,6 +696,8 @@ void ParseStimuli(System &system, YAML::Node config) {
 
 	size_t prev_toggles = 0;
 
+	vector<constr_t> constraints;
+
 	for (size_t i = 0; i < stimuli.size(); ++i) {
 		cout << "\nStimulus " << i << '\n';
 		for (const auto &step : stimuli[i]) {
@@ -644,19 +706,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 
 			if (key_name.compare("constraint") == 0) {
 				if (value.IsMap()) {
-					string wire_name;
-					size_t beg_idx = UINT_MAX;
-					size_t end_idx = UINT_MAX;
-					string type;
-					size_t seed = 0;
-
-					ParseConstraint(value, wire_name, beg_idx, end_idx, type, seed);
-
-					cout << "Wire: " << wire_name << '\n';
-					cout << "Begin index: " << beg_idx << '\n';
-					cout << "End index: " << end_idx << '\n';
-					cout << "Type: " << type << '\n';
-					cout << "Seed: " << seed << '\n';
+					constraints.push_back(ParseConstraint(value));
 				} else {
 					error_constraint_map();
 				}
@@ -665,8 +715,22 @@ void ParseStimuli(System &system, YAML::Node config) {
 			} else {
 				const auto &value_name = value.as<string>();
 				const auto &wire = system.GetWire(key_name);
+				const auto &wb = system.GetWireBundle(key_name);
+
 				if (wire) {
 					auto value = false;
+
+					// Check if one of the constraints affects this wire.
+					for (const auto &c : constraints) {
+						if (c->wire_name == wire->GetName()) {
+							const auto rnd_val = c->distribution(c->generator);
+							if (rnd_val < 0.0f) {
+								value = false;
+							} else if (rnd_val > 1.0f) {
+								value = true;
+							}
+						}
+					}
 
 					if (value_name.compare("1") == 0 || value_name.compare("true") == 0) {
 						value = true;
@@ -681,53 +745,78 @@ void ParseStimuli(System &system, YAML::Node config) {
 
 					// Print the wire name and value.
 					cout << key_name << ": " << value << '\n';
-				} else {
-					const auto &wb = system.GetWireBundle(key_name);
-					if (wb) {
-						auto value_string = value_name;
-						auto base = 2;
+				} else if (wb) {
+					auto value_string = value_name;
+					auto base = 2;
 
-						// A wire bundle value begins with either:
-						// * "0b" for binary representation
-						// * "0x" for hexadecimal representation
-						// * "0d" for decimal representation
-						if (value_string.length() > 2) {
-							const auto &prefix = value_string.substr(0, 2);
-							if (prefix.compare("0b") == 0 || prefix.compare("0B") == 0) {
-								base = 2;
-							} else if (prefix.compare("0x") == 0 || prefix.compare("0X") == 0) {
-								base = 16;
-							} else if (prefix.compare("0d") == 0 || prefix.compare("0D") == 0) {
-								base = 10;
-							} else {
-								error_invalid_value(value_string);
-							}
+					// A wire bundle value begins with either:
+					// * "0b" for binary representation
+					// * "0x" for hexadecimal representation
+					// * "0d" for decimal representation
+					if (value_string.length() > 2) {
+						const auto &prefix = value_string.substr(0, 2);
+						if (prefix.compare("0b") == 0 || prefix.compare("0B") == 0) {
+							base = 2;
+						} else if (prefix.compare("0x") == 0 || prefix.compare("0X") == 0) {
+							base = 16;
+						} else if (prefix.compare("0d") == 0 || prefix.compare("0D") == 0) {
+							base = 10;
 						} else {
 							error_invalid_value(value_string);
 						}
-
-						// Remove the prefix
-						value_string.erase(0, 2);
-
-						try {
-							const int64_t value = stol(value_string, 0, base);
-							wb->SetValue(value, false);
-
-							// Print the bundle name and value in hex and binary.
-							cout << wb->GetName() << ": "
-								 << value << " "
-								 << ValueToHexString(value) << " "
-								 << ValueToBinaryString(value, wb->GetSize()) << '\n';
-						} catch (invalid_argument e) {
-							error_invalid_value(value_string);
-						} catch (out_of_range e) {
-							cout << "[Error] Value \"" << value_string << "\" is too large.\n";
-							exit(1);
-						}
 					} else {
-						cout << "[Error] Non-existent wire or wire bundle \"" << key_name << "\" found in stimuli section.\n";
+						error_invalid_value(value_string);
+					}
+
+					// Remove the prefix
+					value_string.erase(0, 2);
+
+					try {
+						int64_t value = 0;
+
+						// Check if any of the constraints affect this wire bundle.
+						bool affected_by_constraint = false;
+
+						for (const auto &c : constraints) {
+							if (c->wire_name == wb->GetName()) {
+								switch (c->type) {
+								case Constraint::TYPE::RNG: {
+									const float scale_factor = (float)(1l << wb->GetSize());
+									float rnd_val = abs(c->distribution(c->generator) * scale_factor);
+
+									if (rnd_val > scale_factor) {
+										rnd_val = scale_factor;
+									}
+
+									value = (int64_t)rnd_val;
+									affected_by_constraint = true;
+									break;
+								}
+								case Constraint::TYPE::NONE: break;
+								}
+							}
+						}
+
+						if (!affected_by_constraint) {
+							value = stol(value_string, 0, base);
+						}
+
+						wb->SetValue(value, false);
+
+						// Print the bundle name and value in hex and binary.
+						cout << wb->GetName() << ": "
+							 << value << " "
+							 << ValueToHexString(value) << " "
+							 << ValueToBinaryString(value, wb->GetSize()) << '\n';
+					} catch (invalid_argument e) {
+						error_invalid_value(value_string);
+					} catch (out_of_range e) {
+						cout << "[Error] Value \"" << value_string << "\" is too large.\n";
 						exit(1);
 					}
+				} else {
+					cout << "[Error] Non-existent wire or wire bundle \"" << key_name << "\" found in stimuli section.\n";
+					exit(1);
 				}
 			}
 		}
