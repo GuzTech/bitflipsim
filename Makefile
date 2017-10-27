@@ -1,7 +1,7 @@
 CC := clang++
 SANITIZER := #-fsanitize=memory -fsanitize-memory-track-origins
 INCLUDE_DIRS := lib/yaml-cpp/include
-CFLAGS := -I$(INCLUDE_DIRS) -g -O2 -std=c++1z -Wall -Werror $(SANITIZER)
+CFLAGS := -I$(INCLUDE_DIRS) -g -O3 -std=c++1z -Wall -Werror $(SANITIZER)
 LIBS := -lyaml-cpp
 LDFLAGS := -Llib/yaml-cpp/build $(LIBS) $(SANITIZER)
 OBJDIR := obj
