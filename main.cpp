@@ -621,9 +621,6 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 			cout << "[Error] \"begin_index\" is not a number: " << e.msg << '\n';
 			exit(1);
 		}
-	} else {
-		cout << "[Error] \"begin_index\" is mandatory in a constraint, but none was given.\n";
-		exit(1);
 	}
 
 	if (node["end_index"]) {
@@ -682,7 +679,7 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 		try {
 			times = node["times"].as<size_t>();
 		} catch (YAML::TypedBadConversion<size_t> e) {
-			cout << "[Error] \"times\" is not a number: " << e.mag << '\n';
+			cout << "[Error] \"times\" is not a number: " << e.msg << '\n';
 			exit(1);
 		}
 	}
@@ -702,9 +699,40 @@ void ParseStimuli(System &system, YAML::Node config) {
 	};
 
 	auto error_constraint_map = []() {
-		cout << "[Error] A \"constraint\" needs to be a map that has at least the "
+		cout << "[Error] A \"constraint\" needs to be either a map, or a sequence "
+			 << " of maps. In either case it needs to have at least the "
 			 << "\"wire\", \"begin_index\", and \"type\" keys.\n";
 		exit(1);
+	};
+
+	auto error_non_existent_wire = [](const auto &name) {
+		cout << "[Error] No wire or wire bundle \"" << name << "\" found.\n";
+		exit(1);
+	};
+
+	auto process_wire_rng = [](const auto &wire, const auto &constraint, auto &system) {
+		for (size_t i = 0; i < constraint->times; ++i) {
+			auto rnd_val = constraint->distribution(constraint->generator);
+			if (rnd_val < 0.0f) {
+				wire->SetValue(false, false);
+			} else {
+				wire->SetValue(true, false);
+			}
+			system.Update();
+		}
+	};
+
+	auto process_wire_bundle_rng = [](const auto &wb, const auto &constraint, auto &system) {
+		const float scale_factor = (float)((1l << wb->GetSize()) - 1);
+		for (size_t i = 0; i < constraint->times; ++i) {
+			auto rnd_val = constraint->distribution(constraint->generator) * scale_factor;
+			if (rnd_val > scale_factor) {
+				rnd_val = scale_factor;
+			}
+
+			wb->SetValue((int64_t)rnd_val, false);
+			system.Update();
+		}
 	};
 
 	size_t prev_toggles = 0;
@@ -715,35 +743,96 @@ void ParseStimuli(System &system, YAML::Node config) {
 		cout << "\nStimulus " << i << '\n';
 		for (const auto &step : stimuli[i]) {
 			const auto &key_name = step.first.as<string>();
-			const auto &value = step.second;
+			const auto &value_node = step.second;
 
 			if (key_name.compare("constraint") == 0) {
-				if (value.IsMap()) {
-					constraints.push_back(ParseConstraint(value));
+				// The key is a constraint.
+				if (value_node.IsSequence()) {
+					// The constraint applies to multiple wires or wire bundles.
+					size_t max_repetitions = 1;
+
+					for (YAML::const_iterator it = value_node.begin(); it != value_node.end(); ++it) {
+						const auto &c = ParseConstraint(*it);
+
+						if (c->times > max_repetitions) {
+							max_repetitions = c->times;
+						}
+
+						constraints.push_back(c);
+					}
+
+					for (size_t i = 0; i < max_repetitions; ++i) {
+						for (const auto &c : constraints) {
+							if (c->times) {
+								c->times--;
+								const auto &w = system.GetWire(c->wire_name);
+								const auto &wb = system.GetWireBundle(c->wire_name);
+
+								if (w) {
+									switch (c->type) {
+									case Constraint::TYPE::RNG: {
+										auto rnd_val = c->distribution(c->generator);
+										if (rnd_val < 0.0f) {
+											w->SetValue(false, false);
+										} else {
+											w->SetValue(true, false);
+										}
+										break;
+									}
+									case Constraint::TYPE::NONE: break;
+									}
+								} else if (wb) {
+									switch (c->type) {
+									case Constraint::TYPE::RNG: {
+										const float scale_factor = (float)((1l << wb->GetSize()) - 1);
+										auto rnd_val = c->distribution(c->generator) * scale_factor;
+										if (rnd_val > scale_factor) {
+											rnd_val = scale_factor;
+										}
+
+										wb->SetValue((int64_t)rnd_val, false);
+										break;
+									}
+									case Constraint::TYPE::NONE: break;
+									}
+								}
+							}
+						}
+
+						system.Update();
+					}
+				} else if (value_node.IsMap()) {
+					// The constraint applies to one wire or wire bundle.
+					const auto &c = ParseConstraint(value_node);
+					const auto &w = system.GetWire(c->wire_name);
+					const auto &wb = system.GetWireBundle(c->wire_name);
+
+					if (w) {
+						switch (c->type) {
+						case Constraint::TYPE::RNG: process_wire_rng(w, c, system); break;
+						case Constraint::TYPE::NONE: break;
+						}
+					} else if (wb) {
+						switch (c->type) {
+						case Constraint::TYPE::RNG: process_wire_bundle_rng(wb, c, system); break;
+						case Constraint::TYPE::NONE: break;
+						}
+					} else {
+						error_non_existent_wire(c->wire_name);
+					}
 				} else {
 					error_constraint_map();
 				}
 
 				continue;
 			} else {
-				const auto &value_name = value.as<string>();
+				// The key is a wire.
+				const auto &value_name = value_node.as<string>();
 				const auto &wire = system.GetWire(key_name);
 				const auto &wb = system.GetWireBundle(key_name);
 
 				if (wire) {
 					auto value = false;
-
-					// Check if one of the constraints affects this wire.
-					for (const auto &c : constraints) {
-						if (c->wire_name == wire->GetName()) {
-							const auto rnd_val = c->distribution(c->generator);
-							if (rnd_val < 0.0f) {
-								value = false;
-							} else if (rnd_val > 1.0f) {
-								value = true;
-							}
-						}
-					}
 
 					if (value_name.compare("1") == 0 || value_name.compare("true") == 0) {
 						value = true;
@@ -785,35 +874,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 					value_string.erase(0, 2);
 
 					try {
-						int64_t value = 0;
-
-						// Check if any of the constraints affect this wire bundle.
-						bool affected_by_constraint = false;
-
-						for (const auto &c : constraints) {
-							if (c->wire_name == wb->GetName()) {
-								switch (c->type) {
-								case Constraint::TYPE::RNG: {
-									const float scale_factor = (float)(1l << wb->GetSize());
-									float rnd_val = abs(c->distribution(c->generator) * scale_factor);
-
-									if (rnd_val > scale_factor) {
-										rnd_val = scale_factor;
-									}
-
-									value = (int64_t)rnd_val;
-									affected_by_constraint = true;
-									break;
-								}
-								case Constraint::TYPE::NONE: break;
-								}
-							}
-						}
-
-						if (!affected_by_constraint) {
-							value = stol(value_string, 0, base);
-						}
-
+						const int64_t value = stol(value_string, 0, base);
 						wb->SetValue(value, false);
 
 						// Print the bundle name and value in hex and binary.
