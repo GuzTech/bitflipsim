@@ -1,0 +1,44 @@
+components:
+  Multiplier_Smag: [smag, 32, 32]
+wires:
+  A 32:
+    - from: input
+    - to: smag
+      port: A 0 31
+  B 32:
+    - from: input
+    - to: smag
+      port: B 0 31
+  O 63:
+    - from: smag
+      port: O 0 62
+    - to: output
+stimuli:
+#  - constraint:
+#      - wire: A
+#        begin_index: 0
+#        end_index: 5
+#        type: rng
+#        sigma: 0.00000001
+#        seed: 3
+#        times: 1000
+#      - wire: B
+#        begin_index: 0
+#        end_index: 5
+#        type: rng
+#        sigma: 0.00000001
+#        seed: 5
+#        times: 1000
+  - constraint:
+    - {wire: A, type: rng, sigma: 0.00000001, seed: 3, times: 10000}
+    - {wire: B, type: rng, sigma: 0.00000001, seed: 5, times: 10000}
+
+#  - constraint: {wire: B, begin_index: 0, end_index: 5, type: rng, sigma: 0.00000001, seed: 5, times: 1000}
+#  - A: 0x5
+#    B: 0x7
+#  - A: 0x80000005
+#    B: 0x80000007
+#  - A: 0x5
+#    B: 0x7
+#  - A: 0x80000005
+#    B: 0x80000007
