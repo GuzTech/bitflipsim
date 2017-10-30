@@ -10,10 +10,10 @@ public:
 	WireBundle(string _name, size_t _size, REPR _repr = REPR::TWOS_COMPLEMENT);
 	~WireBundle() = default;
 
-	const string &GetName() {return name;}
-	const size_t GetSize() {return wires.size();}
-	const size_t GetAllocatedSize() {return wires.capacity();}
-	const vector<wire_t> &GetWires() {return wires;}
+	const string &GetName() const {return name;}
+	const size_t GetSize() const {return wires.size();}
+	const size_t GetAllocatedSize() const {return wires.capacity();}
+	const vector<wire_t> &GetWires() const {return wires;}
 	const int64_t GetValue() const;
 	const REPR GetRepresentation() const {return repr;};
 
