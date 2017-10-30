@@ -1,6 +1,7 @@
 #include "main.h"
 #include <yaml-cpp/yaml.h>
 #include <random>
+#include <fstream>
 
 using namespace std;
 
@@ -102,7 +103,16 @@ void Connect(const comp_t &component, const string &port_name, const wire_t &wir
 	}
 }
 
-void ParseWireAndSize(string wire_string, string &wire_name, size_t &size) {
+void ParseWireAndSize(string wire_string, string &wire_name, size_t &size, WireBundle::REPR &repr) {
+	auto error_inconsistent = [](const auto &wire) {
+		cout << "[Error] Inconsistent wire declaration for wire \"" << wire << "\".\n"
+			 << "Format for wires:\n"
+			 << "<wire name>\n\n"
+			 << "Format for wire bundles:\n"
+			 << "<wire name> <size> [1c/1C/2c/2C/smag]\n";
+		exit(1);
+	};
+
 	// Check if the wire name contains a space to indicate that it
 	// consists of the name and size of the wire bundle.
 	size_t pos = wire_string.find(" ");
@@ -115,20 +125,55 @@ void ParseWireAndSize(string wire_string, string &wire_name, size_t &size) {
 		wire_string.erase(0, pos + 1);
 
 		pos = wire_string.find(" ");
-		if (wire_string.length() != 0 && pos == string::npos) {
-			try {
-				size = stoul(wire_string.substr(0, pos));
-			} catch (invalid_argument e) {
-				cout << "[Error] Size for wire \"" << wire_name << "\" is not a number.\n";
-				exit(1);
-			} catch (out_of_range e ) {
-				cout << "[Error] Size for wire \"" << wire_name << "\" is too large.\n";
-				exit(1);
+		if (wire_string.length() != 0) {
+			if (pos == string::npos) {
+				// Only a size is given.
+				try {
+					size = stoul(wire_string.substr(0, pos));
+				} catch (invalid_argument e) {
+					cout << "[Error] Size for wire \"" << wire_name << "\" is not a number.\n";
+					exit(1);
+				} catch (out_of_range e ) {
+					cout << "[Error] Size for wire \"" << wire_name << "\" is too large.\n";
+					exit(1);
+				}
+			} else {
+				// A size and number representation is given.
+				try {
+					size = stoul(wire_string.substr(0, pos));
+
+					// We again remove the name + " " part from the string, and search again.
+					wire_string.erase(0, pos + 1);
+
+					pos = wire_string.find(" ");
+					if (wire_string.length() != 0 && pos == string::npos) {
+						if (wire_string.compare("2c") == 0 ||
+							wire_string.compare("2C") == 0) {
+							repr = WireBundle::REPR::TWOS_COMPLEMENT;
+						} else if (wire_string.compare("1c") == 0 ||
+								   wire_string.compare("1C") == 0) {
+							repr = WireBundle::REPR::ONES_COMPLEMENT;
+						} else if (wire_string.compare("smag") == 0) {
+							repr = WireBundle::REPR::SIGNED_MAGNITUDE;
+						} else {
+							cout << "[Error] Unrecognized number representation for wire bundle \""
+								 << wire_name << "\".\nOnly \"2c\"/\"2C\" (default), \"1c\"/\"1C\""
+								 << ", and \"s_mag\" are supported.\n";
+							exit(1);
+						}
+					} else {
+						error_inconsistent(wire_name);
+					}
+				} catch (invalid_argument e) {
+					cout << "[Error] Size for wire \"" << wire_name << "\" is not a number.\n";
+					exit(1);
+				} catch (out_of_range e ) {
+					cout << "[Error] Size for wire \"" << wire_name << "\" is too large.\n";
+					exit(1);
+				}
 			}
 		} else {
-			cout << "[Error] A numeric size should be given after wire name \"" << wire_name
-				 << '\n';
-			exit(1);
+			error_inconsistent(wire_name);
 		}
 	} else {
 		// The name is just the wire name and does not contain a size.
@@ -278,7 +323,8 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 
 		string wire_name;
 		size_t bundle_size = 0;
-		ParseWireAndSize(wire_string, wire_name, bundle_size);
+		WireBundle::REPR repr = WireBundle::REPR::TWOS_COMPLEMENT;
+		ParseWireAndSize(wire_string, wire_name, bundle_size, repr);
 
 		if (it->second.size() == 2) {
 			wire_t wire;
@@ -286,7 +332,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 			size_t size = 1;
 
 			if (bundle_size > 0) {
-				wire_bundle = make_shared<WireBundle>(wire_name, bundle_size);
+				wire_bundle = make_shared<WireBundle>(wire_name, bundle_size, repr);
 				wire_bundle->Init();
 				size = bundle_size;
 			}
@@ -582,7 +628,8 @@ struct Constraint {
 		, times(_times)
 	{
 		generator = default_random_engine(seed);
-		distribution = normal_distribution<float>(0.0f, sigma);
+		norm_distr = normal_distribution<float>(0.0f, sigma);
+		uniform_int_distr = uniform_int_distribution<int32_t>(0, 1);
 	}
 
 	string wire_name;
@@ -592,7 +639,8 @@ struct Constraint {
 	size_t seed;
 	float  sigma;
 	default_random_engine generator;
-	normal_distribution<float> distribution;
+	normal_distribution<float> norm_distr;
+	uniform_int_distribution<int32_t> uniform_int_distr;
 	size_t times;
 };
 
@@ -712,7 +760,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 
 	auto process_wire_rng = [](const auto &wire, const auto &constraint, auto &system) {
 		for (size_t i = 0; i < constraint->times; ++i) {
-			auto rnd_val = constraint->distribution(constraint->generator);
+			auto rnd_val = constraint->uniform_int_distr(constraint->generator);
 			if (rnd_val < 0.0f) {
 				wire->SetValue(false, false);
 			} else {
@@ -725,7 +773,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 	auto process_wire_bundle_rng = [](const auto &wb, const auto &constraint, auto &system) {
 		const float scale_factor = (float)((1l << wb->GetSize()) - 1);
 		for (size_t i = 0; i < constraint->times; ++i) {
-			auto rnd_val = constraint->distribution(constraint->generator) * scale_factor;
+			auto rnd_val = constraint->norm_distr(constraint->generator) * scale_factor;
 			if (rnd_val > scale_factor) {
 				rnd_val = scale_factor;
 			}
@@ -771,7 +819,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 								if (w) {
 									switch (c->type) {
 									case Constraint::TYPE::RNG: {
-										auto rnd_val = c->distribution(c->generator);
+										auto rnd_val = c->uniform_int_distr(c->generator);
 										if (rnd_val < 0.0f) {
 											w->SetValue(false, false);
 										} else {
@@ -785,7 +833,8 @@ void ParseStimuli(System &system, YAML::Node config) {
 									switch (c->type) {
 									case Constraint::TYPE::RNG: {
 										const float scale_factor = (float)((1l << wb->GetSize()) - 1);
-										auto rnd_val = c->distribution(c->generator) * scale_factor;
+										auto rnd_val = c->norm_distr(c->generator) * scale_factor;
+
 										if (rnd_val > scale_factor) {
 											rnd_val = scale_factor;
 										}

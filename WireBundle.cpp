@@ -1,12 +1,13 @@
 #include "main.h"
 
-WireBundle::WireBundle(string _name, size_t _size)
+WireBundle::WireBundle(string _name, size_t _size, REPR _repr)
 	: name(_name)
-	, size(_size) {
+	, size(_size)
+	, repr(_repr) {
 	wires.reserve(size);
 }
 
-const int64_t WireBundle::GetValue() {
+const int64_t WireBundle::GetValue() const {
 	int64_t result = 0;
 
 	for (size_t i = 0; i < size; ++i) {
@@ -31,6 +32,22 @@ void WireBundle::Init() {
 }
 
 void WireBundle::SetValue(int64_t value, bool propagating) {
+	switch(repr) {
+	case REPR::TWOS_COMPLEMENT: break;
+	case REPR::ONES_COMPLEMENT: {
+		if (value < 0) {
+			value = ~(-value);
+		}
+		break;
+	}
+	case REPR::SIGNED_MAGNITUDE: {
+		if (value < 0) {
+			value = -value | (1l << (wires.size() - 1));
+		}
+		break;
+	}
+	}
+
 	for (int i = size - 1; i >= 0; --i) {
 		bool bit_val = false;
 		if (value & (1 << i)) {
