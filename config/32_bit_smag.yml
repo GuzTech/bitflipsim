@@ -1,15 +1,15 @@
 components:
   Multiplier_Smag: [smag, 32, 32]
 wires:
-  A 32:
+  A 32 smag:
     - from: input
     - to: smag
       port: A 0 31
-  B 32:
+  B 32 smag:
     - from: input
     - to: smag
       port: B 0 31
-  O 63:
+  O 63 smag:
     - from: smag
       port: O 0 62
     - to: output
