@@ -15,11 +15,13 @@ public:
 	const size_t GetAllocatedSize() {return wires.capacity();}
 	const vector<wire_t> &GetWires() {return wires;}
 	const int64_t GetValue() const;
+	const REPR GetRepresentation() const {return repr;};
 
 	const wire_t &operator [] (size_t i) const {return wires[i];}
 
 	void Init();
 	void SetValue(int64_t value, bool propagating = true);
+	void SetRepresentation(REPR _repr) {repr = _repr;};
 private:
 	string name;
 	size_t size;

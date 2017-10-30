@@ -875,7 +875,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 
 				continue;
 			} else {
-				// The key is a wire.
+				// The key is a wire or wire bundle.
 				const auto &value_name = value_node.as<string>();
 				const auto &wire = system.GetWire(key_name);
 				const auto &wb = system.GetWireBundle(key_name);
@@ -928,9 +928,9 @@ void ParseStimuli(System &system, YAML::Node config) {
 
 						// Print the bundle name and value in hex and binary.
 						cout << wb->GetName() << ": "
-							 << value << " "
-							 << ValueToHexString(value) << " "
-							 << ValueToBinaryString(value, wb->GetSize()) << '\n';
+							 << wb->GetValue() << " "
+							 << ValueToHexString(wb->GetValue()) << " "
+							 << ValueToBinaryString(wb->GetValue(), wb->GetSize()) << '\n';
 					} catch (invalid_argument e) {
 						error_invalid_value(value_string);
 					} catch (out_of_range e) {
