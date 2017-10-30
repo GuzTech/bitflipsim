@@ -15,6 +15,7 @@ public:
 	const size_t GetAllocatedSize() const {return wires.capacity();}
 	const vector<wire_t> &GetWires() const {return wires;}
 	const int64_t GetValue() const;
+	const int64_t Get2CValue() const;
 	const REPR GetRepresentation() const {return repr;};
 
 	const wire_t &operator [] (size_t i) const {return wires[i];}

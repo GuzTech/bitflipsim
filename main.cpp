@@ -928,7 +928,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 
 						// Print the bundle name and value in hex and binary.
 						cout << wb->GetName() << ": "
-							 << wb->GetValue() << " "
+							 << wb->Get2CValue() << " "
 							 << ValueToHexString(wb->GetValue()) << " "
 							 << ValueToBinaryString(wb->GetValue(), wb->GetSize()) << '\n';
 					} catch (invalid_argument e) {
@@ -1057,7 +1057,7 @@ int main(int argc, char **argv) {
 				{
 					const auto value = wb->GetValue();
 					cout << wb->GetName() << ": "
-						 << value << " "
+						 << wb->Get2CValue() << " "
 						 << ValueToHexString(value) << " "
 						 << ValueToBinaryString(value, wb->GetSize()) << '\n';
 
@@ -1080,7 +1080,7 @@ int main(int argc, char **argv) {
 				{
 					const auto value = wb->GetValue();
 					cout << wb->GetName() << ": "
-						 << value << " "
+						 << wb->Get2CValue() << " "
 						 << ValueToHexString(value) << " "
 						 << ValueToBinaryString(value, wb->GetSize()) << '\n';
 

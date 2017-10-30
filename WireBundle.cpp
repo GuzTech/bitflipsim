@@ -22,6 +22,32 @@ const int64_t WireBundle::GetValue() const {
 	return result;
 }
 
+const int64_t WireBundle::Get2CValue() const {
+	int64_t result = GetValue();
+
+	switch(repr) {
+	case REPR::TWOS_COMPLEMENT: break;
+	case REPR::ONES_COMPLEMENT: {
+		// Modify the result if the MSB is a 1.
+		if (wires.back()->GetValue()) {
+			result = (-1 & ~((1l << (size - 1)) - 1)) | result;
+			result += 1;
+		}
+		break;
+	}
+	case REPR::SIGNED_MAGNITUDE: {
+		// Modify the result if the MSB is a 1.
+		if (wires.back()->GetValue()) {
+			result &= ((1l << (size - 1)) - 1);
+			result = -result;
+		}
+		break;
+	}
+	}
+
+	return result;
+}
+
 void WireBundle::Init() {
 	for (size_t i = 0; i < size; ++i) {
 		wires.push_back(
@@ -42,7 +68,7 @@ void WireBundle::SetValue(int64_t value, bool propagating) {
 	}
 	case REPR::SIGNED_MAGNITUDE: {
 		if (value < 0) {
-			value = -value | (1l << (wires.size() - 1));
+			value = -value | (1l << (size - 1));
 		}
 		break;
 	}
