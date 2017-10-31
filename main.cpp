@@ -576,8 +576,14 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 
 				if (from_is_input) {
 					wire->SetAsInputWire();
+					if (wire_bundle) {
+						wire_bundle->SetAsInputBundle();
+					}
 				} else if (output) {
 					wire->SetAsOutputWire();
+					if (wire_bundle) {
+						wire_bundle->SetAsOutputBundle();
+					}
 				}
 			}
 		} else {
@@ -735,7 +741,7 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 	return make_shared<Constraint>(wire_name, beg_idx, end_idx, type, seed, sigma, times);
 }
 
-void ParseStimuli(System &system, YAML::Node config) {
+void ParseStimuli(System &system, YAML::Node config, const string &config_file_name) {
 	const auto &stimuli = config["stimuli"];
 
 	auto error_invalid_value = [](const auto &val) {
@@ -770,7 +776,13 @@ void ParseStimuli(System &system, YAML::Node config) {
 		}
 	};
 
-	auto process_wire_bundle_rng = [](const auto &wb, const auto &constraint, auto &system) {
+	map<string, vector<int64_t>> io_values;
+	for (const auto &b : system.GetWireBundles()) {
+		io_values[b->GetName()] = vector<int64_t>();
+	}
+	vector<size_t> toggles = {};
+
+	auto process_wire_bundle_rng = [&](const auto &wb, const auto &constraint, auto &system) {
 		const float scale_factor = (float)((1l << wb->GetSize()) - 1);
 		for (size_t i = 0; i < constraint->times; ++i) {
 			auto rnd_val = constraint->norm_distr(constraint->generator) * scale_factor;
@@ -779,6 +791,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 			}
 
 			wb->SetValue((int64_t)rnd_val, false);
+			io_values[wb->GetName()].emplace_back((int64_t)rnd_val);
 			system.Update();
 		}
 	};
@@ -809,6 +822,7 @@ void ParseStimuli(System &system, YAML::Node config) {
 						constraints.push_back(c);
 					}
 
+					size_t prev = system.GetNumToggles();
 					for (size_t i = 0; i < max_repetitions; ++i) {
 						for (const auto &c : constraints) {
 							if (c->times) {
@@ -840,6 +854,8 @@ void ParseStimuli(System &system, YAML::Node config) {
 										}
 
 										wb->SetValue((int64_t)rnd_val, false);
+
+										io_values[wb->GetName()].emplace_back((int64_t)rnd_val);
 										break;
 									}
 									case Constraint::TYPE::NONE: break;
@@ -849,6 +865,13 @@ void ParseStimuli(System &system, YAML::Node config) {
 						}
 
 						system.Update();
+						for (const auto &o : system.GetOutputWireBundles()) {
+							io_values[o->GetName()].emplace_back(o->Get2CValue());
+						}
+
+						const size_t curr_toggles = system.GetNumToggles();
+						toggles.emplace_back(curr_toggles - prev);
+						prev = curr_toggles;
 					}
 				} else if (value_node.IsMap()) {
 					// The constraint applies to one wire or wire bundle.
@@ -950,6 +973,21 @@ void ParseStimuli(System &system, YAML::Node config) {
 		cout << "#toggles: " << (curr_toggles - prev_toggles) << "\n";
 		prev_toggles = curr_toggles;
 	}
+
+	auto outfile_name = config_file_name.substr(0, config_file_name.find_last_of("."));
+	auto outfile = ofstream(outfile_name + ".txt");
+	for (const auto &[name, vals] : io_values) {
+		outfile << name << ' ' << system.GetWireBundle(name)->GetSize() << '\n';
+		for (const auto &val : vals) {
+			outfile << val << ',';
+		}
+		outfile << '\n';
+	}
+	outfile << "toggles\n";
+	for (const auto &val : toggles) {
+		outfile << val << ',';
+	}
+	outfile.close();
 }
 
 int main(int argc, char **argv) {
@@ -1023,7 +1061,7 @@ int main(int argc, char **argv) {
 		cout << "Number of components: " << system.GetNumComponents() <<
 			"\nNumber of wires: " << system.GetNumWires() << '\n';
 
-		ParseStimuli(system, config);
+		ParseStimuli(system, config, config_file_name);
 
 		cout << "\nSimulation done!\n";
 		cout << "Number of toggles: " << system.GetNumToggles() << '\n';
