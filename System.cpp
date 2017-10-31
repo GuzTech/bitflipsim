@@ -10,17 +10,17 @@ void System::AddComponent(comp_t component) {
 				 << "\" has one or more ports that are not connected.\n";
 		} else {
 			wires.insert(pair<string, wire_t>(w->GetName(), w));
-			all_wires.push_back(w);
+			all_wires.emplace_back(w);
 
 			if (w->IsInputWire()) {
 				if (find(input_wires.begin(),
 						 input_wires.end(),
 						 w) == input_wires.end())
 				{
-					input_wires.push_back(w);
+					input_wires.emplace_back(w);
 				}
 			} else if (w->IsOutputWire()) {
-				output_wires.push_back(w);
+				output_wires.emplace_back(w);
 			}
 
 			const auto &wb = w->GetWireBundle();
@@ -30,6 +30,13 @@ void System::AddComponent(comp_t component) {
 				if (wire_bundles.find(wb_name) == wire_bundles.end())
 				{
 					wire_bundles.insert(pair<string, wb_t>(wb_name, wb));
+					all_bundles.emplace_back(wb);
+
+					if (wb->IsInputBundle()) {
+						input_bundles.emplace_back(wb);
+					} else if (wb->IsOutputBundle()) {
+						output_bundles.emplace_back(wb);
+					}
 				}
 			}
 		}
