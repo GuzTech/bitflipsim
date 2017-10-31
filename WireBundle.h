@@ -17,17 +17,23 @@ public:
 	const int64_t GetValue() const;
 	const int64_t Get2CValue() const;
 	const REPR GetRepresentation() const {return repr;};
+	const bool IsInputBundle() const {return is_input_bundle;}
+	const bool IsOutputBundle() const {return is_output_bundle;}
 
 	const wire_t &operator [] (size_t i) const {return wires[i];}
 
 	void Init();
 	void SetValue(int64_t value, bool propagating = true);
-	void SetRepresentation(REPR _repr) {repr = _repr;};
+	void SetRepresentation(REPR _repr) {repr = _repr;}
+	void SetAsInputBundle() {is_input_bundle = true;}
+	void SetAsOutputBundle() {is_output_bundle = true;}
 private:
 	string name;
 	size_t size;
 	vector<wire_t> wires;
 	REPR repr;
+	bool is_input_bundle = false;
+	bool is_output_bundle = false;
 };
 
 #endif // WIREBUNDLE_H
