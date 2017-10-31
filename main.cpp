@@ -109,7 +109,7 @@ void ParseWireAndSize(string wire_string, string &wire_name, size_t &size, WireB
 			 << "Format for wires:\n"
 			 << "<wire name>\n\n"
 			 << "Format for wire bundles:\n"
-			 << "<wire name> <size> [1c/1C/2c/2C/smag]\n";
+			 << "<wire name> <size> [1c|1C|2c|2C|smag]\n";
 		exit(1);
 	};
 
