@@ -26,7 +26,13 @@ const int64_t WireBundle::Get2CValue() const {
 	int64_t result = GetValue();
 
 	switch(repr) {
-	case REPR::TWOS_COMPLEMENT: break;
+	case REPR::TWOS_COMPLEMENT: {
+		// Modify the result if the MSB is a 1.
+		if (wires.back()->GetValue()) {
+			result = (-1 & ~((1l << (size - 1)) - 1)) | result;
+		}
+		break;
+	}
 	case REPR::ONES_COMPLEMENT: {
 		// Modify the result if the MSB is a 1.
 		if (wires.back()->GetValue()) {
