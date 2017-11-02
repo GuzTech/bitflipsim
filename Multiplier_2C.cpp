@@ -596,7 +596,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 	// level to the A input of the output 2C adder XOR gate.
 	wire = make_shared<Wire>(conv_name_prefix + to_string(num_bits_O - 1));
 	last_row.back()->Connect(PORTS::Cout, wire);
-	output_2C_adder_xor->Connect(PORTS::A, wire);
+	output_2C_xors.back()->Connect(PORTS::A, wire);
 	internal_wires.push_back(wire);
 
 	// Connect the output of the different_sign XOR gate to the
