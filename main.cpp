@@ -781,6 +781,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		io_values[b->GetName()] = vector<int64_t>();
 	}
 	vector<size_t> toggles = {};
+	vector<float> sigmas = {};
 
 	auto process_wire_bundle_rng = [&](const auto &wb, const auto &constraint, auto &system) {
 		const float scale_factor = (float)((1l << wb->GetSize()) - 1);
@@ -819,7 +820,8 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 							max_repetitions = c->times;
 						}
 
-						constraints.push_back(c);
+						constraints.emplace_back(c);
+						sigmas.emplace_back(c->sigma);
 					}
 
 					size_t prev = system.GetNumToggles();
@@ -976,8 +978,16 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 	auto outfile_name = config_file_name.substr(0, config_file_name.find_last_of("."));
 	auto outfile = ofstream(outfile_name + ".txt");
+	size_t i = 0;
 	for (const auto &[name, vals] : io_values) {
-		outfile << name << ' ' << system.GetWireBundle(name)->GetSize() << '\n';
+		outfile << name << ' ' << system.GetWireBundle(name)->GetSize();
+
+		if (sigmas.size()) {
+			outfile << ' ' << sigmas[i++] << '\n';
+		} else {
+			outfile << '\n';
+		}
+
 		for (const auto &val : vals) {
 			outfile << val << ',';
 		}
