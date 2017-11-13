@@ -10,7 +10,7 @@ public:
 	Multiplier_2C(string _name,
 				  size_t _num_bits_A,
 				  size_t _num_bits_B,
-				  MUL_TYPE type = MUL_TYPE::ARRAY_INVERSION);
+				  MUL_TYPE type = MUL_TYPE::ARRAY_SIGN_EXTEND);
 	~Multiplier_2C() = default;
 
 	void Update(bool propagating) override;
@@ -46,7 +46,7 @@ private:
 	xor_t different_sign = nullptr;
 	vector<wire_t> internal_wires;
 
-	MUL_TYPE type = MUL_TYPE::ARRAY_INVERSION;
+	MUL_TYPE type = MUL_TYPE::ARRAY_SIGN_EXTEND;
 };
 
 #endif // MULTIPLIER_2C_H

@@ -43,6 +43,19 @@ void Multiplier_2C::Update(bool propagating) {
 	if (needs_update || !propagating) {
 		switch (type) {
 		case MUL_TYPE::ARRAY_SIGN_EXTEND:
+			for (size_t i = 0; i < longest_path; ++i) {
+				for (const auto &and_row : ands) {
+					for (const auto &a : and_row) {
+						a->Update(propagating);
+					}
+				}
+				for (const auto &adder_row : adders) {
+					for (const auto &a : adder_row) {
+						a->Update(propagating);
+					}
+				}
+			}
+			break;
 		case MUL_TYPE::ARRAY_INVERSION:
 			for (size_t i = 0; i < longest_path; ++i) {
 				different_sign->Update(propagating);
@@ -100,8 +113,40 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 		exit(1);
 	}
 
+	auto error_undefined_port = [&](const auto &wire) {
+		cout << "[Error] Trying to connect wire \"" << wire->GetName()
+			 << "\" to undefined port of Multiplier_2C "
+			 << "\"" << name << "\"\n";
+		exit(1);
+	};
+
 	switch (type) {
-	case MUL_TYPE::ARRAY_SIGN_EXTEND: break;
+	case MUL_TYPE::ARRAY_SIGN_EXTEND:
+		switch (port) {
+		case PORTS::A:
+			// Connect to the AND gates at the given index for
+			// each level of AND gates.
+			for (size_t level = 0; level < num_bits_B; ++level) {
+				ands[level][index]->Connect(PORTS::A, wire);
+			}
+			break;
+		case PORTS::B:
+			for (size_t i = 0; i < num_ands_per_level; ++i) {
+				ands[index][i]->Connect(PORTS::B, wire);
+			}
+			break;
+		case PORTS::O:
+			if (index == 0) {
+				ands[0][0]->Connect(PORTS::O, wire);
+			} else {
+				adders[index - 1][0]->Connect(PORTS::O, wire);
+			}
+			output_wires.emplace_back(wire);
+			break;
+		default:
+			error_undefined_port(wire);
+		}
+		break;
 	case MUL_TYPE::ARRAY_INVERSION:
 		switch (port) {
 		case PORTS::A:
@@ -137,10 +182,7 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 			output_wires.emplace_back(wire);
 			break;
 		default:
-			cout << "[Error] Trying to connect wire \"" << wire->GetName()
-				 << "\" to undefined port of Multiplier_2C "
-				 << "\"" << name << "\"\n";
-			exit(1);
+			error_undefined_port(wire);
 		}
 		break;
 	}
@@ -201,24 +243,40 @@ const vector<wire_t> Multiplier_2C::GetInputWires() const {
 	vector<wire_t> input_wires;
 
 	switch (type) {
-	case MUL_TYPE::ARRAY_SIGN_EXTEND: break;
+	case MUL_TYPE::ARRAY_SIGN_EXTEND:
+		// Add the A inputs of the first level of AND gates.
+		// These are all the A inputs.
+		for (size_t a = 0; a < num_ands_per_level; ++a) {
+			const auto &and_i = ands[0][a];
+			const auto &wire = and_i->GetWire(PORTS::A);
+			input_wires.emplace_back(wire);
+		}
+
+		// Add the B inputs of the first AND gate of each
+		// level. These are all the B inputs.
+		for (size_t b = 0; b < num_and_levels; ++b) {
+			const auto &and_i = ands[b].front();
+			const auto &wire = and_i->GetWire(PORTS::B);
+			input_wires.emplace_back(wire);
+		}
+		break;
 	case MUL_TYPE::ARRAY_INVERSION:
 		// Add the A and B inputs of the 2C XOR gates
 		for (const auto &xor_i : input_2C_xors_A) {
 			const auto &wire_A = xor_i->GetWire(PORTS::A);
-			input_wires.push_back(wire_A);
+			input_wires.emplace_back(wire_A);
 		}
 		// The MSB input is connected to all the B ports, so to prevent
 		// duplicates, just take the wire from the first XOR.
-		input_wires.push_back(input_2C_xors_A.front()->GetWire(PORTS::B));
+		input_wires.emplace_back(input_2C_xors_A.front()->GetWire(PORTS::B));
 
 		for (const auto &xor_i : input_2C_xors_B) {
 			const auto &wire_A = xor_i->GetWire(PORTS::A);
-			input_wires.push_back(wire_A);
+			input_wires.emplace_back(wire_A);
 		}
 		// The MSB input is connected to all the B ports, so to prevent
 		// duplicates, just take the wire from the first XOR.
-		input_wires.push_back(input_2C_xors_B.front()->GetWire(PORTS::B));
+		input_wires.emplace_back(input_2C_xors_B.front()->GetWire(PORTS::B));
 		break;
 	}
 	
@@ -229,7 +287,120 @@ const wire_t Multiplier_2C::GetWire(PORTS port, size_t index) const {
 	return nullptr;
 }
 
+// Generates the standard sign-extensions multiplier.
 void Multiplier_2C::GenerateSignExtendHardware() {
+	// Names for the adders.
+	string row_name_prefix = string(name) + "_S_0_";
+	string row_name = row_name_prefix + "0";
+
+	// First row consists of #(O - 2) FullAdders and 2 HalfAdders.
+	vector<comp_t> adders_row;
+
+	// The rest of the rows consist of #(O - level - 1) FullAdders and 1 HalfAdder.
+	for (size_t b = 0; b < (num_bits_O - 1); ++b) {
+		row_name_prefix = name + "_S_" + to_string(b) + "_";
+		row_name = row_name_prefix + "0";
+		adders_row.emplace_back(make_shared<HalfAdder>(row_name));
+
+		for (size_t a = 1; a < (num_bits_O - b - 1); ++a) {
+			row_name = row_name_prefix + to_string(a);
+			adders_row.emplace_back(make_shared<FullAdder>(row_name));
+		}
+
+		adders.emplace_back(adders_row);
+		adders_row.clear();
+	}
+
+	// Connect the O outputs of the full adders.
+	for (size_t y = 0; y < (num_bits_O - 2); ++y) {
+		row_name_prefix = name + "_S_" + to_string(y);
+
+		for (size_t x = 1; x < (num_bits_O - y - 1); ++x) {
+			row_name = row_name_prefix + "_" + to_string(x) + "_O";
+
+			const auto wire = make_shared<Wire>(row_name);
+			adders[y][x]->Connect(PORTS::O, wire);
+			adders[y+1][x-1]->Connect(PORTS::A, wire);
+			internal_wires.emplace_back(wire);
+		}
+	}
+
+	// Create the AND gates that connect to the inputs of the adders.
+	vector<and_t> ands_row;
+
+	// First level of AND gates is slightly different, so handle it
+	// separately. The first AND gate is directly connected to bit 0
+	// of the result.
+	row_name_prefix = name + "_AND_0_";
+	ands_row.emplace_back(make_shared<And>(row_name_prefix + "0"));
+
+	for (size_t a = 1; a < num_bits_A; ++a) {
+		row_name = row_name_prefix + to_string(a);
+
+		const auto and_gate = make_shared<And>(row_name);
+		const auto and_wire = make_shared<Wire>(row_name + "_O");
+		and_gate->Connect(PORTS::O, and_wire);
+		adders[0][a-1]->Connect(PORTS::A, and_wire);
+
+		if (a == (num_bits_A - 1)) {
+			for (size_t i = (num_bits_A - 1); i < (num_bits_O - 1); ++i) {
+				adders[0][i]->Connect(PORTS::A, and_wire);
+			}
+		}
+
+		ands_row.emplace_back(and_gate);
+
+		internal_wires.emplace_back(and_wire);
+	}
+	ands.emplace_back(ands_row);
+	ands_row.clear();
+
+	// Now handle the rest of the AND gate levels.
+	for (size_t b = 1; b < num_bits_B; ++b) {
+		row_name_prefix = name + "_AND_" + to_string(b) + "_";
+
+		for (size_t a = 0; a < num_ands_per_level; ++a) {
+			row_name = row_name_prefix + to_string(a);
+
+			const auto and_gate = make_shared<And>(row_name);
+			const auto and_wire = make_shared<Wire>(row_name + "_O");
+			and_gate->Connect(PORTS::O, and_wire);
+			adders[b-1][a]->Connect(PORTS::B, and_wire);
+
+			if (a == (num_bits_A - 1)) {
+				for (size_t i = num_bits_A; i < (num_bits_O - b); ++i) {
+					adders[b-1][i]->Connect(PORTS::B, and_wire);
+				}
+			}
+
+			if (b == (num_bits_B - 1)) {
+				for (size_t i = num_bits_B; i < (num_bits_O - a); ++i) {
+					adders[i-1][a]->Connect(PORTS::B, and_wire);
+				}
+			}
+
+			ands_row.emplace_back(and_gate);
+
+			internal_wires.emplace_back(and_wire);
+		}
+
+		ands.emplace_back(ands_row);
+		ands_row.clear();
+	}
+
+	// Create the connections between Cout and Cin of the adders.
+	for (size_t b = 0; b < (num_bits_O - 2); ++b) {
+		row_name_prefix = name + "_Cout_" + to_string(b) + "_";
+
+		for (size_t a = 0; a < (num_bits_O - b - 2); ++a) {
+			row_name = row_name_prefix + to_string(a);
+
+			const auto wire = make_shared<Wire>(row_name);
+			adders[b][a]->Connect(PORTS::Cout, wire);
+			adders[b][a+1]->Connect(PORTS::Cin, wire);
+			internal_wires.emplace_back(wire);
+		}
+	}
 }
 
 // This generates hardware that has a twos-complement operator for
@@ -244,30 +415,30 @@ void Multiplier_2C::GenerateInversionHardware() {
 	// First row consists of #A - 2 FullAdders and 2 HalfAdders.
 	vector<comp_t> adders_row;
 
-	adders_row.push_back(make_shared<HalfAdder>(row_name));
+	adders_row.emplace_back(make_shared<HalfAdder>(row_name));
 	for (size_t a = 1; a < num_adders_per_level - 1; ++a) {
 		row_name = row_name_prefix + to_string(a);
 
-		adders_row.push_back(make_shared<FullAdder>(row_name));
+		adders_row.emplace_back(make_shared<FullAdder>(row_name));
 	}
 	row_name = row_name_prefix + to_string(num_adders_per_level - 1);
-	adders_row.push_back(make_shared<HalfAdder>(row_name));
+	adders_row.emplace_back(make_shared<HalfAdder>(row_name));
 
-	adders.push_back(adders_row);
+	adders.emplace_back(adders_row);
 	adders_row.clear();
 
 	// The rest of the rows consist of #A FullAdders and 1 HalfAdder.
 	for (size_t b = 1; b < num_adder_levels; ++b) {
 		row_name_prefix = name + "_S_" + to_string(b) + "_";
 		row_name = row_name_prefix + "0";
-		adders_row.push_back(make_shared<HalfAdder>(row_name));
+		adders_row.emplace_back(make_shared<HalfAdder>(row_name));
 
 		for (size_t a = 1; a < num_adders_per_level; ++a) {
 			row_name = row_name_prefix + to_string(a);
-			adders_row.push_back(make_shared<FullAdder>(row_name));
+			adders_row.emplace_back(make_shared<FullAdder>(row_name));
 		}
 
-		adders.push_back(adders_row);
+		adders.emplace_back(adders_row);
 		adders_row.clear();
 	}
 
@@ -281,7 +452,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 			const auto wire = make_shared<Wire>(row_name);
 			adders[y][x]->Connect(PORTS::O, wire);
 			adders[y+1][x-1]->Connect(PORTS::A, wire);
-			internal_wires.push_back(wire);
+			internal_wires.emplace_back(wire);
 		}
 	}
 
@@ -292,7 +463,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 	// separately. The first AND gate is directly connected to bit 0
 	// of the result.
 	row_name_prefix = name + "_AND_0_";
-	ands_row.push_back(make_shared<And>(row_name_prefix + "0"));
+	ands_row.emplace_back(make_shared<And>(row_name_prefix + "0"));
 
 	for (size_t a = 1; a < num_ands_per_level; ++a) {
 		row_name = row_name_prefix + to_string(a);
@@ -301,11 +472,11 @@ void Multiplier_2C::GenerateInversionHardware() {
 		const auto and_wire = make_shared<Wire>(row_name + "_O");
 		and_gate->Connect(PORTS::O, and_wire);
 		adders[0][a-1]->Connect(PORTS::A, and_wire);
-		ands_row.push_back(and_gate);
+		ands_row.emplace_back(and_gate);
 
-		internal_wires.push_back(and_wire);
+		internal_wires.emplace_back(and_wire);
 	}
-	ands.push_back(ands_row);
+	ands.emplace_back(ands_row);
 	ands_row.clear();
 
 	// Now handle the rest of the AND gate levels.
@@ -319,12 +490,12 @@ void Multiplier_2C::GenerateInversionHardware() {
 			const auto and_wire = make_shared<Wire>(row_name + "_O");
 			and_gate->Connect(PORTS::O, and_wire);
 			adders[b-1][a]->Connect(PORTS::B, and_wire);
-			ands_row.push_back(and_gate);
+			ands_row.emplace_back(and_gate);
 
-			internal_wires.push_back(and_wire);
+			internal_wires.emplace_back(and_wire);
 		}
 
-		ands.push_back(ands_row);
+		ands.emplace_back(ands_row);
 		ands_row.clear();
 	}
 
@@ -345,7 +516,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 
 					const auto wire = make_shared<Wire>(row_name);
 					adders[b][a]->Connect(PORTS::Cout, wire);
-					internal_wires.push_back(wire);
+					internal_wires.emplace_back(wire);
 
 					if (last_a) {
 						adders[b+1][a]->Connect(PORTS::A, wire);
@@ -367,7 +538,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 
 					const auto wire = make_shared<Wire>(row_name);
 					adders[b][a]->Connect(PORTS::Cout, wire);
-					internal_wires.push_back(wire);
+					internal_wires.emplace_back(wire);
 
 					if (second_to_last_a) {
 						adders[b][a+1]->Connect(PORTS::A, wire);
@@ -388,7 +559,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 				if (!(last_a && last_b)) {
 					const auto wire = make_shared<Wire>(row_name);
 					adders[b][a]->Connect(PORTS::Cout, wire);
-					internal_wires.push_back(wire);
+					internal_wires.emplace_back(wire);
 
 					if (last_a) {
 						// The last FullAdder connects to the A input of the
@@ -416,8 +587,8 @@ void Multiplier_2C::GenerateInversionHardware() {
 		const auto wire = make_shared<Wire>(conv_name + "_O");
 		inv_xor->Connect(PORTS::O, wire);
 
-		input_2C_xors_A.push_back(inv_xor);
-		internal_wires.push_back(wire);
+		input_2C_xors_A.emplace_back(inv_xor);
+		internal_wires.emplace_back(wire);
 	}
 
 	// Create the half adders for the A input.
@@ -438,8 +609,8 @@ void Multiplier_2C::GenerateInversionHardware() {
 			ands[level][i]->Connect(PORTS::A, out_wire);
 		}
 
-		input_2C_adders_A.push_back(inv_ha);
-		internal_wires.push_back(out_wire);
+		input_2C_adders_A.emplace_back(inv_ha);
+		internal_wires.emplace_back(out_wire);
 	}
 
 	// Connect the carry out of the half adders to the
@@ -460,7 +631,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 			}
 		}
 
-		internal_wires.push_back(wire);
+		internal_wires.emplace_back(wire);
 	}
 
 	/*
@@ -474,8 +645,8 @@ void Multiplier_2C::GenerateInversionHardware() {
 		const auto wire = make_shared<Wire>(conv_name + "_O");
 		inv_xor->Connect(PORTS::O, wire);
 
-		input_2C_xors_B.push_back(inv_xor);
-		internal_wires.push_back(wire);
+		input_2C_xors_B.emplace_back(inv_xor);
+		internal_wires.emplace_back(wire);
 	}
 
 	// Create the half adders for the B input.
@@ -496,8 +667,8 @@ void Multiplier_2C::GenerateInversionHardware() {
 			ands[i][a]->Connect(PORTS::B, out_wire);
 		}
 
-		input_2C_adders_B.push_back(inv_ha);
-		internal_wires.push_back(out_wire);
+		input_2C_adders_B.emplace_back(inv_ha);
+		internal_wires.emplace_back(out_wire);
 	}
 
 	// Connect the carry out of the half adders to the
@@ -518,7 +689,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 			}
 		}
 
-		internal_wires.push_back(cout_wire);
+		internal_wires.emplace_back(cout_wire);
 	}
 
 	/*
@@ -532,8 +703,8 @@ void Multiplier_2C::GenerateInversionHardware() {
 		const auto inv_wire = make_shared<Wire>(conv_name + "_O");
 		inv_xor->Connect(PORTS::O, inv_wire);
 
-		output_2C_xors.push_back(inv_xor);
-		internal_wires.push_back(inv_wire);
+		output_2C_xors.emplace_back(inv_xor);
+		internal_wires.emplace_back(inv_wire);
 	}
 
 	// Create the half adders for the output.
@@ -543,7 +714,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 		const auto inv_ha = make_shared<HalfAdder>(conv_name);
 		const auto &xor_wire = output_2C_xors[i]->GetWire(PORTS::O);
 		inv_ha->Connect(PORTS::A, xor_wire);
-		output_2C_adders.push_back(inv_ha);
+		output_2C_adders.emplace_back(inv_ha);
 	}
 
 	// We create one more XOR gate than half adders, because
@@ -559,7 +730,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 		const auto cout_wire = make_shared<Wire>(conv_name);
 		output_2C_adders[i]->Connect(PORTS::Cout, cout_wire);
 		output_2C_adders[i+1]->Connect(PORTS::B, cout_wire);
-		internal_wires.push_back(cout_wire);
+		internal_wires.emplace_back(cout_wire);
 	}
 
 	// Connect the carry out of the last half adder to
@@ -568,7 +739,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 		conv_name_prefix + to_string(num_bits_O - 2) + "_Cout");
 	output_2C_adders.back()->Connect(PORTS::Cout, wire);
 	output_2C_adder_xor->Connect(PORTS::A, wire);
-	internal_wires.push_back(wire);
+	internal_wires.emplace_back(wire);
 
 	// Connect the XOR gates to the last level of adders.
 	conv_name_prefix = name + "_in_2C_XOR_";
@@ -589,7 +760,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 			adders[i - 1][0]->Connect(PORTS::O, xor_wire);
 		}
 		output_2C_xors[i]->Connect(PORTS::A, xor_wire);
-		internal_wires.push_back(xor_wire);
+		internal_wires.emplace_back(xor_wire);
 	}
 
 	// Connect the carry out of the last adder of the last
@@ -597,7 +768,7 @@ void Multiplier_2C::GenerateInversionHardware() {
 	wire = make_shared<Wire>(conv_name_prefix + to_string(num_bits_O - 1));
 	last_row.back()->Connect(PORTS::Cout, wire);
 	output_2C_xors.back()->Connect(PORTS::A, wire);
-	internal_wires.push_back(wire);
+	internal_wires.emplace_back(wire);
 
 	// Connect the output of the different_sign XOR gate to the
 	// output 2C XOR gates and the first output 2C half
@@ -610,5 +781,5 @@ void Multiplier_2C::GenerateInversionHardware() {
 		x->Connect(PORTS::B, wire);
 	}
 	output_2C_adders.front()->Connect(PORTS::B, wire);
-	internal_wires.push_back(wire);
+	internal_wires.emplace_back(wire);
 }
