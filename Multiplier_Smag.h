@@ -5,12 +5,12 @@
 
 class Multiplier_Smag : public Component {
 public:
-	enum class MUL_TYPE {ARRAY};
+	enum class MUL_TYPE {CARRY_PROPAGATE, CARRY_SAVE};
 	
 	Multiplier_Smag(string _name,
 					size_t _num_bits_A,
 					size_t _num_bits_B,
-					MUL_TYPE type = MUL_TYPE::ARRAY);
+					MUL_TYPE type = MUL_TYPE::CARRY_PROPAGATE);
 	~Multiplier_Smag() = default;
 
 	void Update(bool propagating) override;
@@ -23,7 +23,8 @@ public:
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
 private:
-	void GenerateArrayHardware();
+	void GenerateCarryPropagateArrayHardware();
+	void GenerateCarrySaveArrayHardware();
 
 	size_t num_bits_A = 0;
 	size_t num_bits_B = 0;
@@ -38,7 +39,7 @@ private:
 	vector<wire_t> internal_wires;
 	xor_t sign = nullptr;
 
-	MUL_TYPE type = MUL_TYPE::ARRAY;
+	MUL_TYPE type = MUL_TYPE::CARRY_PROPAGATE;
 };
 
 #endif // MULTIPLIER_SMAG_H
