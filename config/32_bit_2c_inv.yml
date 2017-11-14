@@ -1,5 +1,12 @@
 components:
-  Multiplier_2C: [2c_mag, 32, 32]
+  Multiplier: {
+    name: 2c_mag,
+    A width: 32,
+    B width: 32,
+    number format: 2C,
+    layout: carry propagate,
+    type: inversion
+  }
 wires:
   A 32:
     - from: input

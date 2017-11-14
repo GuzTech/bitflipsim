@@ -1,5 +1,12 @@
 components:
-  Multiplier_Smag: [smag, 32, 32]
+  Multiplier: {
+    name: smag,
+    A width: 32,
+    B width: 32,
+    number format: SMAG,
+    layout: carry propagate,
+    type: none
+  }
 wires:
   A 32 smag:
     - from: input
