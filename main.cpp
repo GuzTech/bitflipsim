@@ -250,6 +250,95 @@ void ParsePortAndIndex(const string &wire_name,
 	}
 }
 
+void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &multiplier) {
+	string name;
+	size_t num_bits_A = 0;
+	size_t num_bits_B = 0;
+	NUMFMT format = NUMFMT::NONE;
+	LAYOUT layout = LAYOUT::NONE;
+	TYPE type = TYPE::CARRY_PROPAGATE;
+
+	if (multiplier["name"]) {
+		name = multiplier["name"].as<string>();
+	} else {
+		cout << "[Error] Multiplier has no name.\n";
+		exit(1);
+	}
+
+	if (multiplier["A width"]) {
+		try {
+			num_bits_A = multiplier["A width"].as<size_t>();
+		} catch (YAML::TypedBadConversion<size_t> e) {
+			cout << "[Error] Multiplier \"" << name << "\" port A width is not a number: " << e.msg << '\n';
+			exit(1);
+		}
+	} else {
+		cout << "[Error] Property \"A width\" for multiplier \"" << name << "\" is required, but was not found.\n";
+		exit(1);
+	}
+
+	if (multiplier["B width"]) {
+		try {
+			num_bits_B = multiplier["B width"].as<size_t>();
+		} catch (YAML::TypedBadConversion<size_t> e) {
+			cout << "[Error] Multiplier \"" << name << "\" port B width is not a number: " << e.msg << '\n';
+			exit(1);
+		}
+	} else {
+		cout << "[Error] Property \"B width\" for multiplier \"" << name << "\" is required, but was not found.\n";
+		exit(1);
+	}
+
+	if (multiplier["number format"]) {
+		const auto &fmt_string = multiplier["number format"].as<string>();
+
+		if (fmt_string.compare("2C") == 0)			format = NUMFMT::TWOS_COMPLEMENT;
+		else if (fmt_string.compare("1C") == 0) 	format = NUMFMT::ONES_COMPLEMENT;
+		else if (fmt_string.compare("SMAG") == 0) 	format = NUMFMT::SIGNED_MAGNITUDE;
+		else if (fmt_string.compare("UINT") == 0)	format = NUMFMT::UNSIGNED;
+		else {
+			cout << "[Error] Property \"number format\" for multiplier \"" << name << "\" has an unsupported value. "
+				 << "Supported values are \"2C\", \"1C\", \"SMAG\", and \"UINT\".\n";
+			exit(1);
+		}
+	} else {
+		cout << "[Error] Property \"number format\" for multiplier \"" << name << "\" is required, but was not found.\n";
+		exit(1);
+	}
+
+	if (multiplier["layout"]) {
+		const auto &layout_string = multiplier["layout"].as<string>();
+
+		if (layout_string.compare("array") == 0) 				layout = LAYOUT::ARRAY;
+		else if (layout_string.compare("booth radix-2") == 0) 	layout = LAYOUT::BOOTH_RADIX_2;
+		else if (layout_string.compare("booth radix-4") == 0)	layout = LAYOUT::BOOTH_RADIX_4;
+		else {
+			cout << "[Error] Property \"layout\" for multiplier \"" << name << "\" has an unsupported value. "
+				 << "Supported values are \"array\", \"booth radix-2\", and \"booth radix-4\".\n";
+			exit(1);
+		}
+	} else {
+		cout << "[Error] Property \"layout\" for multiplier \"" << name << "\" is required, but was not found.\n";
+		exit(1);
+	}
+
+	if (multiplier["type"]) {
+		const auto &type_string = multiplier["type"].as<string>();
+
+		if (type_string.compare("carry propagate") == 0)	type = TYPE::CARRY_PROPAGATE;
+		else if (type_string.compare("carry save") == 0)	type = TYPE::CARRY_SAVE;
+		else if (type_string.compare("sign extend") == 0)	type = TYPE::SIGN_EXTEND;
+		else {
+			cout << "[Error] Property \"type\" for multiplier \"" << name << "\" has an unsupported value. "
+				 << "Supported values are \"carry propagate\", \"carry save\", and \"sign extend\".\n";
+			exit(1);
+		}
+	} else {
+		cout << "[Error] Property \"type\" for multiplier \"" << name << "\" is required, but was not found.\n";
+		exit(1);
+	}
+}
+
 void ParseComponents(map<string, comp_t> &comps, const YAML::Node &config) {
 	const auto &components = config["components"];
 
@@ -268,6 +357,8 @@ void ParseComponents(map<string, comp_t> &comps, const YAML::Node &config) {
 		if (value) {
 			if (value.IsScalar()) {
 				comp_name = value.as<string>();
+			} else if (value.IsMap()) {
+
 			} else if (value.IsSequence()) {
 				comp_name = value[0].as<string>();
 
@@ -1092,7 +1183,7 @@ int main(int argc, char **argv) {
 				 << "\" #toggles: " << c->GetNumToggles()
 				 << '\n';
 		}
-#else
+#endif
 		cout << "\nInputs:\n";
 		vector<wb_t> processed_wire_bundles;
 
@@ -1138,7 +1229,6 @@ int main(int argc, char **argv) {
 				cout << ow->GetName() << ": " << ow->GetValue() << '\n';
 			}
 		}
-#endif
 	}
 
 	return 0;
