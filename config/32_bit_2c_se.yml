@@ -1,0 +1,26 @@
+components:
+  Multiplier: {
+    name: 2c_mag,
+    A width: 32,
+    B width: 32,
+    number format: 2C,
+    layout: carry propagate,
+    type: sign extension
+  }
+wires:
+  A 32:
+    - from: input
+    - to: 2c_mag
+      port: A 0 31
+  B 32:
+    - from: input
+    - to: 2c_mag
+      port: B 0 31
+  O 64:
+    - from: 2c_mag
+      port: O 0 63
+    - to: output
+stimuli:
+  - constraint:
+    - {wire: A, type: rng, sigma: 0.00000001, seed: 3, times: 10000}
+    - {wire: B, type: rng, sigma: 0.00000001, seed: 5, times: 10000}
