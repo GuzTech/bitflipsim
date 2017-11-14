@@ -256,7 +256,7 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 	size_t num_bits_B = 0;
 	NUMFMT format = NUMFMT::NONE;
 	LAYOUT layout = LAYOUT::NONE;
-	TYPE type = TYPE::CARRY_PROPAGATE;
+	TYPE type = TYPE::NONE;
 
 	if (multiplier["name"]) {
 		name = multiplier["name"].as<string>();
@@ -309,12 +309,13 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 	if (multiplier["layout"]) {
 		const auto &layout_string = multiplier["layout"].as<string>();
 
-		if (layout_string.compare("array") == 0) 				layout = LAYOUT::ARRAY;
+		if (layout_string.compare("carry propagate") == 0) 		layout = LAYOUT::CARRY_PROPAGATE;
+		else if (layout_string.compare("carry save") == 0)		layout = LAYOUT::CARRY_SAVE;
 		else if (layout_string.compare("booth radix-2") == 0) 	layout = LAYOUT::BOOTH_RADIX_2;
 		else if (layout_string.compare("booth radix-4") == 0)	layout = LAYOUT::BOOTH_RADIX_4;
 		else {
 			cout << "[Error] Property \"layout\" for multiplier \"" << name << "\" has an unsupported value. "
-				 << "Supported values are \"array\", \"booth radix-2\", and \"booth radix-4\".\n";
+				 << "Supported values are \"carry propagate\", \"carry save\", \"booth radix-2\", and \"booth radix-4\".\n";
 			exit(1);
 		}
 	} else {
@@ -325,17 +326,46 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 	if (multiplier["type"]) {
 		const auto &type_string = multiplier["type"].as<string>();
 
-		if (type_string.compare("carry propagate") == 0)	type = TYPE::CARRY_PROPAGATE;
-		else if (type_string.compare("carry save") == 0)	type = TYPE::CARRY_SAVE;
-		else if (type_string.compare("sign extend") == 0)	type = TYPE::SIGN_EXTEND;
+		if (type_string.compare("inversion") == 0)				type = TYPE::INVERSION;
+		else if (type_string.compare("sign extension") == 0)	type = TYPE::SIGN_EXTEND;
+		else if (type_string.compare("none") == 0)				type = TYPE::NONE;
 		else {
 			cout << "[Error] Property \"type\" for multiplier \"" << name << "\" has an unsupported value. "
-				 << "Supported values are \"carry propagate\", \"carry save\", and \"sign extend\".\n";
+				 << "Supported values are \"inversion\", and \"sign extension\".\n";
 			exit(1);
 		}
-	} else {
-		cout << "[Error] Property \"type\" for multiplier \"" << name << "\" is required, but was not found.\n";
-		exit(1);
+	}
+	//else {
+	//	cout << "[Error] Property \"type\" for multiplier \"" << name << "\" is required, but was not found.\n";
+	//	exit(1);
+	//}
+
+	switch (format) {
+	case NUMFMT::TWOS_COMPLEMENT:
+		if (layout == LAYOUT::CARRY_PROPAGATE) {
+			if (type == TYPE::INVERSION) {
+				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::ARRAY_INVERSION);
+			}
+			else if (type == TYPE::SIGN_EXTEND) {
+				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::ARRAY_SIGN_EXTEND);
+			} else {
+				cout << "[Error] Unsupported combination of properties for multiplier \"" << name << "\".\n";
+				exit(1);
+			}
+		}
+		break;
+	case NUMFMT::SIGNED_MAGNITUDE:
+		if (layout == LAYOUT::CARRY_PROPAGATE) {
+			comps[name] = make_shared<Multiplier_Smag>(name, num_bits_A, num_bits_B, Multiplier_Smag::MUL_TYPE::CARRY_PROPAGATE);
+		} else if (layout == LAYOUT::CARRY_SAVE) {
+			comps[name] = make_shared<Multiplier_Smag>(name, num_bits_A, num_bits_B, Multiplier_Smag::MUL_TYPE::CARRY_SAVE);
+		} else {
+			cout << "[Error] Unsupported combination of properties for multiplier \"" << name << "\".\n";
+			exit(1);
+		}
+		break;
+	default:
+		break;
 	}
 }
 
@@ -392,6 +422,7 @@ void ParseComponents(map<string, comp_t> &comps, const YAML::Node &config) {
 		else if (comp_type.compare("Not") == 0)              comps[comp_name] = make_shared<Not>(comp_name);
 		else if (comp_type.compare("Mux") == 0)              comps[comp_name] = make_shared<Mux>(comp_name);
 		else if (comp_type.compare("RippleCarryAdder") == 0) comps[comp_name] = make_shared<RippleCarryAdder>(comp_name, num_bits_A);
+		else if (comp_type.compare("Multiplier") == 0) 		 ParseMultiplierComponent(comps, it->second);
 		else if (comp_type.compare("Multiplier_2C") == 0)    comps[comp_name] = make_shared<Multiplier_2C>(comp_name, num_bits_A, num_bits_B);
 		else if (comp_type.compare("Multiplier_Smag") == 0)  comps[comp_name] = make_shared<Multiplier_Smag>(comp_name, num_bits_A, num_bits_B);
 		else {
