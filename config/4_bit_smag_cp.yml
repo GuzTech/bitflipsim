@@ -1,0 +1,26 @@
+components:
+  Multiplier: {
+    name: smag,
+    A width: 4,
+    B width: 4,
+    number format: SMAG,
+    layout: carry propagate,
+    type: none
+  }
+wires:
+  A 4 smag:
+    - from: input
+    - to: smag
+      port: A 0 3
+  B 4 smag:
+    - from: input
+    - to: smag
+      port: B 0 3
+  O 7 smag:
+    - from: smag
+      port: O 0 6
+    - to: output
+stimuli:
+  - A: 0d3
+    B: 0d7
+  - A: 0d-3

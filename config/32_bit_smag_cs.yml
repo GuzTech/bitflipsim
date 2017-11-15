@@ -1,0 +1,26 @@
+components:
+  Multiplier: {
+    name: smag,
+    A width: 32,
+    B width: 32,
+    number format: SMAG,
+    layout: carry save,
+    type: none
+  }
+wires:
+  A 32 smag:
+    - from: input
+    - to: smag
+      port: A 0 31
+  B 32 smag:
+    - from: input
+    - to: smag
+      port: B 0 31
+  O 63 smag:
+    - from: smag
+      port: O 0 62
+    - to: output
+stimuli:
+  - constraint:
+    - {wire: A, type: rng, sigma: 0.00000001, seed: 3, times: 10000}
+    - {wire: B, type: rng, sigma: 0.00000001, seed: 5, times: 10000}
