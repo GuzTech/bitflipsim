@@ -89,52 +89,6 @@ void Multiplier_Smag::Connect(PORTS port, const wire_t &wire, size_t index) {
 
 	switch (type) {
 	case MUL_TYPE::CARRY_PROPAGATE:
-		switch (port) {
-		case PORTS::A:
-			if (index == num_adders_per_level) {
-				// MSB is the sign bit.
-				sign->Connect(PORTS::A, wire);
-			} else {
-				// Connect to the AND gates at the given index for
-				// each level of AND gates.
-				for (size_t level = 0; level < num_and_levels; ++level) {
-					ands[level][index]->Connect(PORTS::A, wire);
-				}
-			}
-			break;
-		case PORTS::B:
-			if (index == num_adders_per_level) {
-				// MSB is the sign bit.
-				sign->Connect(PORTS::B, wire);
-			} else {
-				// Connect to all AND gates at level "index".
-				for (size_t i = 0; i < num_ands_per_level; ++i) {
-					ands[index][i]->Connect(PORTS::B, wire);
-				}
-			}
-			break;
-		case PORTS::O:
-			if (index == (num_bits_O - 1)) {
-				// MSB is the sign bit.
-				sign->Connect(PORTS::O, wire);
-			} else {
-				if (index == (num_bits_O - 2)) {
-					// One bit less than the sign bit is the carry out of the last full adder.
-					adders[num_adder_levels - 1][num_adders_per_level - 1]->Connect(PORTS::Cout, wire);
-				} else if (index > (num_bits_O - num_adders_per_level - 2)) {
-					adders[num_adder_levels - 1][index - num_adders_per_level + 1]->Connect(PORTS::O, wire);
-				} else if (index == 0) {
-					ands[0][0]->Connect(PORTS::O, wire);
-				} else {
-					adders[index - 1][0]->Connect(PORTS::O, wire);
-				}
-			}
-			output_wires.emplace_back(wire);
-			break;
-		default:
-			error_undefined_port(wire);
-		}
-		break;
 	case MUL_TYPE::CARRY_SAVE:
 		switch (port) {
 		case PORTS::A:
@@ -603,6 +557,8 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 			const auto wire = make_shared<Wire>(row_name);
 			adders[b][a]->Connect(PORTS::Cout, wire);
 			adders[b+1][a]->Connect(PORTS::B, wire);
+
+			internal_wires.emplace_back(wire);
 		}
 	}
 
@@ -614,5 +570,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 		const auto wire = make_shared<Wire>(row_name);
 		adders.back()[a]->Connect(PORTS::Cout, wire);
 		adders.back()[a+1]->Connect(PORTS::Cin, wire);
+
+		internal_wires.emplace_back(wire);
 	}
 }
