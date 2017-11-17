@@ -234,7 +234,7 @@ void Multiplier_Smag::GenerateCarryPropagateArrayHardware() {
 	vector<comp_t> adders_row;
 
 	adders_row.emplace_back(make_shared<HalfAdder>(row_name));
-	for (size_t a = 1; a < num_adders_per_level - 1; ++a) {
+	for (size_t a = 1; a < (num_adders_per_level - 1); ++a) {
 		row_name = row_name_prefix + to_string(a);
 
 		adders_row.emplace_back(make_shared<FullAdder>(row_name));
@@ -349,7 +349,7 @@ void Multiplier_Smag::GenerateCarryPropagateArrayHardware() {
 			} else {
 				// If we have only 1 level of adders, do not connect the last
 				// full adder carry output to the next level, since there is none.
-				for (size_t a = 0; a < num_adders_per_level - 1; ++a) {
+				for (size_t a = 0; a < (num_adders_per_level - 1); ++a) {
 					row_name = row_name_prefix + to_string(a);
 
 					const bool second_to_last_a = a == (num_adders_per_level - 2);
@@ -403,7 +403,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 	vector<comp_t> adders_row;
 
 	adders_row.emplace_back(make_shared<HalfAdder>(row_name));
-	for (size_t a = 1; a < num_adders_per_level - 1; ++a) {
+	for (size_t a = 1; a < (num_adders_per_level - 1); ++a) {
 		row_name = row_name_prefix + to_string(a);
 
 		adders_row.emplace_back(make_shared<FullAdder>(row_name));
@@ -414,13 +414,13 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 	adders.emplace_back(adders_row);
 	adders_row.clear();
 
-	// The rest of the rows consist of #(A - 2) FullAdders and 1 HalfAdder.
+	// The rest of the rows consist of (num_bits_A - 2) FullAdders and 1 HalfAdder.
 	for (size_t b = 1; b < num_adder_levels; ++b) {
 		row_name_prefix = name + "_S_" + to_string(b) + "_";
 		row_name = row_name_prefix + "0";
 		adders_row.emplace_back(make_shared<HalfAdder>(row_name));
 
-		for (size_t a = 1; a < num_bits_A; ++a) {
+		for (size_t a = 1; a < num_adders_per_level; ++a) {
 			row_name = row_name_prefix + to_string(a);
 			adders_row.emplace_back(make_shared<FullAdder>(row_name));
 		}
@@ -556,7 +556,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 
 			const auto wire = make_shared<Wire>(row_name);
 			adders[b][a]->Connect(PORTS::Cout, wire);
-			adders[b+1][a]->Connect(PORTS::B, wire);
+			adders[b + 1][a]->Connect(PORTS::B, wire);
 
 			internal_wires.emplace_back(wire);
 		}
@@ -569,7 +569,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 
 		const auto wire = make_shared<Wire>(row_name);
 		adders.back()[a]->Connect(PORTS::Cout, wire);
-		adders.back()[a+1]->Connect(PORTS::Cin, wire);
+		adders.back()[a + 1]->Connect(PORTS::Cin, wire);
 
 		internal_wires.emplace_back(wire);
 	}
