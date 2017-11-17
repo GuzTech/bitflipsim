@@ -399,7 +399,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 	string row_name_prefix = string(name) + "_S_0_";
 	string row_name = row_name_prefix + "0";
 
-	// First row consists of #(A - 3) FullAdders and 2 HalfAdders.
+	// First row consists of (num_bits_A - 2) FullAdders and 2 HalfAdders.
 	vector<comp_t> adders_row;
 
 	adders_row.emplace_back(make_shared<HalfAdder>(row_name));
@@ -446,8 +446,8 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 	// Create the AND gates that connect to the inputs of the adders.
 	vector<and_t> ands_row;
 
-	// First three levels of AND gates are slightly different, so handle it
-	// separately. The first AND gate is directly connected to bit 0
+	// First three levels of AND gates are slightly different, so handle
+	// it separately. The first AND gate is directly connected to bit 0
 	// of the result.
 	row_name_prefix = name + "_AND_0_";
 	ands_row.emplace_back(make_shared<And>(row_name_prefix + "0"));
@@ -496,7 +496,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 			const auto and_wire = make_shared<Wire>(row_name + "_O");
 			and_gate->Connect(PORTS::O, and_wire);
 
-			if (x >= num_adders_per_level) {
+			if (x == num_adders_per_level) {
 				x = (num_adders_per_level - 1);
 				y++;
 			}
@@ -518,8 +518,8 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 	for (size_t b = 3; b < num_and_levels; ++b) {
 		row_name_prefix = name + "_AND_" + to_string(b) + "_";
 
-		size_t x = 1;     // starting position
-		size_t y = b - 2; // level - 2
+		size_t x = 1;		// Starting x position in the row.
+		size_t y = b - 2;	// Starting y position is level - 2.
 
 		for (size_t a = 0; a < num_ands_per_level; ++a) {
 			row_name = row_name_prefix + to_string(a);
@@ -528,7 +528,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 			const auto and_wire = make_shared<Wire>(row_name + "_O");
 			and_gate->Connect(PORTS::O, and_wire);
 
-			if (x >= num_adders_per_level) {
+			if (x == num_adders_per_level) {
 				x = (num_adders_per_level - 1);
 				y++;
 			}
