@@ -5,12 +5,12 @@
 
 class Multiplier_2C : public Component {
 public:
-	enum class MUL_TYPE {ARRAY_SIGN_EXTEND, ARRAY_INVERSION};
+	enum class MUL_TYPE {CARRY_PROPAGATE_SIGN_EXTEND, CARRY_PROPAGATE_INVERSION, CARRY_SAVE_SIGN_EXTEND, CARRY_SAVE_INVERSION};
 	
 	Multiplier_2C(string _name,
 				  size_t _num_bits_A,
 				  size_t _num_bits_B,
-				  MUL_TYPE type = MUL_TYPE::ARRAY_SIGN_EXTEND);
+				  MUL_TYPE type = MUL_TYPE::CARRY_SAVE_SIGN_EXTEND);
 	~Multiplier_2C() = default;
 
 	void Update(bool propagating) override;
@@ -23,8 +23,10 @@ public:
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
 private:
-	void GenerateSignExtendHardware();
-	void GenerateInversionHardware();
+	void GenerateCarryPropagateSignExtendHardware();
+	void GenerateCarrySaveSignExtendHardware();
+	void GenerateCarryPropagateInversionHardware();
+	void GenerateCarrySaveInversionHardware();
 
 	size_t num_bits_A = 0;
 	size_t num_bits_B = 0;
@@ -46,7 +48,7 @@ private:
 	xor_t different_sign = nullptr;
 	vector<wire_t> internal_wires;
 
-	MUL_TYPE type = MUL_TYPE::ARRAY_SIGN_EXTEND;
+	MUL_TYPE type = MUL_TYPE::CARRY_SAVE_SIGN_EXTEND;
 };
 
 #endif // MULTIPLIER_2C_H

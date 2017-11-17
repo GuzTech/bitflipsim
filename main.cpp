@@ -344,10 +344,26 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 	case NUMFMT::TWOS_COMPLEMENT:
 		if (layout == LAYOUT::CARRY_PROPAGATE) {
 			if (type == TYPE::INVERSION) {
-				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::ARRAY_INVERSION);
+				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_INVERSION);
 			}
 			else if (type == TYPE::SIGN_EXTEND) {
-				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::ARRAY_SIGN_EXTEND);
+				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_SIGN_EXTEND);
+			} else if (type == TYPE::NONE) {
+				cout << "[Error] Twos-complement multiplier \"" << name << "\" cannot have \"none\" as a type.\n";
+				exit(1);
+			} else {
+				cout << "[Error] Unsupported combination of properties for multiplier \"" << name << "\".\n";
+				exit(1);
+			}
+		} else if (layout == LAYOUT::CARRY_SAVE) {
+			if (type == TYPE::INVERSION) {
+				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_INVERSION);
+			}
+			else if (type == TYPE::SIGN_EXTEND) {
+				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_SIGN_EXTEND);
+			} else if (type == TYPE::NONE) {
+				cout << "[Error] Twos-complement multiplier \"" << name << "\" cannot have \"none\" as a type.\n";
+				exit(1);
 			} else {
 				cout << "[Error] Unsupported combination of properties for multiplier \"" << name << "\".\n";
 				exit(1);
