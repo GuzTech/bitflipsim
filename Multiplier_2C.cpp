@@ -65,6 +65,26 @@ void Multiplier_2C::Update(bool propagating) {
 				}
 			}
 			break;
+		case MUL_TYPE::CARRY_SAVE_BAUGH_WOOLEY:
+			for (size_t i = 0; i < longest_path; ++i) {
+				for (const auto &notA : input_nots_A) {
+					notA->Update(propagating);
+				}
+				for (const auto &notB : input_nots_B) {
+					notB->Update(propagating);
+				}
+				for (const auto &and_row : ands) {
+					for (const auto &a : and_row) {
+						a->Update(propagating);
+					}
+				}
+				for (const auto &adder_row : adders) {
+					for (const auto &a : adder_row) {
+						a->Update(propagating);
+					}
+				}
+			}
+			break;
 		case MUL_TYPE::CARRY_PROPAGATE_INVERSION:
 		case MUL_TYPE::CARRY_SAVE_INVERSION:
 			for (size_t i = 0; i < longest_path; ++i) {
@@ -103,7 +123,7 @@ void Multiplier_2C::Update(bool propagating) {
 			}
 			break;
 		default:
-			cout << "[Error] Baugh-Wooley multiplier not implemented yet!\n";
+			cout << "[Error] Multiplier not implemented yet!\n";
 			exit(1);
 			break;
 		}
@@ -162,6 +182,44 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 			error_undefined_port(wire);
 		}
 		break;
+	case MUL_TYPE::CARRY_SAVE_BAUGH_WOOLEY:
+		switch (port) {
+		case PORTS::A:
+			input_nots_A[index]->Connect(PORTS::I, wire);
+
+			if (index < (num_bits_A - 1)) {
+				for (size_t level = 0; level < (num_adder_levels - 1); ++level) {
+					ands[level][index]->Connect(PORTS::A, wire);
+				}
+			} else {
+				ands.back().back()->Connect(PORTS::A, wire);
+				adders.back()[0]->Connect(PORTS::B, wire);
+			}
+			break;
+		case PORTS::B:
+			input_nots_B[index]->Connect(PORTS::I, wire);
+
+			if (index < (num_bits_B - 1)) {
+				for (size_t i = 0; i < (num_ands_per_level - 1); ++i) {
+					ands[index][i]->Connect(PORTS::B, wire);
+				}
+			} else {
+				adders.back()[0]->Connect(PORTS::Cin, wire);
+			}
+			break;
+		case PORTS::O:
+			if (index == 0) {
+				ands[0][0]->Connect(PORTS::O, wire);
+			} else if (index < (num_bits_A - 1)) {
+				adders[index - 1][0]->Connect(PORTS::O, wire);
+			} else {
+				adders.back()[index - (num_bits_A - 1)]->Connect(PORTS::O, wire);
+			}
+			break;
+		default:
+			error_undefined_port(wire);
+		}
+		break;
 	case MUL_TYPE::CARRY_PROPAGATE_INVERSION:
 	case MUL_TYPE::CARRY_SAVE_INVERSION:
 		switch (port) {
@@ -202,7 +260,7 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 		}
 		break;
 	default:
-		cout << "[Error] Baugh-Wooley multiplier not implemented yet!\n";
+		cout << "[Error] Multiplier not implemented yet!\n";
 		exit(1);
 		break;
 	}
@@ -301,7 +359,7 @@ const vector<wire_t> Multiplier_2C::GetInputWires() const {
 		input_wires.emplace_back(input_2C_xors_B.front()->GetWire(PORTS::B));
 		break;
 	default:
-		cout << "[Error] Baugh-Wooley multiplier not implemented yet!\n";
+		cout << "[Error] Multiplier not implemented yet!\n";
 		exit(1);
 		break;
 	}
@@ -1472,6 +1530,8 @@ void Multiplier_2C::GenerateCarrySaveBaughWooleyHardware() {
 		ands_row.emplace_back(and_gate);
 		internal_wires.emplace_back(and_wire);
 	}
+	ands.emplace_back(ands_row);
+	ands_row.clear();
 
 	// The next levels of AND gates have a regular structure except the last two.
 	for (size_t b = 1; b < (num_and_levels - 1); ++b) {
@@ -1494,6 +1554,8 @@ void Multiplier_2C::GenerateCarrySaveBaughWooleyHardware() {
 			ands_row.emplace_back(and_gate);
 			internal_wires.emplace_back(and_wire);
 		}
+		ands.emplace_back(ands_row);
+		ands_row.clear();
 	}
 
 	// The last two levels are different, so handle them separately.
@@ -1515,13 +1577,15 @@ void Multiplier_2C::GenerateCarrySaveBaughWooleyHardware() {
 				adder->Connect(PORTS::A, input_nots_A.back()->GetWire(PORTS::O));
 				adder->Connect(PORTS::Cin, input_nots_B.back()->GetWire(PORTS::O));
 			} else {
-				and_gate->Connect(PORTS::B, input_nots_A[a]->GetWire(PORTS::O));
+				and_gate->Connect(PORTS::A, input_nots_A[a]->GetWire(PORTS::O));
 				adders[b - 1][a]->Connect(PORTS::B, and_wire);
 			}
 
 			ands_row.emplace_back(and_gate);
 			internal_wires.emplace_back(and_wire);
 		}
+		ands.emplace_back(ands_row);
+		ands_row.clear();
 
 		// The last level just requires hooking up the MSB of A and B,
 		// and a hardcoded '1' to the last FA.
