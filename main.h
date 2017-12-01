@@ -32,7 +32,7 @@ class System;
 enum class PORTS {A, B, Cin, Cout, I, O, S};
 enum class NUMFMT {NONE, TWOS_COMPLEMENT, ONES_COMPLEMENT, SIGNED_MAGNITUDE, UNSIGNED};
 enum class LAYOUT {NONE, CARRY_PROPAGATE, CARRY_SAVE, BOOTH_RADIX_2, BOOTH_RADIX_4};
-enum class TYPE {NONE, INVERSION, SIGN_EXTEND};
+enum class TYPE {NONE, INVERSION, SIGN_EXTEND, BAUGH_WOOLEY};
 
 using wire_t  = shared_ptr<Wire>;
 using wb_t    = shared_ptr<WireBundle>;

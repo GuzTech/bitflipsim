@@ -30,10 +30,16 @@ Multiplier_2C::Multiplier_2C(string _name,
 
 	// Generate the requested hardware.
 	switch (type) {
-	case MUL_TYPE::CARRY_PROPAGATE_SIGN_EXTEND:	GenerateCarryPropagateSignExtendHardware(); break;
-	case MUL_TYPE::CARRY_SAVE_SIGN_EXTEND: 		GenerateCarrySaveSignExtendHardware(); break;
-	case MUL_TYPE::CARRY_PROPAGATE_INVERSION: 	GenerateCarryPropagateInversionHardware(); break;
-	case MUL_TYPE::CARRY_SAVE_INVERSION:   		GenerateCarrySaveInversionHardware(); break;
+	case MUL_TYPE::CARRY_PROPAGATE_SIGN_EXTEND:		GenerateCarryPropagateSignExtendHardware(); break;
+	case MUL_TYPE::CARRY_PROPAGATE_INVERSION: 		GenerateCarryPropagateInversionHardware(); break;
+		//case MUL_TYPE::CARRY_PROPAGATE_BAUGH_WOOLEY:	GenerateCarryPropagateBaughWooleyHardware(); break;
+	case MUL_TYPE::CARRY_SAVE_SIGN_EXTEND: 			GenerateCarrySaveSignExtendHardware(); break;
+	case MUL_TYPE::CARRY_SAVE_INVERSION:   			GenerateCarrySaveInversionHardware(); break;
+	case MUL_TYPE::CARRY_SAVE_BAUGH_WOOLEY:
+		num_adder_levels++;
+		num_adders_per_level--;
+		GenerateCarrySaveBaughWooleyHardware();
+		break;
 	default:
 		cout << "[Error] Unknown type supplied for generating Multiplier_2C \""
 			 << name << "\"\n";
@@ -95,6 +101,10 @@ void Multiplier_2C::Update(bool propagating) {
 
 				output_2C_adder_xor->Update(propagating);
 			}
+			break;
+		default:
+			cout << "[Error] Baugh-Wooley multiplier not implemented yet!\n";
+			exit(1);
 			break;
 		}
 
@@ -191,6 +201,10 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 			error_undefined_port(wire);
 		}
 		break;
+	default:
+		cout << "[Error] Baugh-Wooley multiplier not implemented yet!\n";
+		exit(1);
+		break;
 	}
 }
 
@@ -286,6 +300,10 @@ const vector<wire_t> Multiplier_2C::GetInputWires() const {
 		// duplicates, just take the wire from the first XOR.
 		input_wires.emplace_back(input_2C_xors_B.front()->GetWire(PORTS::B));
 		break;
+	default:
+		cout << "[Error] Baugh-Wooley multiplier not implemented yet!\n";
+		exit(1);
+		break;
 	}
 	
 	return input_wires;
@@ -327,7 +345,7 @@ void Multiplier_2C::GenerateCarryPropagateSignExtendHardware() {
 
 			const auto wire = make_shared<Wire>(row_name);
 			adders[y][x]->Connect(PORTS::O, wire);
-			adders[y+1][x-1]->Connect(PORTS::A, wire);
+			adders[y + 1][x - 1]->Connect(PORTS::A, wire);
 			internal_wires.emplace_back(wire);
 		}
 	}
@@ -347,7 +365,7 @@ void Multiplier_2C::GenerateCarryPropagateSignExtendHardware() {
 		const auto and_gate = make_shared<And>(row_name);
 		const auto and_wire = make_shared<Wire>(row_name + "_O");
 		and_gate->Connect(PORTS::O, and_wire);
-		adders[0][a-1]->Connect(PORTS::A, and_wire);
+		adders[0][a - 1]->Connect(PORTS::A, and_wire);
 
 		if (a == (num_bits_A - 1)) {
 			for (size_t i = (num_bits_A - 1); i < (num_bits_O - 1); ++i) {
@@ -376,13 +394,13 @@ void Multiplier_2C::GenerateCarryPropagateSignExtendHardware() {
 
 			if (a == (num_bits_A - 1)) {
 				for (size_t i = num_bits_A; i < (num_bits_O - b); ++i) {
-					adders[b-1][i]->Connect(PORTS::B, and_wire);
+					adders[b - 1][i]->Connect(PORTS::B, and_wire);
 				}
 			}
 
 			if (b == (num_bits_B - 1)) {
 				for (size_t i = num_bits_B; i < (num_bits_O - a); ++i) {
-					adders[i-1][a]->Connect(PORTS::B, and_wire);
+					adders[i - 1][a]->Connect(PORTS::B, and_wire);
 				}
 			}
 
@@ -1341,4 +1359,206 @@ void Multiplier_2C::GenerateCarrySaveInversionHardware() {
 	}
 	output_2C_adders.front()->Connect(PORTS::B, wire);
 	internal_wires.emplace_back(wire);
+}
+
+void Multiplier_2C::GenerateCarrySaveBaughWooleyHardware() {
+	// Names for the adders.
+	string row_name_prefix = string(name) + "_S_0_";
+	string row_name = row_name_prefix + "0";
+
+	// Create the inverted input signals.
+	for (size_t a = 0; a < num_bits_A; ++a) {
+		string not_name = 'A' + to_string(a) + "_n";
+
+		const auto notA = make_shared<Not>(not_name);
+		const auto wire = make_shared<Wire>(not_name + "_O");
+		notA->Connect(PORTS::O, wire);
+
+		input_nots_A.emplace_back(notA);
+		internal_wires.emplace_back(wire);
+	}
+	for (size_t b = 0; b < num_bits_B; ++b) {
+		string not_name = 'B' + to_string(b) + "_n";
+
+		const auto notB = make_shared<Not>(not_name);
+		const auto wire = make_shared<Wire>(not_name + "_O");
+		notB->Connect(PORTS::O, wire);
+
+		input_nots_B.emplace_back(notB);
+		internal_wires.emplace_back(wire);
+	}
+
+	// First row consists of only HalfAdders.
+	vector<comp_t> adders_row;
+
+	for (size_t a = 0; a < num_adders_per_level; ++a) {
+		row_name = row_name_prefix + to_string(a);
+
+		adders_row.emplace_back(make_shared<HalfAdder>(row_name));
+	}
+	adders.emplace_back(adders_row);
+	adders_row.clear();
+
+	// The rest of the rows consist of only FullAdders,
+	// and are regular until the last two rows.
+	for (size_t b = 1; b < num_adder_levels; ++b) {
+		row_name_prefix = name + "_S_" + to_string(b) + "_";
+
+		for (size_t a = 0; a < num_adders_per_level; ++a) {
+			row_name = row_name_prefix + to_string(a);
+			adders_row.emplace_back(make_shared<FullAdder>(row_name));
+		}
+
+		if (b >= (num_adder_levels - 2)) {
+			// Second to last row.
+			adders_row.emplace_back(make_shared<FullAdder>(row_name_prefix + to_string(num_adders_per_level)));
+
+			if (b >= (num_adder_levels - 1)) {
+				// Last row.
+				adders_row.emplace_back(make_shared<FullAdder>(row_name_prefix + to_string(num_adders_per_level + 1)));
+			}
+		}
+
+		adders.emplace_back(adders_row);
+		adders_row.clear();
+	}
+
+	// Connect the O outputs of the full adders.
+	for (size_t y = 0; y < (num_adder_levels - 1); ++y) {
+		row_name_prefix = name + "_S_" + to_string(y);
+
+		if (y < (num_adder_levels - 2)) {
+			for (size_t x = 1; x < num_adders_per_level; ++x) {
+				row_name = row_name_prefix + '_' + to_string(x) + "_O";
+
+				const auto wire = make_shared<Wire>(row_name);
+				adders[y][x]->Connect(PORTS::O, wire);
+				adders[y + 1][x - 1]->Connect(PORTS::A, wire);
+				internal_wires.emplace_back(wire);
+			}
+		} else {
+			for (size_t x = 0; x < (num_adders_per_level + 1); ++x) {
+				row_name = row_name_prefix + '_' + to_string(x) + "_O";
+
+				const auto wire = make_shared<Wire>(row_name);
+				adders[y][x]->Connect(PORTS::O, wire);
+				adders[y + 1][x]->Connect(PORTS::A, wire);
+				internal_wires.emplace_back(wire);
+			}
+		}
+	}
+
+	// Create the AND gates that connect to the inputs of the adders.
+	vector<and_t> ands_row;
+
+	// First level of AND gates is slightly different, so handle it
+	// separately. The first AND gate is directly connected to bit 0
+	// of the result.
+	row_name_prefix = name + "_AND_0_";
+	ands_row.emplace_back(make_shared<And>(row_name_prefix + "0"));
+
+	for (size_t a = 1; a < num_bits_A; ++a) {
+		row_name = row_name_prefix + to_string(a);
+
+		const auto and_gate = make_shared<And>(row_name);
+		const auto and_wire = make_shared<Wire>(row_name + "_O");
+		and_gate->Connect(PORTS::O, and_wire);
+		adders[0][a - 1]->Connect(PORTS::A, and_wire);
+
+		if (a == (num_bits_A - 1)) {
+			and_gate->Connect(PORTS::B, input_nots_B[0]->GetWire(PORTS::O));
+		}
+
+		ands_row.emplace_back(and_gate);
+		internal_wires.emplace_back(and_wire);
+	}
+
+	// The next levels of AND gates have a regular structure except the last two.
+	for (size_t b = 1; b < (num_and_levels - 1); ++b) {
+		row_name_prefix = name + "_AND_" + to_string(b) + '_';
+
+		for (size_t a = 0; a < num_bits_A; ++a) {
+			row_name = row_name_prefix + to_string(a);
+
+			const auto and_gate = make_shared<And>(row_name);
+			const auto and_wire = make_shared<Wire>(row_name + "_O");
+			and_gate->Connect(PORTS::O, and_wire);
+
+			if (a == (num_bits_A - 1)) {
+				and_gate->Connect(PORTS::B, input_nots_B[b]->GetWire(PORTS::O));
+				adders[b].back()->Connect(PORTS::A, and_wire);
+			} else {
+				adders[b - 1][a]->Connect(PORTS::B, and_wire);
+			}
+
+			ands_row.emplace_back(and_gate);
+			internal_wires.emplace_back(and_wire);
+		}
+	}
+
+	// The last two levels are different, so handle them separately.
+	{
+		const size_t b = num_and_levels - 1;
+		row_name_prefix = name + "_AND_" + to_string(b) + '_';
+
+		// Second to last level.
+		for (size_t a = 0; a < num_bits_A; ++a) {
+			row_name = row_name_prefix + to_string(a);
+
+			const auto and_gate = make_shared<And>(row_name);
+			const auto and_wire = make_shared<Wire>(row_name + "_O");
+			and_gate->Connect(PORTS::O, and_wire);
+
+			if (a == (num_bits_A - 1)) {
+				const auto adder = adders[b - 1][a];
+				adder->Connect(PORTS::B, and_wire);
+				adder->Connect(PORTS::A, input_nots_A.back()->GetWire(PORTS::O));
+				adder->Connect(PORTS::Cin, input_nots_B.back()->GetWire(PORTS::O));
+			} else {
+				and_gate->Connect(PORTS::B, input_nots_A[a]->GetWire(PORTS::O));
+				adders[b - 1][a]->Connect(PORTS::B, and_wire);
+			}
+
+			ands_row.emplace_back(and_gate);
+			internal_wires.emplace_back(and_wire);
+		}
+
+		// The last level just requires hooking up the MSB of A and B,
+		// and a hardcoded '1' to the last FA.
+	}
+
+	// Create the Cout connections for each adder level except the last.
+	for (size_t b = 0; b < (num_adder_levels - 1); ++b) {
+		row_name_prefix = name + "_Cout_" + to_string(b) + "_";
+
+		for (size_t a = 0; a < num_adders_per_level; ++a) {
+			row_name = row_name_prefix + to_string(a);
+
+			const auto wire = make_shared<Wire>(row_name);
+			adders[b][a]->Connect(PORTS::Cout, wire);
+			adders[b + 1][a]->Connect(PORTS::Cin, wire);
+
+			internal_wires.emplace_back(wire);
+		}
+
+		if (b == (num_adder_levels - 2)) {
+			row_name = row_name_prefix + to_string(num_adders_per_level);
+
+			const auto wire = make_shared<Wire>(row_name);
+			adders[b].back()->Connect(PORTS::Cout, wire);
+			adders.back().back()->Connect(PORTS::Cin, wire);
+		}
+	}
+
+	// Create the Cout connections for the last level.
+	row_name_prefix = name + "_Cout_" + to_string(num_adder_levels - 1) + "_";
+	for (size_t a = 0; a < num_bits_A; ++a) {
+		row_name = row_name_prefix + to_string(a);
+
+		const auto wire = make_shared<Wire>(row_name);
+		adders.back()[a]->Connect(PORTS::Cout, wire);
+		adders.back()[a + 1]->Connect(PORTS::Cin, wire);
+
+		internal_wires.emplace_back(wire);
+	}
 }

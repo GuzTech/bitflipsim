@@ -328,6 +328,7 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 
 		if (type_string.compare("inversion") == 0)				type = TYPE::INVERSION;
 		else if (type_string.compare("sign extension") == 0)	type = TYPE::SIGN_EXTEND;
+		else if (type_string.compare("Baugh-Wooley") == 0)		type = TYPE::BAUGH_WOOLEY;
 		else if (type_string.compare("none") == 0)				type = TYPE::NONE;
 		else {
 			cout << "[Error] Property \"type\" for multiplier \"" << name << "\" has an unsupported value. "
@@ -345,9 +346,10 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 		if (layout == LAYOUT::CARRY_PROPAGATE) {
 			if (type == TYPE::INVERSION) {
 				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_INVERSION);
-			}
-			else if (type == TYPE::SIGN_EXTEND) {
+			} else if (type == TYPE::SIGN_EXTEND) {
 				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_SIGN_EXTEND);
+			} else if (type == TYPE::BAUGH_WOOLEY) {
+				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_BAUGH_WOOLEY);
 			} else if (type == TYPE::NONE) {
 				cout << "[Error] Twos-complement multiplier \"" << name << "\" cannot have \"none\" as a type.\n";
 				exit(1);
@@ -358,9 +360,10 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 		} else if (layout == LAYOUT::CARRY_SAVE) {
 			if (type == TYPE::INVERSION) {
 				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_INVERSION);
-			}
-			else if (type == TYPE::SIGN_EXTEND) {
+			} else if (type == TYPE::SIGN_EXTEND) {
 				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_SIGN_EXTEND);
+			} else if (type == TYPE::BAUGH_WOOLEY) {
+				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_BAUGH_WOOLEY);
 			} else if (type == TYPE::NONE) {
 				cout << "[Error] Twos-complement multiplier \"" << name << "\" cannot have \"none\" as a type.\n";
 				exit(1);

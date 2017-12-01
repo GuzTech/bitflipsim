@@ -5,7 +5,7 @@
 
 class Multiplier_2C : public Component {
 public:
-	enum class MUL_TYPE {CARRY_PROPAGATE_SIGN_EXTEND, CARRY_PROPAGATE_INVERSION, CARRY_SAVE_SIGN_EXTEND, CARRY_SAVE_INVERSION};
+	enum class MUL_TYPE {CARRY_PROPAGATE_SIGN_EXTEND, CARRY_PROPAGATE_INVERSION, CARRY_PROPAGATE_BAUGH_WOOLEY, CARRY_SAVE_SIGN_EXTEND, CARRY_SAVE_INVERSION, CARRY_SAVE_BAUGH_WOOLEY};
 	
 	Multiplier_2C(string _name,
 				  size_t _num_bits_A,
@@ -27,6 +27,7 @@ private:
 	void GenerateCarrySaveSignExtendHardware();
 	void GenerateCarryPropagateInversionHardware();
 	void GenerateCarrySaveInversionHardware();
+	void GenerateCarrySaveBaughWooleyHardware();
 
 	size_t num_bits_A = 0;
 	size_t num_bits_B = 0;
@@ -44,6 +45,8 @@ private:
 	vector<ha_t> input_2C_adders_B;
 	vector<xor_t> output_2C_xors;
 	vector<ha_t> output_2C_adders;
+	vector<not_t> input_nots_A;				// Used in the Baugh-Wooley multiplier.
+	vector<not_t> input_nots_B;				// Used in the Baugh-Wooley multiplier.
 	xor_t output_2C_adder_xor = nullptr;
 	xor_t different_sign = nullptr;
 	vector<wire_t> internal_wires;
