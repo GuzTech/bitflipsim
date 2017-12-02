@@ -187,11 +187,10 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 		case PORTS::A:
 			input_nots_A[index]->Connect(PORTS::I, wire);
 
-			if (index < (num_bits_A - 1)) {
-				for (size_t level = 0; level < (num_adder_levels - 1); ++level) {
-					ands[level][index]->Connect(PORTS::A, wire);
-				}
-			} else {
+			for (size_t level = 0; level < (num_adder_levels - 1); ++level) {
+				ands[level][index]->Connect(PORTS::A, wire);
+			}
+			if (index == (num_bits_A - 1)) {
 				ands.back().back()->Connect(PORTS::A, wire);
 				adders.back()[0]->Connect(PORTS::B, wire);
 			}
@@ -200,10 +199,13 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 			input_nots_B[index]->Connect(PORTS::I, wire);
 
 			if (index < (num_bits_B - 1)) {
-				for (size_t i = 0; i < (num_ands_per_level - 1); ++i) {
+				for (size_t i = 0; i < (num_bits_A - 1); ++i) {
 					ands[index][i]->Connect(PORTS::B, wire);
 				}
 			} else {
+				for (size_t i = 0; i < num_bits_A; ++i) {
+					ands[index][i]->Connect(PORTS::B, wire);
+				}
 				adders.back()[0]->Connect(PORTS::Cin, wire);
 			}
 			break;
@@ -215,6 +217,7 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 			} else {
 				adders.back()[index - (num_bits_A - 1)]->Connect(PORTS::O, wire);
 			}
+			output_wires.emplace_back(wire);
 			break;
 		default:
 			error_undefined_port(wire);
@@ -336,6 +339,19 @@ const vector<wire_t> Multiplier_2C::GetInputWires() const {
 		for (size_t b = 0; b < num_and_levels; ++b) {
 			const auto &and_i = ands[b].front();
 			const auto &wire = and_i->GetWire(PORTS::B);
+			input_wires.emplace_back(wire);
+		}
+		break;
+	case MUL_TYPE::CARRY_SAVE_BAUGH_WOOLEY:
+		// Add the I inputs of the A inverters.
+		for (const auto &not_i : input_nots_A) {
+			const auto &wire = not_i->GetWire(PORTS::I);
+			input_wires.emplace_back(wire);
+		}
+
+		// Add the I inputs of the B inverters.
+		for (const auto &not_i : input_nots_B) {
+			const auto &wire = not_i->GetWire(PORTS::I);
 			input_wires.emplace_back(wire);
 		}
 		break;
@@ -1546,7 +1562,7 @@ void Multiplier_2C::GenerateCarrySaveBaughWooleyHardware() {
 
 			if (a == (num_bits_A - 1)) {
 				and_gate->Connect(PORTS::B, input_nots_B[b]->GetWire(PORTS::O));
-				adders[b].back()->Connect(PORTS::A, and_wire);
+				adders[b][a - 1]->Connect(PORTS::A, and_wire);
 			} else {
 				adders[b - 1][a]->Connect(PORTS::B, and_wire);
 			}
@@ -1589,28 +1605,37 @@ void Multiplier_2C::GenerateCarrySaveBaughWooleyHardware() {
 
 		// The last level just requires hooking up the MSB of A and B,
 		// and a hardcoded '1' to the last FA.
+		const auto wire = make_shared<Wire>(name + "_hardcoded_1");
+		wire->SetValue(true);
+		adders.back().back()->Connect(PORTS::A, wire);
+		internal_wires.emplace_back(wire);
 	}
 
 	// Create the Cout connections for each adder level except the last.
 	for (size_t b = 0; b < (num_adder_levels - 1); ++b) {
 		row_name_prefix = name + "_Cout_" + to_string(b) + "_";
 
-		for (size_t a = 0; a < num_adders_per_level; ++a) {
-			row_name = row_name_prefix + to_string(a);
+		if (b < (num_adder_levels - 2)) {
+			for (size_t a = 0; a < num_adders_per_level; ++a) {
+				row_name = row_name_prefix + to_string(a);
 
-			const auto wire = make_shared<Wire>(row_name);
-			adders[b][a]->Connect(PORTS::Cout, wire);
-			adders[b + 1][a]->Connect(PORTS::Cin, wire);
+				const auto wire = make_shared<Wire>(row_name);
+				adders[b][a]->Connect(PORTS::Cout, wire);
+				adders[b + 1][a]->Connect(PORTS::Cin, wire);
 
-			internal_wires.emplace_back(wire);
-		}
+				internal_wires.emplace_back(wire);
+			}
+		} else {
+			// Second to last row.
+			for (size_t a = 0; a < num_bits_A; ++a) {
+				row_name = row_name_prefix + to_string(a);
 
-		if (b == (num_adder_levels - 2)) {
-			row_name = row_name_prefix + to_string(num_adders_per_level);
+				const auto wire = make_shared<Wire>(row_name);
+				adders[b][a]->Connect(PORTS::Cout, wire);
+				adders[b + 1][a + 1]->Connect(PORTS::Cin, wire);
 
-			const auto wire = make_shared<Wire>(row_name);
-			adders[b].back()->Connect(PORTS::Cout, wire);
-			adders.back().back()->Connect(PORTS::Cin, wire);
+				internal_wires.emplace_back(wire);
+			}
 		}
 	}
 
@@ -1621,7 +1646,7 @@ void Multiplier_2C::GenerateCarrySaveBaughWooleyHardware() {
 
 		const auto wire = make_shared<Wire>(row_name);
 		adders.back()[a]->Connect(PORTS::Cout, wire);
-		adders.back()[a + 1]->Connect(PORTS::Cin, wire);
+		adders.back()[a + 1]->Connect(PORTS::B, wire);
 
 		internal_wires.emplace_back(wire);
 	}
