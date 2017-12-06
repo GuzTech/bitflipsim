@@ -434,7 +434,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 		row_name_prefix = name + "_S_" + to_string(y);
 
 		for (size_t x = 1; x < num_adders_per_level; ++x) {
-			row_name = row_name_prefix + "_" + to_string(x) + "_O";
+			row_name = row_name_prefix + '_' + to_string(x) + "_O";
 
 			const auto wire = make_shared<Wire>(row_name);
 			adders[y][x]->Connect(PORTS::O, wire);
@@ -450,7 +450,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 	// it separately. The first AND gate is directly connected to bit 0
 	// of the result.
 	row_name_prefix = name + "_AND_0_";
-	ands_row.emplace_back(make_shared<And>(row_name_prefix + "0"));
+	ands_row.emplace_back(make_shared<And>(row_name_prefix + '0'));
 
 	// Level 0
 	for (size_t a = 1; a < num_ands_per_level; ++a) {
@@ -516,7 +516,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 
 	// Now handle the rest of the AND gate levels.
 	for (size_t b = 3; b < num_and_levels; ++b) {
-		row_name_prefix = name + "_AND_" + to_string(b) + "_";
+		row_name_prefix = name + "_AND_" + to_string(b) + '_';
 
 		size_t x = 1;		// Starting x position in the row.
 		size_t y = b - 2;	// Starting y position is level - 2.
@@ -549,7 +549,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 
 	// Create the Cout connections for each adder level except the last.
 	for (size_t b = 0; b < (num_adder_levels - 1); ++b) {
-		row_name_prefix = name + "_Cout_" + to_string(b) + "_";
+		row_name_prefix = name + "_Cout_" + to_string(b) + '_';
 
 		for (size_t a = 0; a < num_adders_per_level; ++a) {
 			row_name = row_name_prefix + to_string(a);
@@ -563,7 +563,7 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 	}
 
 	// Create the Cout connections for the last level.
-	row_name_prefix = name + "_Cout_" + to_string(num_adders_per_level - 1) + "_";
+	row_name_prefix = name + "_Cout_" + to_string(num_adders_per_level - 1) + '_';
 	for (size_t a = 0; a < (num_adders_per_level - 1); ++a) {
 		row_name = row_name_prefix + to_string(a);
 
