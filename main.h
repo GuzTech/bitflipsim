@@ -17,8 +17,12 @@ class FullAdder;
 class RippleCarryAdder;
 class Multiplier_2C;
 class Multiplier_Smag;
+class BoothEncoderRadix4;
+class BoothDecoderRadix4;
+class Multiplier_2C_Booth;
 class And;
 class Or;
+class Or3;
 class Xor;
 class Nand;
 class Nor;
@@ -29,7 +33,7 @@ class WireBundle;
 class Wire;
 class System;
 
-enum class PORTS {A, B, Cin, Cout, I, O, S};
+enum class PORTS {A, B, C, Cin, Cout, I, O, S, X_2I, X_2I_MINUS_ONE, X_2I_PLUS_ONE, Y_LSB, Y_MSB, NEG, SE, ROW_LSB, X1_b, X2_b, Z, Yj, Yj_m1, PPTj, NEG_CIN};
 enum class NUMFMT {NONE, TWOS_COMPLEMENT, ONES_COMPLEMENT, SIGNED_MAGNITUDE, UNSIGNED};
 enum class LAYOUT {NONE, CARRY_PROPAGATE, CARRY_SAVE, BOOTH_RADIX_2, BOOTH_RADIX_4};
 enum class TYPE {NONE, INVERSION, SIGN_EXTEND, BAUGH_WOOLEY};
@@ -42,6 +46,7 @@ using ha_t    = shared_ptr<HalfAdder>;
 using fa_t    = shared_ptr<FullAdder>;
 using and_t   = shared_ptr<And>;
 using or_t    = shared_ptr<Or>;
+using or3_t   = shared_ptr<Or3>;
 using xor_t   = shared_ptr<Xor>;
 using nand_t  = shared_ptr<Nand>;
 using nor_t   = shared_ptr<Nor>;
@@ -51,6 +56,9 @@ using mux_t   = shared_ptr<Mux>;
 using rca_t   = shared_ptr<RippleCarryAdder>;
 using m2c_t   = shared_ptr<Multiplier_2C>;
 using msmag_t = shared_ptr<Multiplier_Smag>;
+using b_enc_t = shared_ptr<BoothEncoderRadix4>;
+using b_dec_t = shared_ptr<BoothDecoderRadix4>;
+using m2cb_t  = shared_ptr<Multiplier_2C_Booth>;
 
 #include "Component.h"
 #include "HalfAdder.h"
@@ -58,8 +66,12 @@ using msmag_t = shared_ptr<Multiplier_Smag>;
 #include "RippleCarryAdder.h"
 #include "Multiplier_2C.h"
 #include "Multiplier_Smag.h"
+#include "BoothEncoderRadix4.h"
+#include "BoothDecoderRadix4.h"
+#include "Multiplier_2C_Booth.h"
 #include "And.h"
 #include "Or.h"
+#include "Or3.h"
 #include "Xor.h"
 #include "Nand.h"
 #include "Nor.h"

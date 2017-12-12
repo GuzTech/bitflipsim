@@ -14,6 +14,7 @@ void Connect(const comp_t &component, const string &port_name, const wire_t &wir
 	const auto &ha_comp   = dynamic_pointer_cast<HalfAdder>(component);
 	const auto &and_comp  = dynamic_pointer_cast<And>(component);
 	const auto &or_comp   = dynamic_pointer_cast<Or>(component);
+	const auto &or3_comp  = dynamic_pointer_cast<Or3>(component);
 	const auto &xor_comp  = dynamic_pointer_cast<Xor>(component);
 	const auto &nand_comp = dynamic_pointer_cast<Nand>(component);
 	const auto &nor_comp  = dynamic_pointer_cast<Nor>(component);
@@ -52,6 +53,12 @@ void Connect(const comp_t &component, const string &port_name, const wire_t &wir
 		if (port_name.compare("A") == 0)      or_comp->Connect(PORTS::A, wire);
 		else if (port_name.compare("B") == 0) or_comp->Connect(PORTS::B, wire);
 		else if (port_name.compare("O") == 0) or_comp->Connect(PORTS::O, wire);
+		else error_non_existent_port();
+	} else if (or3_comp != nullptr) {
+		if (port_name.compare("A") == 0)      or3_comp->Connect(PORTS::A, wire);
+		else if (port_name.compare("B") == 0) or3_comp->Connect(PORTS::B, wire);
+		else if (port_name.compare("C") == 0) or3_comp->Connect(PORTS::C, wire);
+		else if (port_name.compare("O") == 0) or3_comp->Connect(PORTS::O, wire);
 		else error_non_existent_port();
 	} else if (xor_comp != nullptr) {
 		if (port_name.compare("A") == 0)      xor_comp->Connect(PORTS::A, wire);
@@ -1281,5 +1288,90 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	// Booth encoder radix-4
+	b_enc_t be = make_shared<BoothEncoderRadix4>("test");
+
+	// Input wires
+	const auto w2x_i = make_shared<Wire>("2x_i");
+	const auto w2x_i_p1 = make_shared<Wire>("2x_i_p1");
+	const auto w2x_i_m1 = make_shared<Wire>("2x_i_m1");
+	const auto y_lsb = make_shared<Wire>("y_lsb");
+	const auto y_msb = make_shared<Wire>("y_msb");
+	be->Connect(PORTS::X_2I, w2x_i);
+	be->Connect(PORTS::X_2I_PLUS_ONE, w2x_i_p1);
+	be->Connect(PORTS::X_2I_MINUS_ONE, w2x_i_m1);
+	be->Connect(PORTS::Y_LSB, y_lsb);
+	be->Connect(PORTS::Y_MSB, y_msb);
+
+	// Output wires
+	const auto neg = make_shared<Wire>("neg");
+	const auto row_lsb = make_shared<Wire>("row_lsb");
+	const auto x1b = make_shared<Wire>("x1b");
+	const auto x2b = make_shared<Wire>("x2b");
+	const auto se = make_shared<Wire>("se");
+	const auto z = make_shared<Wire>("z");
+	const auto neg_cin = make_shared<Wire>("Neg_cin");
+	be->Connect(PORTS::NEG, neg);
+	be->Connect(PORTS::ROW_LSB, row_lsb);
+	be->Connect(PORTS::X1_b, x1b);
+	be->Connect(PORTS::X2_b, x2b);
+	be->Connect(PORTS::SE, se);
+	be->Connect(PORTS::Z, z);
+	be->Connect(PORTS::NEG_CIN, neg_cin);
+
+	// Stimuli
+	y_lsb->SetValue(false); w2x_i_m1->SetValue(false); w2x_i->SetValue(false); w2x_i_p1->SetValue(true);
+	y_msb->SetValue(true);
+
+	const auto bd1 = make_shared<BoothDecoderRadix4>("test");
+	const auto bd2 = make_shared<BoothDecoderRadix4>("test");
+	bd1->Connect(PORTS::NEG, w2x_i_p1);
+	bd1->Connect(PORTS::X1_b, x1b);
+	bd1->Connect(PORTS::X2_b, x2b);
+	bd1->Connect(PORTS::Z, z);
+	bd2->Connect(PORTS::NEG, w2x_i_p1);
+	bd2->Connect(PORTS::X1_b, x1b);
+	bd2->Connect(PORTS::X2_b, x2b);
+	bd2->Connect(PORTS::Z, z);
+	const auto ppt1 = make_shared<Wire>("ppt1");
+	const auto y1 = make_shared<Wire>("y1");
+	const auto y2 = make_shared<Wire>("y2");
+	const auto ppt2 = make_shared<Wire>("ppt2");
+	bd1->Connect(PORTS::PPTj, ppt1);
+	bd1->Connect(PORTS::Yj, y2);
+	bd1->Connect(PORTS::Yj_m1, y1);
+	bd2->Connect(PORTS::PPTj, ppt2);
+	bd2->Connect(PORTS::Yj, y_msb);
+	bd2->Connect(PORTS::Yj_m1, y2);
+	y1->SetValue(false);
+	y2->SetValue(true);
+	
+	//be->Update(true);
+	//bd->Update(true);
+	be->Update(false);
+	bd1->Update(false);
+
+	// Print values
+	cout << "\nEncoder:";
+	cout << "\n2x_i_m1:\t" << w2x_i_m1->GetValue()
+		 << "\n2x_i:\t\t" << w2x_i->GetValue()
+		 << "\n2x_i_p1:\t" << w2x_i_p1->GetValue()
+		 << "\ny_lsb:\t\t" << y_lsb->GetValue()
+		 << "\ny_msb:\t\t" << y_msb->GetValue() << '\n';
+	cout << "\nx1b:\t\t" << x1b->GetValue()
+		 << "\nx2b:\t\t" << x2b->GetValue()
+		 << "\nneg:\t\t" << w2x_i_p1->GetValue()//neg->GetValue()
+		 << "\nz:\t\t" << z->GetValue()
+		 << "\nrow_lsb:\t" << row_lsb->GetValue()
+		 << "\nse:\t\t" << se->GetValue()
+		 << "\nneg_cin:\t" << neg_cin->GetValue() << '\n';
+
+	cout << "\nDecoder:";
+	cout << "\ny1:\t\t" << y1->GetValue()
+		 << "\ny2:\t\t" << y2->GetValue()
+		 << "\ny3:\t\t" << y_msb->GetValue()
+		 << "\nppt1:\t\t" << ppt1->GetValue()
+		 << "\nppt2:\t\t" << ppt2->GetValue()
+		 << '\n';
 	return 0;
 }
