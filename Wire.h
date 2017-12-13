@@ -27,6 +27,8 @@ public:
 	const bool IsInputWire() const {return is_input_wire;}
 	const bool IsOutputWire() const {return is_output_wire;}
 
+	const bool operator ()() {return curr_value;}
+
 private:
 	bool curr_value = false; // The current value on the wire.
 	bool prev_value = false; // The value on the wire before propagation started.

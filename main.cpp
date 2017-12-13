@@ -2,6 +2,7 @@
 #include <yaml-cpp/yaml.h>
 #include <random>
 #include <fstream>
+#include <bitset>
 
 using namespace std;
 
@@ -1289,13 +1290,18 @@ int main(int argc, char **argv) {
 	}
 
 	// Booth encoder radix-4
-	b_enc_t be = make_shared<BoothEncoderRadix4>("test");
+	const auto be = make_shared<BoothEncoderRadix4>("be_0");
+	const auto bd1 = make_shared<BoothDecoderRadix4>("bd_1");
+	const auto bd2 = make_shared<BoothDecoderRadix4>("bd_2");
+	const auto bd3 = make_shared<BoothDecoderRadix4>("bd_3");
 
 	// Input wires
 	const auto w2x_i = make_shared<Wire>("2x_i");
 	const auto w2x_i_p1 = make_shared<Wire>("2x_i_p1");
 	const auto w2x_i_m1 = make_shared<Wire>("2x_i_m1");
 	const auto y_lsb = make_shared<Wire>("y_lsb");
+	const auto y1 = make_shared<Wire>("y1");
+	const auto y2 = make_shared<Wire>("y2");
 	const auto y_msb = make_shared<Wire>("y_msb");
 	be->Connect(PORTS::X_2I, w2x_i);
 	be->Connect(PORTS::X_2I_PLUS_ONE, w2x_i_p1);
@@ -1311,6 +1317,12 @@ int main(int argc, char **argv) {
 	const auto se = make_shared<Wire>("se");
 	const auto z = make_shared<Wire>("z");
 	const auto neg_cin = make_shared<Wire>("Neg_cin");
+	const auto ppt1 = make_shared<Wire>("ppt1");
+	const auto ppt2 = make_shared<Wire>("ppt2");
+	const auto ppt3 = make_shared<Wire>("ppt3");
+
+	// Connections
+	// Encoder
 	be->Connect(PORTS::NEG, neg);
 	be->Connect(PORTS::ROW_LSB, row_lsb);
 	be->Connect(PORTS::X1_b, x1b);
@@ -1319,37 +1331,106 @@ int main(int argc, char **argv) {
 	be->Connect(PORTS::Z, z);
 	be->Connect(PORTS::NEG_CIN, neg_cin);
 
-	// Stimuli
-	y_lsb->SetValue(false); w2x_i_m1->SetValue(false); w2x_i->SetValue(false); w2x_i_p1->SetValue(true);
-	y_msb->SetValue(true);
-
-	const auto bd1 = make_shared<BoothDecoderRadix4>("test");
-	const auto bd2 = make_shared<BoothDecoderRadix4>("test");
+	// Decoder 1 input
+	bd1->Connect(PORTS::Yj, y1);
+	bd1->Connect(PORTS::Yj_m1, y_lsb);
 	bd1->Connect(PORTS::NEG, w2x_i_p1);
 	bd1->Connect(PORTS::X1_b, x1b);
 	bd1->Connect(PORTS::X2_b, x2b);
 	bd1->Connect(PORTS::Z, z);
+
+	// Decoder 1 output
+	bd1->Connect(PORTS::PPTj, ppt1);
+	
+	// Decoder 2 input
+	bd2->Connect(PORTS::Yj, y2);
+	bd2->Connect(PORTS::Yj_m1, y1);
 	bd2->Connect(PORTS::NEG, w2x_i_p1);
 	bd2->Connect(PORTS::X1_b, x1b);
 	bd2->Connect(PORTS::X2_b, x2b);
 	bd2->Connect(PORTS::Z, z);
-	const auto ppt1 = make_shared<Wire>("ppt1");
-	const auto y1 = make_shared<Wire>("y1");
-	const auto y2 = make_shared<Wire>("y2");
-	const auto ppt2 = make_shared<Wire>("ppt2");
-	bd1->Connect(PORTS::PPTj, ppt1);
-	bd1->Connect(PORTS::Yj, y2);
-	bd1->Connect(PORTS::Yj_m1, y1);
+
+	// Decoder 2 output
 	bd2->Connect(PORTS::PPTj, ppt2);
-	bd2->Connect(PORTS::Yj, y_msb);
-	bd2->Connect(PORTS::Yj_m1, y2);
-	y1->SetValue(false);
-	y2->SetValue(true);
+
+	// Decoder 3 input
+	bd3->Connect(PORTS::Yj, y_msb);
+	bd3->Connect(PORTS::Yj_m1, y2);
+	bd3->Connect(PORTS::NEG, w2x_i_p1);
+	bd3->Connect(PORTS::X1_b, x1b);
+	bd3->Connect(PORTS::X2_b, x2b);
+	bd3->Connect(PORTS::Z, z);
+
+	// Decoder 3 output
+	bd3->Connect(PORTS::PPTj, ppt3);
+
+	// Stimuli
+
+	// y = 1100
+	// x = 10
+	// 1100 * 10 = -4 * -2 = 8 = 001000
+	w2x_i_m1->SetValue(false); // x[1]
+	w2x_i->SetValue(false);    // x[0]
+	w2x_i_p1->SetValue(true);  // x[-1] == 0
+
+	y_lsb->SetValue(false); // y[0]
+	y1->SetValue(false);    // y[1]
+	y2->SetValue(true);     // y[2]
+	y_msb->SetValue(true);  // y[3]
+
+	// y = 1000
+	// x = 11
+	// 1000 * 11 = -8 * -1 = 8 = 001000
+//	w2x_i_m1->SetValue(false); // x[1]
+//	w2x_i->SetValue(true);     // x[0]
+//	w2x_i_p1->SetValue(true);  // x[-1] == 0
+//
+//	y_lsb->SetValue(false); // y[0]
+//	y1->SetValue(false);    // y[1]
+//	y2->SetValue(false);    // y[2]
+//	y_msb->SetValue(true);  // y[3]
 	
-	//be->Update(true);
-	//bd->Update(true);
+	// y = 1000
+	// x = 01
+	// 1000 * 01 = -8 * 1 = -8 = 111000
+//	w2x_i_m1->SetValue(false); // x[1]
+//	w2x_i->SetValue(true);     // x[0]
+//	w2x_i_p1->SetValue(false); // x[-1] == 0
+//
+//	y_lsb->SetValue(false); // y[0]
+//	y1->SetValue(false);    // y[1]
+//	y2->SetValue(false);    // y[2]
+//	y_msb->SetValue(true);  // y[3]
+
+	// y = 1100
+	// x = 11
+	// 1100 * 11 = -4 * -1 = 4 = 000100
+//	w2x_i_m1->SetValue(false); // x[1]
+//	w2x_i->SetValue(true);     // x[0]
+//	w2x_i_p1->SetValue(true);  // x[-1] == 0
+//
+//	y_lsb->SetValue(false); // y[0]
+//	y1->SetValue(false);    // y[1]
+//	y2->SetValue(true);     // y[2]
+//	y_msb->SetValue(true);  // y[3]
+
+	// y = 0000
+	// x = 11
+	// 0000 * 11 = 0 * -1 = 4 = 000000
+//	w2x_i_m1->SetValue(false); // x[1]
+//	w2x_i->SetValue(true);     // x[0]
+//	w2x_i_p1->SetValue(true);  // x[-1] == 0
+//
+//	y_lsb->SetValue(false); // y[0]
+//	y1->SetValue(false);    // y[1]
+//	y2->SetValue(false);    // y[2]
+//	y_msb->SetValue(false); // y[3]
+
+	// Update
 	be->Update(false);
 	bd1->Update(false);
+	bd2->Update(false);
+	bd3->Update(false);
 
 	// Print values
 	cout << "\nEncoder:";
@@ -1367,11 +1448,60 @@ int main(int argc, char **argv) {
 		 << "\nneg_cin:\t" << neg_cin->GetValue() << '\n';
 
 	cout << "\nDecoder:";
-	cout << "\ny1:\t\t" << y1->GetValue()
+	cout << "\ny0:\t\t" << y_lsb->GetValue()
+		 << "\ny1:\t\t" << y1->GetValue()
 		 << "\ny2:\t\t" << y2->GetValue()
 		 << "\ny3:\t\t" << y_msb->GetValue()
 		 << "\nppt1:\t\t" << ppt1->GetValue()
 		 << "\nppt2:\t\t" << ppt2->GetValue()
-		 << '\n';
+		 << "\nppt3:\t\t" << ppt3->GetValue();
+
+	const size_t ppt = ((*se)() << 6)
+		| (!(*se)() << 5)
+		| (!(*se)() << 4)
+		| ((*ppt3)() << 3)
+		| ((*ppt2)() << 2)
+		| ((*ppt1)() << 1)
+		| (*row_lsb)();
+	const size_t full_ppt = ppt +  size_t((*neg_cin)() << 1);
+	bitset<7> full_ppt_bin(full_ppt);
+	bitset<6> final_result(full_ppt & 0x3F);
+
+	cout << "\n\nFull partial product: " << full_ppt_bin << "\nFinal result: " << final_result << '\n';
+
+	//const auto bm = Multiplier_2C_Booth("Booth", 4, 2);
+
+	const auto ppt1_r4d = make_shared<Wire>("ppt1_r4d");
+	const auto ppt2_r4d = make_shared<Wire>("ppt2_r4d");
+	const auto ppt3_r4d = make_shared<Wire>("ppt3_r4d");
+	
+	auto r4d = Radix4BoothDecoder("r4d", 4);
+	r4d.Connect(PORTS::Yj, y_lsb, 0);
+	r4d.Connect(PORTS::Yj, y1, 1);
+	r4d.Connect(PORTS::Yj, y2, 2);
+	r4d.Connect(PORTS::Yj, y_msb, 3);
+	r4d.Connect(PORTS::NEG, w2x_i_p1);
+	r4d.Connect(PORTS::X1_b, x1b);
+	r4d.Connect(PORTS::X2_b, x2b);
+	r4d.Connect(PORTS::Z, z);
+	r4d.Connect(PORTS::O, ppt1_r4d, 0);
+	r4d.Connect(PORTS::O, ppt2_r4d, 1);
+	r4d.Connect(PORTS::O, ppt3_r4d, 2);
+
+	r4d.Update(false);
+
+	const size_t ppt_r4d = ((*se)() << 6)
+		| (!(*se)() << 5)
+		| (!(*se)() << 4)
+		| ((*ppt3_r4d)() << 3)
+		| ((*ppt2_r4d)() << 2)
+		| ((*ppt1_r4d)() << 1)
+		| (*row_lsb)();
+	const size_t full_ppt_r4d = ppt_r4d +  size_t((*neg_cin)() << 1);
+	bitset<7> full_ppt_bin_r4d(full_ppt_r4d);
+	bitset<6> final_result_r4d(full_ppt_r4d & 0x3F);
+
+	cout << "\nFull partial product: " << full_ppt_bin_r4d << "\nFinal result: " << final_result_r4d << '\n';
+
 	return 0;
 }

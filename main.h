@@ -19,6 +19,7 @@ class Multiplier_2C;
 class Multiplier_Smag;
 class BoothEncoderRadix4;
 class BoothDecoderRadix4;
+class Radix4BoothDecoder;
 class Multiplier_2C_Booth;
 class And;
 class Or;
@@ -58,6 +59,7 @@ using m2c_t   = shared_ptr<Multiplier_2C>;
 using msmag_t = shared_ptr<Multiplier_Smag>;
 using b_enc_t = shared_ptr<BoothEncoderRadix4>;
 using b_dec_t = shared_ptr<BoothDecoderRadix4>;
+using b_r4d_t = shared_ptr<Radix4BoothDecoder>;
 using m2cb_t  = shared_ptr<Multiplier_2C_Booth>;
 
 #include "Component.h"
@@ -68,6 +70,7 @@ using m2cb_t  = shared_ptr<Multiplier_2C_Booth>;
 #include "Multiplier_Smag.h"
 #include "BoothEncoderRadix4.h"
 #include "BoothDecoderRadix4.h"
+#include "Radix4BoothDecoder.h"
 #include "Multiplier_2C_Booth.h"
 #include "And.h"
 #include "Or.h"
