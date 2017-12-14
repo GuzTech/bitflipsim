@@ -926,8 +926,8 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 	};
 
 	map<string, vector<int64_t>> io_values;
-	for (const auto &b : system.GetWireBundles()) {
-		io_values[b->GetName()] = vector<int64_t>();
+	for (const auto &[name, bundle] : system.GetWireBundles()) {
+		io_values[name] = vector<int64_t>();
 	}
 	vector<size_t> toggles = {};
 	vector<float> sigmas = {};
@@ -1225,10 +1225,10 @@ int main(int argc, char **argv) {
 		cout << "\nSimulation done!\n";
 		cout << "Number of toggles: " << system.GetNumToggles() << '\n';
 
-#if 0
+#if 1
 		cout << "\nValue of all wires:\n";
-		for (const auto &ow : system.GetWires()) {
-			cout << "Wire \"" << ow->GetName()
+		for (const auto &[ow_name, ow] : system.GetWires()) {
+			cout << "Wire \"" << ow_name
 				 << "\": " << ow->GetValue()
 				 << "\t#outputs: " << ow->GetNumOutputs()
 				 << "\t#toggles: " << ow->GetNumToggles()
@@ -1288,7 +1288,7 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-
+#if 0
 	// Booth encoder radix-4
 	const auto be = make_shared<BoothEncoderRadix4>("be_0");
 	const auto bd1 = make_shared<BoothDecoderRadix4>("bd_1");
@@ -1502,6 +1502,6 @@ int main(int argc, char **argv) {
 	bitset<6> final_result_r4d(full_ppt_r4d & 0x3F);
 
 	cout << "\nFull partial product: " << full_ppt_bin_r4d << "\nFinal result: " << final_result_r4d << '\n';
-
+#endif
 	return 0;
 }

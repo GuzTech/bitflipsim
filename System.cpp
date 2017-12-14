@@ -10,9 +10,10 @@ void System::AddComponent(comp_t component) {
 				 << "\" has one or more ports that are not connected.\n";
 		} else {
 			wires.insert(pair<string, wire_t>(w->GetName(), w));
-			all_wires.emplace_back(w);
 
 			if (w->IsInputWire()) {
+				// Add this wire to the list of input wires
+				// if we haven't done so already.
 				if (find(input_wires.begin(),
 						 input_wires.end(),
 						 w) == input_wires.end())
@@ -20,6 +21,10 @@ void System::AddComponent(comp_t component) {
 					input_wires.emplace_back(w);
 				}
 			} else if (w->IsOutputWire()) {
+				// Since outputs can only be driven by one
+				// component only, we do not have to check if
+				// we already have this wire is the list of
+				// output wires.
 				output_wires.emplace_back(w);
 			}
 
@@ -30,11 +35,20 @@ void System::AddComponent(comp_t component) {
 				if (wire_bundles.find(wb_name) == wire_bundles.end())
 				{
 					wire_bundles.insert(pair<string, wb_t>(wb_name, wb));
-					all_bundles.emplace_back(wb);
 
 					if (wb->IsInputBundle()) {
-						input_bundles.emplace_back(wb);
+						// Add this wire to the list of input bundles
+						// if we haven't done so already.
+						if (find(input_bundles.begin(),
+								 input_bundles.end(),
+								 wb) == input_bundles.end()) {
+							input_bundles.emplace_back(wb);
+						}
 					} else if (wb->IsOutputBundle()) {
+						// Since outputs can only be driven by one
+						// component only, we do not have to check if
+						// we already have this bundle is the list of
+						// output bundles.
 						output_bundles.emplace_back(wb);
 					}
 				}

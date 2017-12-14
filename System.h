@@ -17,11 +17,11 @@ public:
 	const vector<comp_t> GetComponents() const;
 	const size_t GetNumWires() const {return wires.size();}
 	const wire_t GetWire(const string &wire_name) const;
-	const vector<wire_t> &GetWires() const {return all_wires;}
+	const map<string, wire_t> &GetWires() const {return wires;}
 	const vector<wire_t> &GetInputWires() const {return input_wires;}
 	const vector<wire_t> &GetOutputWires() const {return output_wires;}
 	const wb_t GetWireBundle(const string &bundle_name) const;
-	const vector<wb_t> &GetWireBundles() const {return all_bundles;}
+	const map<string, wb_t> &GetWireBundles() const {return wire_bundles;}
 	const vector<wb_t> &GetInputWireBundles() const {return input_bundles;}
 	const vector<wb_t> &GetOutputWireBundles() const {return output_bundles;}
 	const size_t GetLongestPath() const {return longest_path;}
@@ -32,11 +32,9 @@ private:
 	map<string, wire_t> wires;
 	map<string, wb_t> wire_bundles;
 
-	vector<wire_t> all_wires;
 	vector<wire_t> input_wires;
 	vector<wire_t> output_wires;
 
-	vector<wb_t> all_bundles;
 	vector<wb_t> input_bundles;
 	vector<wb_t> output_bundles;
 
