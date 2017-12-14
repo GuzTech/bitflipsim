@@ -92,7 +92,7 @@ void BoothEncoderRadix4::Connect(PORTS port, const wire_t &wire, size_t index) {
 	auto error_undefined_port = [&](const auto &wire) {
 		cout << "[Error] Trying to connect wire \"" << wire->GetName()
 			 << "\" to undefined port of BoothEncoderRadix4 "
-			 << "\"" << name << "\"\n";
+			 << "\"" << name << "\".\n";
 		exit(1);
 	};
 
@@ -104,47 +104,58 @@ void BoothEncoderRadix4::Connect(PORTS port, const wire_t &wire, size_t index) {
 		Z->Connect(PORTS::B, wire);
 		Neg_cin_nor_1->Connect(PORTS::A, wire);
 		Neg_cin_nor_3->Connect(PORTS::B, wire);
+		input_wires.emplace_back(wire);
 		break;
 	case PORTS::X_2I_MINUS_ONE:
 		X1_b->Connect(PORTS::A, wire);
 		X2_b->Connect(PORTS::A, wire);
 		Neg_cin_nor_1->Connect(PORTS::B, wire);
 		Neg_cin_nor_2->Connect(PORTS::A, wire);
+		input_wires.emplace_back(wire);
 		break;
 	case PORTS::X_2I_PLUS_ONE:
 		Z->Connect(PORTS::A, wire);
 		Neg_cin_and->Connect(PORTS::A, wire);
 		SE->Connect(PORTS::B, wire);
+		input_wires.emplace_back(wire);
 		break;
 	case PORTS::Y_LSB:
 		Row_LSB->Connect(PORTS::B, wire);
 		Neg_cin_nor_2->Connect(PORTS::B, wire);
 		Neg_cin_nor_3->Connect(PORTS::A, wire);
+		input_wires.emplace_back(wire);
 		break;
 	case PORTS::Y_MSB:
 		SE->Connect(PORTS::A, wire);
+		input_wires.emplace_back(wire);
 		break;
 	/* Outputs */
 	case PORTS::NEG:
 		break;
 	case PORTS::ROW_LSB:
 		Row_LSB->Connect(PORTS::O, wire);
+		output_wires.emplace_back(wire);
 		break;
 	case PORTS::X1_b:
 		X1_b->Connect(PORTS::O, wire);
+		output_wires.emplace_back(wire);
 		break;
 	case PORTS::X2_b:
 		X2_b->Connect(PORTS::O, wire);
 		Row_LSB->Connect(PORTS::A, wire);
+		output_wires.emplace_back(wire);
 		break;
 	case PORTS::SE:
 		SE->Connect(PORTS::O, wire);
+		output_wires.emplace_back(wire);
 		break;
 	case PORTS::Z:
 		Z->Connect(PORTS::O, wire);
+		output_wires.emplace_back(wire);
 		break;
 	case PORTS::NEG_CIN:
 		Neg_cin_and->Connect(PORTS::O, wire);
+		output_wires.emplace_back(wire);
 		break;
 	default:
 		error_undefined_port(wire);
@@ -167,14 +178,6 @@ const size_t BoothEncoderRadix4::GetNumToggles() {
 	toggle_count = 0;
 
 	return toggle_count;
-}
-
-const vector<wire_t> BoothEncoderRadix4::GetWires() const {
-	return vector<wire_t>();
-}
-
-const vector<wire_t> BoothEncoderRadix4::GetInputWires() const {
-	return vector<wire_t>();
 }
 
 const wire_t BoothEncoderRadix4::GetWire(PORTS port, size_t index) const {

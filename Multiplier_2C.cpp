@@ -42,7 +42,7 @@ Multiplier_2C::Multiplier_2C(string _name,
 		break;
 	default:
 		cout << "[Error] Unknown type supplied for generating Multiplier_2C \""
-			 << name << "\"\n";
+			 << name << "\".\n";
 		exit(1);
 	}
 }
@@ -135,22 +135,22 @@ void Multiplier_2C::Update(bool propagating) {
 void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 	if (port == PORTS::A && index >= num_bits_A) {
 		cout << "[Error] Index " << index << " of port A is out of "
-			 << "bounds for Multiplier_2C \"" << name << "\"\n";
+			 << "bounds for Multiplier_2C \"" << name << "\".\n";
 		exit(1);
 	} else if (port == PORTS::B && index >= num_bits_B) {
 		cout << "[Error] Index " << index << " of port B is out of "
-			 << "bounds for Multiplier_2C \"" << name << "\"\n";
+			 << "bounds for Multiplier_2C \"" << name << "\".\n";
 		exit(1);
 	} else if (port == PORTS::O && index >= num_bits_O) {
 		cout << "[Error] Index " << index << " of port O is out of "
-			 << "bounds for Multiplier_2C \"" << name << "\"\n";
+			 << "bounds for Multiplier_2C \"" << name << "\".\n";
 		exit(1);
 	}
 
 	auto error_undefined_port = [&](const auto &wire) {
 		cout << "[Error] Trying to connect wire \"" << wire->GetName()
 			 << "\" to undefined port of Multiplier_2C "
-			 << "\"" << name << "\"\n";
+			 << "\"" << name << "\".\n";
 		exit(1);
 	};
 
@@ -164,11 +164,13 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 			for (size_t level = 0; level < num_bits_B; ++level) {
 				ands[level][index]->Connect(PORTS::A, wire);
 			}
+			input_wires.emplace_back(wire);
 			break;
 		case PORTS::B:
 			for (size_t i = 0; i < num_ands_per_level; ++i) {
 				ands[index][i]->Connect(PORTS::B, wire);
 			}
+			input_wires.emplace_back(wire);
 			break;
 		case PORTS::O:
 			if (index == 0) {
@@ -194,6 +196,7 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 				ands.back().back()->Connect(PORTS::A, wire);
 				adders.back()[0]->Connect(PORTS::B, wire);
 			}
+			input_wires.emplace_back(wire);
 			break;
 		case PORTS::B:
 			input_nots_B[index]->Connect(PORTS::I, wire);
@@ -208,6 +211,7 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 				}
 				adders.back()[0]->Connect(PORTS::Cin, wire);
 			}
+			input_wires.emplace_back(wire);
 			break;
 		case PORTS::O:
 			if (index == 0) {
@@ -237,6 +241,7 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 				input_2C_adders_A[0]->Connect(PORTS::B, wire);
 				different_sign->Connect(PORTS::A, wire);
 			}
+			input_wires.emplace_back(wire);
 			break;
 		case PORTS::B:
 			if (index < (num_bits_B - 1)) {
@@ -249,6 +254,7 @@ void Multiplier_2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 				input_2C_adders_B[0]->Connect(PORTS::B, wire);
 				different_sign->Connect(PORTS::B, wire);
 			}
+			input_wires.emplace_back(wire);
 			break;
 		case PORTS::O:
 			if (index == (num_bits_O - 1)) {
@@ -273,7 +279,7 @@ void Multiplier_2C::Connect(PORTS port, const wb_t &wires, size_t port_idx, size
 	if (wire_idx >= wires->GetSize()) {
 		cout << "[Error] Wire bundle \"" << wires->GetName()
 			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << '\n';
+			 << " but has size " << wires->GetSize() << ".\n";
 		exit(1);
 	}
 
@@ -295,92 +301,6 @@ const size_t Multiplier_2C::GetNumToggles() {
 	}
 
 	return toggle_count;
-}
-
-const vector<wire_t> Multiplier_2C::GetWires() const {
-	vector<wire_t> wires;
-
-	// Add all input wires.
-	const vector<wire_t> &input = GetInputWires();
-	wires.insert(wires.end(),
-				 input.begin(),
-				 input.end());
-
-	// Add all internal wires.
-	wires.insert(wires.end(),
-				 internal_wires.begin(),
-				 internal_wires.end());
-
-	// Add all output wires.
-	const vector<wire_t> &output = GetOutputWires();
-	wires.insert(wires.end(),
-				 output.begin(),
-				 output.end());
-
-	return wires;
-}
-
-const vector<wire_t> Multiplier_2C::GetInputWires() const {
-	vector<wire_t> input_wires;
-
-	switch (type) {
-	case MUL_TYPE::CARRY_PROPAGATE_SIGN_EXTEND:
-	case MUL_TYPE::CARRY_SAVE_SIGN_EXTEND:
-		// Add the A inputs of the first level of AND gates.
-		// These are all the A inputs.
-		for (size_t a = 0; a < num_ands_per_level; ++a) {
-			const auto &and_i = ands[0][a];
-			const auto &wire = and_i->GetWire(PORTS::A);
-			input_wires.emplace_back(wire);
-		}
-
-		// Add the B inputs of the first AND gate of each
-		// level. These are all the B inputs.
-		for (size_t b = 0; b < num_and_levels; ++b) {
-			const auto &and_i = ands[b].front();
-			const auto &wire = and_i->GetWire(PORTS::B);
-			input_wires.emplace_back(wire);
-		}
-		break;
-	case MUL_TYPE::CARRY_SAVE_BAUGH_WOOLEY:
-		// Add the I inputs of the A inverters.
-		for (const auto &not_i : input_nots_A) {
-			const auto &wire = not_i->GetWire(PORTS::I);
-			input_wires.emplace_back(wire);
-		}
-
-		// Add the I inputs of the B inverters.
-		for (const auto &not_i : input_nots_B) {
-			const auto &wire = not_i->GetWire(PORTS::I);
-			input_wires.emplace_back(wire);
-		}
-		break;
-	case MUL_TYPE::CARRY_PROPAGATE_INVERSION:
-	case MUL_TYPE::CARRY_SAVE_INVERSION:
-		// Add the A and B inputs of the 2C XOR gates
-		for (const auto &xor_i : input_2C_xors_A) {
-			const auto &wire_A = xor_i->GetWire(PORTS::A);
-			input_wires.emplace_back(wire_A);
-		}
-		// The MSB input is connected to all the B ports, so to prevent
-		// duplicates, just take the wire from the first XOR.
-		input_wires.emplace_back(input_2C_xors_A.front()->GetWire(PORTS::B));
-
-		for (const auto &xor_i : input_2C_xors_B) {
-			const auto &wire_A = xor_i->GetWire(PORTS::A);
-			input_wires.emplace_back(wire_A);
-		}
-		// The MSB input is connected to all the B ports, so to prevent
-		// duplicates, just take the wire from the first XOR.
-		input_wires.emplace_back(input_2C_xors_B.front()->GetWire(PORTS::B));
-		break;
-	default:
-		cout << "[Error] Multiplier not implemented yet!\n";
-		exit(1);
-		break;
-	}
-	
-	return input_wires;
 }
 
 const wire_t Multiplier_2C::GetWire(PORTS port, size_t index) const {

@@ -68,9 +68,21 @@ void FullAdder::Update(bool propagating) {
 
 void FullAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
 	switch (port) {
-	case PORTS::A:    A    = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
-	case PORTS::B:    B    = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
-	case PORTS::Cin:  Cin  = wire; wire->AddOutput(this->shared_from_base<FullAdder>()); break;
+	case PORTS::A:
+		A = wire;
+		wire->AddOutput(this->shared_from_base<FullAdder>());
+		input_wires.emplace_back(wire);
+		break;
+	case PORTS::B:
+		B = wire;
+		wire->AddOutput(this->shared_from_base<FullAdder>());
+		input_wires.emplace_back(wire);
+		break;
+	case PORTS::Cin:
+		Cin = wire;
+		wire->AddOutput(this->shared_from_base<FullAdder>());
+		input_wires.emplace_back(wire);
+		break;
 	case PORTS::O:
 		O = wire; wire->SetInput(this->shared_from_base<FullAdder>());
 		output_wires.emplace_back(O);
@@ -81,7 +93,7 @@ void FullAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
 		break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of FullAdder "
-			 << "\"" << name << "\"\n";
+			 << "\"" << name << "\".\n";
 		exit(1);
 	}
 }
@@ -90,20 +102,12 @@ void FullAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t w
 	if (wire_idx >= wires->GetSize()) {
 		cout << "[Error] Wire bundle \"" << wires->GetName()
 			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << '\n';
+			 << " but has size " << wires->GetSize() << ".\n";
 		exit(1);
 	}
 
 	const wire_t &wire = (*wires)[wire_idx];
 	Connect(port, wire, port_idx);
-}
-
-const vector<wire_t> FullAdder::GetWires() const {
-	return {A, B, Cin, O, Cout};
-}
-
-const vector<wire_t> FullAdder::GetInputWires() const {
-	return {A, B, Cin};
 }
 
 const wire_t FullAdder::GetWire(PORTS port, size_t index) const {
@@ -115,7 +119,7 @@ const wire_t FullAdder::GetWire(PORTS port, size_t index) const {
 	case PORTS::Cout: return Cout;
 	default:
 		cout << "[Error] Trying to retrieve an undefined port of FullAdder "
-			 << "\"" << name << "\"\n";
+			 << "\"" << name << "\".\n";
 		exit(1);
 	}
 }

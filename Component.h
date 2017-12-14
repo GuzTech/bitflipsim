@@ -21,8 +21,8 @@ public:
 	const string &GetName() const {return name;}
 	const virtual size_t GetNumToggles() {return toggle_count;}
 	const size_t GetLongestPath() const {return longest_path;}
-	const virtual vector<wire_t> GetWires() const =0;
-	const virtual vector<wire_t> GetInputWires() const =0;
+	const virtual vector<wire_t> GetWires() const;
+	const virtual vector<wire_t> GetInputWires() const {return input_wires;}
 	const vector<wire_t> &GetOutputWires() const {return output_wires;}
 	const virtual wire_t GetWire(PORTS port, size_t index = 0) const =0;
 protected:
@@ -30,11 +30,15 @@ protected:
 		return static_pointer_cast<Derived>(shared_from_this());
 	}
 
+	virtual void CheckIfIndexIsInRange(PORTS port, size_t index) const {return;}
+
 	string name;
 	bool needs_update = false;
 	size_t toggle_count = 0;
 	size_t longest_path = 1; // Default path length is 1.
 
+	vector<wire_t> input_wires;
+	vector<wire_t> internal_wires;
 	vector<wire_t> output_wires;
 };
 

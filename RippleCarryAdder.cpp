@@ -85,14 +85,23 @@ void RippleCarryAdder::Update(bool propagating) {
 void RippleCarryAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
 	if (index >= num_bits) {
 		cout << "[Error] Index " << index << " out of bounds for "
-			 << "RippleCarryAdder \"" << name << "\"\n";
+			 << "RippleCarryAdder \"" << name << "\".\n";
 		exit(1);
 	}
 
 	switch (port) {
-	case PORTS::A:   full_adders[index]->Connect(PORTS::A, wire); break;
-	case PORTS::B:   full_adders[index]->Connect(PORTS::B, wire); break;
-	case PORTS::Cin: full_adders.front()->Connect(PORTS::Cin, wire); break;
+	case PORTS::A:
+		full_adders[index]->Connect(PORTS::A, wire);
+		input_wires.emplace_back(wire);
+		break;
+	case PORTS::B:
+		full_adders[index]->Connect(PORTS::B, wire);
+		input_wires.emplace_back(wire);
+		break;
+	case PORTS::Cin:
+		full_adders.front()->Connect(PORTS::Cin, wire);
+		input_wires.emplace_back(wire);
+		break;
 	case PORTS::O:
 		full_adders[index]->Connect(PORTS::O, wire);
 		output_wires.emplace_back(wire);
@@ -103,7 +112,7 @@ void RippleCarryAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
 		break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of RippleCarryAdder "
-			 << "\"" << name << "\"\n";
+			 << "\"" << name << "\".\n";
 		exit(1);
 	}
 }
@@ -112,7 +121,7 @@ void RippleCarryAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, s
 	if (wire_idx >= wires->GetSize()) {
 		cout << "[Error] Wire bundle \"" << wires->GetName()
 			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << '\n';
+			 << " but has size " << wires->GetSize() << ".\n";
 		exit(1);
 	}
 
@@ -130,51 +139,10 @@ const size_t RippleCarryAdder::GetNumToggles() {
 	return toggle_count;
 }
 
-const vector<wire_t> RippleCarryAdder::GetWires() const {
-	vector<wire_t> all_wires;
-
-	// Add the A and B inputs of all the full adders.
-	const auto &inputs = GetInputWires();
-	const auto &outputs = GetOutputWires();
-
-	all_wires.insert(all_wires.end(),
-					 inputs.begin(),
-					 inputs.end());
-	all_wires.insert(all_wires.end(),
-					 outputs.begin(),
-					 outputs.end());
-
-	// Finally add the internal wires.
-	for (size_t i = 0; i < num_bits - 1; ++i) {
-		const auto &wire = full_adders[i]->GetWire(PORTS::Cout);
-		all_wires.push_back(wire);
-	}
-
-	return all_wires;
-}
-
-const vector<wire_t> RippleCarryAdder::GetInputWires() const {
-	vector<wire_t> input_wires;
-
-	// Get the A and B inputs of all the full adders.
-	for (size_t i = 0; i < num_bits; ++i) {
-		const auto &wire_A = full_adders[i]->GetWire(PORTS::A);
-		const auto &wire_B = full_adders[i]->GetWire(PORTS::B);
-
-		input_wires.push_back(wire_A);
-		input_wires.push_back(wire_B);
-	}
-
-	// Get the carry in input from the first full adder.
-	input_wires.push_back(full_adders[0]->GetWire(PORTS::Cin));
-
-	return input_wires;
-}
-
 const wire_t RippleCarryAdder::GetWire(PORTS port, size_t index) const {
 	if (index >= num_bits) {
 		cout << "[Error] Index " << index << " out of bound for "
-			 << "RippleCarryAdder \"" << name << "\"\n";
+			 << "RippleCarryAdder \"" << name << "\".\n";
 		exit(1);
 	}
 
@@ -187,7 +155,7 @@ const wire_t RippleCarryAdder::GetWire(PORTS port, size_t index) const {
 		return full_adders[index]->GetWire(port);
 	default:
 		cout << "[Error] Trying to retrieve undefined port of RippleCarryAdder "
-			 << "\"" << name << "\"\n";
+			 << "\"" << name << "\".\n";
 		exit(1);
 	}
 }

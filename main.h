@@ -15,6 +15,7 @@ class Component;
 class HalfAdder;
 class FullAdder;
 class RippleCarryAdder;
+class CarrySaveAdder;
 class Multiplier_2C;
 class Multiplier_Smag;
 class BoothEncoderRadix4;
@@ -55,6 +56,7 @@ using xnor_t  = shared_ptr<Xnor>;
 using not_t   = shared_ptr<Not>;
 using mux_t   = shared_ptr<Mux>;
 using rca_t   = shared_ptr<RippleCarryAdder>;
+using csa_t   = shared_ptr<CarrySaveAdder>;
 using m2c_t   = shared_ptr<Multiplier_2C>;
 using msmag_t = shared_ptr<Multiplier_Smag>;
 using b_enc_t = shared_ptr<BoothEncoderRadix4>;
@@ -66,6 +68,7 @@ using m2cb_t  = shared_ptr<Multiplier_2C_Booth>;
 #include "HalfAdder.h"
 #include "FullAdder.h"
 #include "RippleCarryAdder.h"
+#include "CarrySaveAdder.h"
 #include "Multiplier_2C.h"
 #include "Multiplier_Smag.h"
 #include "BoothEncoderRadix4.h"

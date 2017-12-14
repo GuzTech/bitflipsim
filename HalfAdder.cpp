@@ -34,8 +34,16 @@ void HalfAdder::Update(bool propagating) {
 
 void HalfAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
 	switch (port) {
-	case PORTS::A: A = wire; wire->AddOutput(this->shared_from_base<HalfAdder>()); break;
-	case PORTS::B: B = wire; wire->AddOutput(this->shared_from_base<HalfAdder>()); break;
+	case PORTS::A:
+		A = wire;
+		wire->AddOutput(this->shared_from_base<HalfAdder>());
+		input_wires.emplace_back(wire);
+		break;
+	case PORTS::B:
+		B = wire;
+		wire->AddOutput(this->shared_from_base<HalfAdder>());
+		input_wires.emplace_back(wire);
+		break;
 	case PORTS::O:
 		O = wire; wire->SetInput(this->shared_from_base<HalfAdder>());
 		output_wires.emplace_back(O);
@@ -55,20 +63,12 @@ void HalfAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t w
 	if (wire_idx >= wires->GetSize()) {
 		cout << "[Error] Wire bundle \"" << wires->GetName()
 			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << '\n';
+			 << " but has size " << wires->GetSize() << ".\n";
 		exit(1);
 	}
 
 	const wire_t &wire = (*wires)[wire_idx];
 	Connect(port, wire, port_idx);
-}
-
-const vector<wire_t> HalfAdder::GetWires() const {
-	return {A, B, O, Cout};
-}
-
-const vector<wire_t> HalfAdder::GetInputWires() const {
-	return {A, B};
 }
 
 const wire_t HalfAdder::GetWire(PORTS port, size_t index) const {
@@ -79,7 +79,7 @@ const wire_t HalfAdder::GetWire(PORTS port, size_t index) const {
 	case PORTS::Cout: return Cout;
 	default:
 		cout << "[Error] Trying to retrieve undefined port of HalfAdder "
-			 << "\"" << name << "\"\n";
+			 << "\"" << name << "\".\n";
 		exit(1);
 	}
 }

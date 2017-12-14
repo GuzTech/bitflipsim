@@ -40,7 +40,7 @@ void BoothDecoderRadix4::Connect(PORTS port, const wire_t &wire, size_t index) {
 	auto error_undefined_port = [&](const auto &wire) {
 		cout << "[Error] Trying to connect wire \"" << wire->GetName()
 			 << "\" to undefined port of BoothDecoderRadix4 "
-			 << "\"" << name << "\"\n";
+			 << "\"" << name << "\".\n";
 		exit(1);
 	};
 
@@ -48,26 +48,33 @@ void BoothDecoderRadix4::Connect(PORTS port, const wire_t &wire, size_t index) {
 	/* Inputs */
 	case PORTS::X1_b:
 		yj_x1b->Connect(PORTS::B, wire);
+		input_wires.emplace_back(wire);
 		break;
 	case PORTS::X2_b:
 		yj_m1_z_x2b->Connect(PORTS::C, wire);
+		input_wires.emplace_back(wire);
 		break;
 	case PORTS::Z:
 		yj_m1_z_x2b->Connect(PORTS::A, wire);
+		input_wires.emplace_back(wire);
 		break;
 	case PORTS::NEG:
 		yj_neg->Connect(PORTS::B, wire);
 		yj_m1_neg->Connect(PORTS::B, wire);
+		input_wires.emplace_back(wire);
 		break;
 	case PORTS::Yj:
 		yj_neg->Connect(PORTS::A, wire);
+		input_wires.emplace_back(wire);
 		break;
 	case PORTS::Yj_m1:
 		yj_m1_neg->Connect(PORTS::A, wire);
+		input_wires.emplace_back(wire);
 		break;
 	/* Outputs */
 	case PORTS::PPTj:
 		ppt_j->Connect(PORTS::O, wire);
+		output_wires.emplace_back(wire);
 		break;
 	default:
 		error_undefined_port(wire);
@@ -90,14 +97,6 @@ const size_t BoothDecoderRadix4::GetNumToggles() {
 	toggle_count = 0;
 
 	return toggle_count;
-}
-
-const vector<wire_t> BoothDecoderRadix4::GetWires() const {
-	return vector<wire_t>();
-}
-
-const vector<wire_t> BoothDecoderRadix4::GetInputWires() const {
-	return vector<wire_t>();
 }
 
 const wire_t BoothDecoderRadix4::GetWire(PORTS port, size_t index) const {

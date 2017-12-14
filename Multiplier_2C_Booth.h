@@ -15,18 +15,20 @@ public:
 	void Connect(PORTS port, const wb_t &wires, size_t port_idx = 0, size_t wire_idx = 0) override;
 
 	const size_t GetNumToggles() final;
-	const vector<wire_t> GetWires() const override;
-	const vector<wire_t> GetInputWires() const override;
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
 private:
+	void CheckIfIndexIsInRange(PORTS port, size_t index) const override;
 	void Generate2CBoothHardware();
 
 	size_t num_bits_A = 0;
 	size_t num_bits_B = 0;
 	size_t num_bits_O = 0;
+	size_t num_encoders = 0;
+	size_t num_decoders_per_row = 0;
 
-	vector<wire_t> internal_wires;
+	vector<b_enc_t> encoders;
+	vector<b_r4d_t> decoders;
 };
 
 #endif // MULTIPLIER_2C_BOOTH_H

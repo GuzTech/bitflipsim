@@ -34,7 +34,7 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 	case MUL_TYPE::CARRY_SAVE: 		GenerateCarrySaveArrayHardware(); break;
 	default:
 		cout << "[Error] Unknown type supplied for generating Multiplier_Smag \""
-			 << name << "\"\n";
+			 << name << "\".\n";
 		exit(1);
 	}
 }
@@ -68,22 +68,22 @@ void Multiplier_Smag::Update(bool propagating) {
 void Multiplier_Smag::Connect(PORTS port, const wire_t &wire, size_t index) {
 	if (port == PORTS::A && index > num_bits_A) {
 		cout << "[Error] Index " << index << " of port A is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\"\n";
+			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
 		exit(1);
 	} else if (port == PORTS::B && index > num_bits_B) {
 		cout << "[Error] Index " << index << " of port B is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\"\n";
+			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
 		exit(1);
 	} else if (port == PORTS::O && index >= num_bits_O) {
 		cout << "[Error] Index " << index << " of port O is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\"\n";
+			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
 		exit(1);
 	}
 
 	auto error_undefined_port = [&](const auto &wire) {
 		cout << "[Error] Trying to connect wire \"" << wire->GetName()
 			 << "\" to undefined port of Multiplier_2C "
-			 << "\"" << name << "\"\n";
+			 << "\"" << name << "\".\n";
 		exit(1);
 	};
 
@@ -102,6 +102,7 @@ void Multiplier_Smag::Connect(PORTS port, const wire_t &wire, size_t index) {
 					ands[level][index]->Connect(PORTS::A, wire);
 				}
 			}
+			input_wires.emplace_back(wire);
 			break;
 		case PORTS::B:
 			if (index == num_adders_per_level) {
@@ -113,6 +114,7 @@ void Multiplier_Smag::Connect(PORTS port, const wire_t &wire, size_t index) {
 					ands[index][i]->Connect(PORTS::B, wire);
 				}
 			}
+			input_wires.emplace_back(wire);
 			break;
 		case PORTS::O:
 			if (index == (num_bits_O - 1)) {
@@ -143,7 +145,7 @@ void Multiplier_Smag::Connect(PORTS port, const wb_t &wires, size_t port_idx, si
 	if (wire_idx >= wires->GetSize()) {
 		cout << "[Error] Wire bundle \"" << wires->GetName()
 			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << '\n';
+			 << " but has size " << wires->GetSize() << ".\n";
 		exit(1);
 	}
 
@@ -164,59 +166,6 @@ const size_t Multiplier_Smag::GetNumToggles() {
 	}
 	
 	return toggle_count;
-}
-
-const vector<wire_t> Multiplier_Smag::GetWires() const {
-	vector<wire_t> wires;
-
-	// Add all input wires.
-	const vector<wire_t> &input = GetInputWires();
-	wires.insert(wires.end(),
-				 input.begin(),
-				 input.end());
-
-	// Add all internal wires.
-	wires.insert(wires.end(),
-				 internal_wires.begin(),
-				 internal_wires.end());
-
-	// Add all output wires.
-	const vector<wire_t> &output = GetOutputWires();
-	wires.insert(wires.end(),
-				 output.begin(),
-				 output.end());
-
-	return wires;
-}
-
-const vector<wire_t> Multiplier_Smag::GetInputWires() const {
-	vector<wire_t> input_wires;
-
-	// Add the A inputs of the first level of AND gates.
-	// These are all the A inputs (except for the sign bit
-	// XOR gate).
-	for (size_t x = 0; x < num_ands_per_level; ++x) {
-		const auto &and_i = ands[0][x];
-		const auto &wire = and_i->GetWire(PORTS::A);
-		input_wires.emplace_back(wire);
-	}
-
-	// Add the B inputs of the first AND gate of each
-		// level. These are all the B inputs.
-	for (size_t y = 0; y < num_and_levels; ++y) {
-		const auto &and_i = ands[y].front();
-		const auto &wire = and_i->GetWire(PORTS::B);
-		input_wires.emplace_back(wire);
-	}
-
-	// Add the inputs to the sign bit XOR gate.
-	const auto &wire_A = sign->GetWire(PORTS::A);
-	const auto &wire_B = sign->GetWire(PORTS::B);
-
-	input_wires.emplace_back(wire_A);
-	input_wires.emplace_back(wire_B);
-
-	return input_wires;
 }
 
 const wire_t Multiplier_Smag::GetWire(PORTS port, size_t index) const {

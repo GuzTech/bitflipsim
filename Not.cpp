@@ -28,14 +28,18 @@ void Not::Update(bool propagating) {
 
 void Not::Connect(PORTS port, const wire_t &wire, size_t index) {
 	switch (port) {
-	case PORTS::I: I = wire; wire->AddOutput(this->shared_from_base<Not>()); break;
+	case PORTS::I:
+		I = wire;
+		wire->AddOutput(this->shared_from_base<Not>());
+		input_wires.emplace_back(wire);
+		break;
 	case PORTS::O:
 		O = wire; wire->SetInput(this->shared_from_base<Not>());
 		output_wires.emplace_back(O);
 		break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of Not "
-			 << "\"" << name << "\"\n";
+			 << "\"" << name << "\".\n";
 		exit(1);
 	}
 }
@@ -44,20 +48,12 @@ void Not::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_id
 	if (wire_idx >= wires->GetSize()) {
 		cout << "[Error] Wire bundle \"" << wires->GetName()
 			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << '\n';
+			 << " but has size " << wires->GetSize() << ".\n";
 		exit(1);
 	}
 
 	const wire_t &wire = (*wires)[wire_idx];
 	Connect(port, wire, port_idx);
-}
-
-const vector<wire_t> Not::GetWires() const {
-	return {I, O};
-}
-
-const vector<wire_t> Not::GetInputWires() const {
-	return {I};
 }
 
 const wire_t Not::GetWire(PORTS port, size_t index) const {
@@ -66,7 +62,7 @@ const wire_t Not::GetWire(PORTS port, size_t index) const {
 	case PORTS::O: return O;
 	default:
 		cout << "[Error] Trying to retrieve undefined port of Not "
-			 << "\"" << name << "\"\n";
+			 << "\"" << name << "\".\n";
 		exit(1);
 	}
 }

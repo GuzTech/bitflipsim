@@ -18,8 +18,6 @@ public:
 	void Connect(PORTS port, const wb_t &wires, size_t port_idx = 0, size_t wire_idx = 0) override;
 
 	const size_t GetNumToggles() final;
-	const vector<wire_t> GetWires() const override;
-	const vector<wire_t> GetInputWires() const override;
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
 private:
@@ -49,7 +47,6 @@ private:
 	vector<not_t> input_nots_B;				// Used in the Baugh-Wooley multiplier.
 	xor_t output_2C_adder_xor = nullptr;
 	xor_t different_sign = nullptr;
-	vector<wire_t> internal_wires;
 
 	MUL_TYPE type = MUL_TYPE::CARRY_SAVE_SIGN_EXTEND;
 };

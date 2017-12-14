@@ -18,8 +18,6 @@ public:
 	void Connect(PORTS port, const wb_t &wires, size_t port_idx = 0, size_t wire_idx = 0) override;
 
 	const size_t GetNumToggles() final;
-	const vector<wire_t> GetWires() const override;
-	const vector<wire_t> GetInputWires() const override;
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
 private:
@@ -36,7 +34,6 @@ private:
 
 	vector<vector<comp_t>> adders;
 	vector<vector<and_t>> ands;
-	vector<wire_t> internal_wires;
 	xor_t sign = nullptr;
 
 	MUL_TYPE type = MUL_TYPE::CARRY_PROPAGATE;
