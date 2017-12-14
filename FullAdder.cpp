@@ -20,46 +20,40 @@
        |----------------|D|
  */
 
+FullAdder::FullAdder(string _name)
+	: Component(_name, 3)
+{
+	xor_ab = make_shared<Xor>(_name + "_xor_ab");
+	xor_cin = make_shared<Xor>(_name + "_xor_cin");
+	and_cin = make_shared<And>(_name + "_and_cin");
+	and_ab = make_shared<And>(_name + "_and_ab");
+	or_cout = make_shared<Or>(_name + "_or_cout");
+
+	const auto iw_1 = make_shared<Wire>(_name + "_iw_1");
+	xor_ab->Connect(PORTS::O, iw_1);
+	xor_cin->Connect(PORTS::A, iw_1);
+	and_cin->Connect(PORTS::A, iw_1);
+	internal_wires.emplace_back(iw_1);
+
+	const auto iw_2 = make_shared<Wire>(_name + "_iw_2");
+	and_cin->Connect(PORTS::O, iw_2);
+	or_cout->Connect(PORTS::A, iw_2);
+	internal_wires.emplace_back(iw_2);
+
+	const auto iw_3 = make_shared<Wire>(_name + "_iw_3");
+	and_ab->Connect(PORTS::O, iw_3);
+	or_cout->Connect(PORTS::B, iw_3);
+	internal_wires.emplace_back(iw_3);
+}
+
 void FullAdder::Update(bool propagating) {
 	if (needs_update || !propagating) {
-		bool i_A, i_B, i_C, o_O, o_C;
-
-		// Get the wire values.
-		i_A = A ? A->GetValue() : false;
-		i_B = B ? B->GetValue() : false;
-		i_C = Cin ? Cin->GetValue() : false;
-
-		// Update the current state.
-		iw_1_curr = i_A ^ i_B;
-		iw_3_curr = i_A & i_B;
-		iw_2_curr = iw_1_curr & i_C;
-		o_O = iw_1_curr ^ i_C;
-		o_C = iw_2_curr | iw_3_curr;
-
-		// Set the output values.
-		if (O) {
-			O->SetValue(o_O, propagating);
-		}
-		if (Cout) {
-			Cout->SetValue(o_C, propagating);
-		}
-
-		if (!propagating) {
-			// Count number of toggles.
-			if (iw_1_curr != iw_1_prev) {
-				toggle_count++;
-			}
-			if (iw_2_curr != iw_2_prev) {
-				toggle_count++;
-			}
-			if (iw_3_curr != iw_3_prev) {
-				toggle_count++;
-			}
-
-			// Save the current state.
-			iw_1_prev = iw_1_curr;
-			iw_2_prev = iw_2_curr;
-			iw_3_prev = iw_3_curr;
+		for (size_t i = 0; i < longest_path; ++i) {
+			xor_ab->Update(propagating);
+			xor_cin->Update(propagating);
+			and_cin->Update(propagating);
+			and_ab->Update(propagating);
+			or_cout->Update(propagating);
 		}
 
 		needs_update = false;
@@ -69,27 +63,27 @@ void FullAdder::Update(bool propagating) {
 void FullAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
 	switch (port) {
 	case PORTS::A:
-		A = wire;
-		wire->AddOutput(this->shared_from_base<FullAdder>());
+		xor_ab->Connect(PORTS::A, wire);
+		and_ab->Connect(PORTS::A, wire);
 		input_wires.emplace_back(wire);
 		break;
 	case PORTS::B:
-		B = wire;
-		wire->AddOutput(this->shared_from_base<FullAdder>());
+		xor_ab->Connect(PORTS::B, wire);
+		and_ab->Connect(PORTS::B, wire);
 		input_wires.emplace_back(wire);
 		break;
 	case PORTS::Cin:
-		Cin = wire;
-		wire->AddOutput(this->shared_from_base<FullAdder>());
+		xor_cin->Connect(PORTS::B, wire);
+		and_cin->Connect(PORTS::B, wire);
 		input_wires.emplace_back(wire);
 		break;
 	case PORTS::O:
-		O = wire; wire->SetInput(this->shared_from_base<FullAdder>());
-		output_wires.emplace_back(O);
+		xor_cin->Connect(PORTS::O, wire);
+		output_wires.emplace_back(wire);
 		break;
 	case PORTS::Cout:
-		Cout = wire; wire->SetInput(this->shared_from_base<FullAdder>());
-		output_wires.emplace_back(Cout);
+		or_cout->Connect(PORTS::O, wire);
+		output_wires.emplace_back(wire);
 		break;
 	default:
 		cout << "[Error] Trying to connect to undefined port of FullAdder "
@@ -112,11 +106,11 @@ void FullAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t w
 
 const wire_t FullAdder::GetWire(PORTS port, size_t index) const {
 	switch (port) {
-	case PORTS::A:    return A;
-	case PORTS::B:    return B;
-	case PORTS::Cin:  return Cin;
-	case PORTS::O:    return O;
-	case PORTS::Cout: return Cout;
+	case PORTS::A: return xor_ab->GetWire(PORTS::A);
+	case PORTS::B: return xor_ab->GetWire(PORTS::B);
+	case PORTS::Cin: return xor_cin->GetWire(PORTS::B);
+	case PORTS::O : return xor_cin->GetWire(PORTS::O);
+	case PORTS::Cout: return or_cout->GetWire(PORTS::O);
 	default:
 		cout << "[Error] Trying to retrieve an undefined port of FullAdder "
 			 << "\"" << name << "\".\n";

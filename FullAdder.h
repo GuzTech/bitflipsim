@@ -5,8 +5,7 @@
 
 class FullAdder : public Component {
 public:
-	FullAdder(string _name)
-		: Component(_name) {}
+	FullAdder(string _name);
 	~FullAdder() = default;
 
 	void Update(bool propagating) override;
@@ -16,19 +15,15 @@ public:
 	const wire_t GetWire(PORTS port, size_t index = 0) const override;
 
 private:
-	wire_t A;
-	wire_t B;
-	wire_t Cin;
-	wire_t O;
-	wire_t Cout;
+	xor_t xor_ab = nullptr;
+	xor_t xor_cin = nullptr;
+	and_t and_cin = nullptr;
+	and_t and_ab = nullptr;
+	or_t or_cout = nullptr;
 
-	// Internal wires
-	bool iw_1_curr = false;
-	bool iw_2_curr = false;
-	bool iw_3_curr = false;
-	bool iw_1_prev = false;
-	bool iw_2_prev = false;
-	bool iw_3_prev = false;
+	wire_t iw_1 = nullptr;
+	wire_t iw_2 = nullptr;
+	wire_t iw_3 = nullptr;
 };
 
 #endif // FULLADDER_H
