@@ -287,22 +287,6 @@ void Multiplier_2C::Connect(PORTS port, const wb_t &wires, size_t port_idx, size
 	Connect(port, wire, port_idx);
 }
 
-const size_t Multiplier_2C::GetNumToggles() {
-	toggle_count = 0;
-
-	// Only full adders have internal state, and therefore only
-	// they can increase the toggle count. The twos-complement
-	// hardware only use half adders, so they do not contribute
-	// to the toggle_count. Internal wires are handled by System.
-	for (const auto &add_row : adders) {
-		for (const auto &add : add_row) {
-			toggle_count += add->GetNumToggles();
-		}
-	}
-
-	return toggle_count;
-}
-
 const wire_t Multiplier_2C::GetWire(PORTS port, size_t index) const {
 	return nullptr;
 }

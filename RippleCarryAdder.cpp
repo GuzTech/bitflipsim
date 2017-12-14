@@ -129,16 +129,6 @@ void RippleCarryAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, s
 	Connect(port, wire, port_idx);
 }
 
-const size_t RippleCarryAdder::GetNumToggles() {
-	toggle_count = 0;
-
-	for (auto &fa : full_adders) {
-		toggle_count += fa->GetNumToggles();
-	}
-
-	return toggle_count;
-}
-
 const wire_t RippleCarryAdder::GetWire(PORTS port, size_t index) const {
 	if (index >= num_bits) {
 		cout << "[Error] Index " << index << " out of bound for "

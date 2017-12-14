@@ -16,10 +16,9 @@ public:
 	virtual void Connect(PORTS port, const wire_t &wire, size_t index = 0) =0;
 	virtual void Connect(PORTS port, const wb_t &wires, size_t port_idx = 0, size_t wire_idx = 0) =0;
 	void MarkUpdate() {needs_update = true;}
-	void Reset() {needs_update = false; toggle_count = 0;}
+	void Reset() {needs_update = false;}
 
 	const string &GetName() const {return name;}
-	const virtual size_t GetNumToggles() {return toggle_count;}
 	const size_t GetLongestPath() const {return longest_path;}
 	const virtual vector<wire_t> GetWires() const;
 	const virtual vector<wire_t> GetInputWires() const {return input_wires;}
@@ -34,7 +33,6 @@ protected:
 
 	string name;
 	bool needs_update = false;
-	size_t toggle_count = 0;
 	size_t longest_path = 1; // Default path length is 1.
 
 	vector<wire_t> input_wires;

@@ -13,7 +13,6 @@ public:
 	void Connect(PORTS port, const wire_t &wire, size_t index = 0) override;
 	void Connect(PORTS port, const wb_t &wires, size_t port_idx = 0, size_t wire_idx = 0) override;
 
-	const size_t GetNumToggles() override;
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
 private:

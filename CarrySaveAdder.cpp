@@ -74,12 +74,6 @@ void CarrySaveAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, siz
 	Connect(port, wire, port_idx);
 }
 
-const size_t CarrySaveAdder::GetNumToggles() {
-	toggle_count = 0;
-
-	return toggle_count;
-}
-
 const wire_t CarrySaveAdder::GetWire(PORTS port, size_t index) const {
 	CheckIfIndexIsInRange(port, index);
 

@@ -93,12 +93,6 @@ void BoothDecoderRadix4::Connect(PORTS port, const wb_t &wires, size_t port_idx,
 	Connect(port, wire, port_idx);
 }
 
-const size_t BoothDecoderRadix4::GetNumToggles() {
-	toggle_count = 0;
-
-	return toggle_count;
-}
-
 const wire_t BoothDecoderRadix4::GetWire(PORTS port, size_t index) const {
 	return wire_t();
 }

@@ -1234,13 +1234,6 @@ int main(int argc, char **argv) {
 				 << "\t#toggles: " << ow->GetNumToggles()
 				 << '\n';
 		}
-
-		cout << "\nValue of all components:\n";
-		for (const auto &c : system.GetComponents()) {
-			cout << "Component \"" << c->GetName()
-				 << "\" #toggles: " << c->GetNumToggles()
-				 << '\n';
-		}
 #endif
 		cout << "\nInputs:\n";
 		vector<wb_t> processed_wire_bundles;

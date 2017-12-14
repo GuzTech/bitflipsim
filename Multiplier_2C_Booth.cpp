@@ -73,13 +73,6 @@ void Multiplier_2C_Booth::Connect(PORTS port, const wb_t &wires, size_t port_idx
 	Connect(port, wire, port_idx);
 }
 
-const size_t Multiplier_2C_Booth::GetNumToggles() {
-	toggle_count = 0;
-
-	return toggle_count;
-}
-
-
 const wire_t Multiplier_2C_Booth::GetWire(PORTS port, size_t index) const {
 	CheckIfIndexIsInRange(port, index);
 
@@ -98,13 +91,25 @@ void Multiplier_2C_Booth::Generate2CBoothHardware() {
 	// Generate the decoders.
 	name_prefix = name + "_dec_";
 	for (size_t i = 0; i < num_encoders; ++i) {
-		string decoder_name = name_prefix + to_string(i);
-		decoders.emplace_back(make_shared<Radix4BoothDecoder>(decoder_name, num_decoders_per_row));
+		decoders.emplace_back(
+			make_shared<Radix4BoothDecoder>(
+				name_prefix + to_string(i), num_decoders_per_row));
+	}
+
+	// Generate the Carry-Save adders. First adder is slightly larger
+	// due to more sign-extension bits.
+	name_prefix = name + "_csa_";
+	cs_adders.emplace_back(
+		make_shared<CarrySaveAdder>(
+			name_prefix + '0', num_bits_A + 4));
+
+	for (size_t i = 1; i < (num_encoders - 1); ++i) {
+		cs_adders.emplace_back(
+			make_shared<CarrySaveAdder>(
+				name_prefix + to_string(i), num_bits_A + 3));
 	}
 
 	assert(encoders.size() == decoders.size());
-
-	//
 }
 
 void Multiplier_2C_Booth::CheckIfIndexIsInRange(PORTS port, size_t index) const {

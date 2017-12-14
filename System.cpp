@@ -62,6 +62,8 @@ void System::FindLongestPathInSystem() {
 	vector<wire_t> wires_to_process(input_wires);
 	vector<comp_t> components_to_process;
 
+	cout << "Finding longest path in the system.\n";
+
 	do {
 		components_to_process.clear();
 
@@ -129,12 +131,7 @@ void System::Update() {
 const size_t System::GetNumToggles() const {
 	size_t toggle_count = 0;
 
-	for (const auto &[name, component] : components) {
-		if (component) {
-			toggle_count += component->GetNumToggles();
-		}
-	}
-
+	// Only wires keep track of how many times they toggled.
 	for (const auto &[name, wire] : wires) {
 		if (wire) {
 			toggle_count += wire->GetNumToggles();

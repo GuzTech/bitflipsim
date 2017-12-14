@@ -14,7 +14,6 @@ public:
 	void Connect(PORTS port, const wire_t &wire, size_t index) override;
 	void Connect(PORTS port, const wb_t &wires, size_t port_idx = 0, size_t wire_idx = 0) override;
 
-	const size_t GetNumToggles() final;
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
 private:
@@ -29,6 +28,7 @@ private:
 
 	vector<b_enc_t> encoders;
 	vector<b_r4d_t> decoders;
+	vector<csa_t> cs_adders;
 };
 
 #endif // MULTIPLIER_2C_BOOTH_H
