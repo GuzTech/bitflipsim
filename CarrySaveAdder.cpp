@@ -74,17 +74,10 @@ void CarrySaveAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, siz
 	Connect(port, wire, port_idx);
 }
 
-const vector<wire_t> CarrySaveAdder::GetInputWires() const {
-	vector<wire_t> inputs;
+const size_t CarrySaveAdder::GetNumToggles() {
+	toggle_count = 0;
 
-	for (const auto &comp : full_adders) {
-		const auto &i_wires = comp->GetInputWires();
-		inputs.insert(inputs.end(),
-					  i_wires.begin(),
-					  i_wires.end());
-	}
-
-	return inputs;
+	return toggle_count;
 }
 
 const wire_t CarrySaveAdder::GetWire(PORTS port, size_t index) const {
