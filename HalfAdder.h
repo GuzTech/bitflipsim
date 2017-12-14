@@ -5,8 +5,7 @@
 
 class HalfAdder : public Component {
 public:
-	HalfAdder(string _name)
-		: Component(_name) {}
+	HalfAdder(string _name);
 	~HalfAdder() = default;
 
 	void Update(bool propagating) override;
@@ -16,10 +15,8 @@ public:
 	const wire_t GetWire(PORTS port, size_t index = 0) const override;
 
 private:
-	wire_t A;
-	wire_t B;
-	wire_t O;
-	wire_t Cout;
+	xor_t xor_ha = nullptr;
+	and_t and_ha = nullptr;
 };
 
 #endif // HALFADDER_H
