@@ -75,7 +75,7 @@ void Radix4BoothDecoder::Connect(PORTS port, const wire_t &wire, size_t index) {
 		}
 		input_wires.emplace_back(wire);
 		break;
-	case PORTS::O:
+	case PORTS::PPTj:
 		ppt_j[index]->Connect(PORTS::O, wire);
 		output_wires.emplace_back(wire);
 		break;
@@ -111,7 +111,7 @@ const wire_t Radix4BoothDecoder::GetWire(PORTS port, size_t index) const {
 	case PORTS::X1_b: return yj_x1b[index]->GetWire(PORTS::B);
 	case PORTS::X2_b: return yj_m1_z_x2b[index]->GetWire(PORTS::C);
 	case PORTS::Z:    return yj_m1_z_x2b[index]->GetWire(PORTS::B);
-	case PORTS::O:    return ppt_j[index]->GetWire(PORTS::O);
+	case PORTS::PPTj: return ppt_j[index]->GetWire(PORTS::O);
 	default:
 		error_undefined_port();
 		return nullptr;
