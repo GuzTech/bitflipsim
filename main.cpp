@@ -1281,7 +1281,7 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-#if 0
+#if 1
 	// Booth encoder radix-4
 	const auto be = make_shared<BoothEncoderRadix4>("be_0");
 	const auto bd1 = make_shared<BoothDecoderRadix4>("bd_1");
@@ -1462,8 +1462,6 @@ int main(int argc, char **argv) {
 
 	cout << "\n\nFull partial product: " << full_ppt_bin << "\nFinal result: " << final_result << '\n';
 
-	//const auto bm = Multiplier_2C_Booth("Booth", 4, 2);
-
 	const auto ppt1_r4d = make_shared<Wire>("ppt1_r4d");
 	const auto ppt2_r4d = make_shared<Wire>("ppt2_r4d");
 	const auto ppt3_r4d = make_shared<Wire>("ppt3_r4d");
@@ -1477,9 +1475,9 @@ int main(int argc, char **argv) {
 	r4d.Connect(PORTS::X1_b, x1b);
 	r4d.Connect(PORTS::X2_b, x2b);
 	r4d.Connect(PORTS::Z, z);
-	r4d.Connect(PORTS::O, ppt1_r4d, 0);
-	r4d.Connect(PORTS::O, ppt2_r4d, 1);
-	r4d.Connect(PORTS::O, ppt3_r4d, 2);
+	r4d.Connect(PORTS::PPTj, ppt1_r4d, 0);
+	r4d.Connect(PORTS::PPTj, ppt2_r4d, 1);
+	r4d.Connect(PORTS::PPTj, ppt3_r4d, 2);
 
 	r4d.Update(false);
 
@@ -1495,6 +1493,40 @@ int main(int argc, char **argv) {
 	bitset<6> final_result_r4d(full_ppt_r4d & 0x3F);
 
 	cout << "\nFull partial product: " << full_ppt_bin_r4d << "\nFinal result: " << final_result_r4d << '\n';
+
+	auto bm = Multiplier_2C_Booth("Booth", 4, 2);
+	const auto bm_o0 = make_shared<Wire>("o0");
+	const auto bm_o1 = make_shared<Wire>("o1");
+	const auto bm_o2 = make_shared<Wire>("o2");
+	const auto bm_o3 = make_shared<Wire>("o3");
+	const auto bm_o4 = make_shared<Wire>("o4");
+	const auto bm_o5 = make_shared<Wire>("o5");
+	bm.Connect(PORTS::A, y_lsb, 0);
+	bm.Connect(PORTS::A, y1, 1);
+	bm.Connect(PORTS::A, y2, 2);
+	bm.Connect(PORTS::A, y_msb, 3);
+	bm.Connect(PORTS::B, w2x_i, 0);
+	bm.Connect(PORTS::B, w2x_i_p1, 1);
+	bm.Connect(PORTS::O, bm_o0, 0);
+	bm.Connect(PORTS::O, bm_o1, 1);
+	bm.Connect(PORTS::O, bm_o2, 2);
+	bm.Connect(PORTS::O, bm_o3, 3);
+	bm.Connect(PORTS::O, bm_o4, 4);
+	bm.Connect(PORTS::O, bm_o5, 5);
+
+	bm.Update(false);
+
+	const size_t ppt_bm = ((*bm_o5)() << 5)
+		| ((*bm_o4)() << 4)
+		| ((*bm_o3)() << 3)
+		| ((*bm_o2)() << 2)
+		| ((*bm_o1)() << 1)
+		| (*bm_o0)();
+	const size_t full_ppt_bm = ppt_bm +  size_t((*neg_cin)() << 1);
+	bitset<7> full_ppt_bin_bm(full_ppt_bm);
+	bitset<6> final_result_bm(full_ppt_bm & 0x3F);
+
+	cout << "\nFull partial product: " << full_ppt_bin_bm << "\nFinal result: " << final_result_bm << '\n';
 #endif
 	return 0;
 }
