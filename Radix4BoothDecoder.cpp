@@ -32,6 +32,10 @@ void Radix4BoothDecoder::Update(bool propagating) {
 			}
 		}
 
+		if (print_debug) {
+			PrintDebug();
+		}
+
 		needs_update = false;
 	}
 }
@@ -189,4 +193,33 @@ void Radix4BoothDecoder::CheckIfIndexIsInRange(PORTS port, size_t index) const {
 			 << "bounds for Radix4BoothDecoder \"" << name << "\".\n";
 		exit(1);
 	}
+}
+
+void Radix4BoothDecoder::PrintDebug() const {
+	cout << '\n' << name << ":\n";
+
+	for (size_t i = 0; i < num_bits; ++i) {
+		const auto &wire = yj_neg[i]->GetWire(PORTS::A);
+		if (wire) {
+			cout << "yj_neg[" << i << "] (" << wire->GetName() << "): " << (*wire)() << '\n';
+		}
+	}
+
+	const auto &x1b = yj_x1b.front()->GetWire(PORTS::B);
+	const auto &x2b = yj_m1_z_x2b.front()->GetWire(PORTS::C);
+	const auto &neg = yj_neg.front()->GetWire(PORTS::B);
+	const auto &z = yj_m1_z_x2b.front()->GetWire(PORTS::B);
+	if (x1b) cout << "X1_b (" << x1b->GetName() << "): " << (*x1b)() << '\n';
+	if (x2b) cout << "X2_b (" << x2b->GetName() << "): " << (*x2b)() << '\n';
+	if (neg) cout << "NEG (" << neg->GetName() << "): " << (*neg)() << '\n';
+	if (z)   cout << "Z (" << z->GetName() << "): " << (*z)() << '\n';
+
+	for (const auto &o : ppt_j) {
+		const auto &ow = o->GetWire(PORTS::O);
+		if (ow) {
+			cout << o->GetName() << " (" << ow->GetName() << "): " << (*ow)() << '\n';
+		}
+	}
+
+	cout << '\n';
 }

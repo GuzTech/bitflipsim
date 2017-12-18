@@ -24,6 +24,10 @@ void CarrySaveAdder::Update(bool propagating) {
 
 		needs_update = false;
 	}
+
+	if (print_debug) {
+		PrintDebug();
+	}
 }
 
 void CarrySaveAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
@@ -118,4 +122,23 @@ void CarrySaveAdder::CheckIfIndexIsInRange(PORTS port, size_t index) const {
 			 << "bounds for CarrySaveAdder \"" << name << "\".\n";
 		exit(1);
 	}
+}
+
+void CarrySaveAdder::PrintDebug() const {
+	cout << '\n' << name << ':';
+	for (const auto &fa : full_adders) {
+		const auto &A = fa->GetWire(PORTS::A);
+		const auto &B = fa->GetWire(PORTS::B);
+		const auto &Cin = fa->GetWire(PORTS::Cin);
+		const auto &Cout = fa->GetWire(PORTS::Cout);
+		const auto &O = fa->GetWire(PORTS::O);
+
+		cout << '\n' << fa->GetName() << '\n';
+		if (A) cout << "A (" << A->GetName() << "): " << (*A)() << '\n';
+		if (B) cout << "B (" << B->GetName() << "): " << (*B)() << '\n';
+		if (Cin) cout << "Cin (" << Cin->GetName() << "): " << (*Cin)() << '\n';
+		if (O) cout << "O (" << O->GetName() << "): " << (*O)() << '\n';
+		if (Cout) cout << "Cout (" << Cout->GetName() << "): " << (*Cout)() << '\n';
+	}
+	cout << '\n';
 }

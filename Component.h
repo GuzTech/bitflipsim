@@ -24,6 +24,9 @@ public:
 	const virtual vector<wire_t> GetInputWires() const {return input_wires;}
 	const vector<wire_t> &GetOutputWires() const {return output_wires;}
 	const virtual wire_t GetWire(PORTS port, size_t index = 0) const =0;
+
+	void PrintDebugAfterUpdate(bool value) {print_debug = value;}
+	virtual void PrintDebug() const {};
 protected:
 	template <typename Derived> shared_ptr<Derived> shared_from_base() {
 		return static_pointer_cast<Derived>(shared_from_this());
@@ -34,6 +37,8 @@ protected:
 	string name;
 	bool needs_update = false;
 	size_t longest_path = 1; // Default path length is 1.
+
+	bool print_debug = false;
 
 	vector<wire_t> input_wires;
 	vector<wire_t> internal_wires;

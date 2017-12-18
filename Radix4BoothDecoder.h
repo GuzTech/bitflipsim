@@ -15,6 +15,7 @@ public:
 
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
+	void PrintDebug() const override;
 private:
 	void GenerateDecoderHardware();
 	void CheckIfIndexIsInRange(PORTS port, size_t index) const override;

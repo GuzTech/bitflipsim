@@ -84,6 +84,10 @@ void BoothEncoderRadix4::Update(bool propagating) {
 			Neg_cin_and->Update(propagating);
 		}
 
+		if (print_debug) {
+			PrintDebug();
+		}
+
 		needs_update = false;
 	}
 }
@@ -175,5 +179,60 @@ void BoothEncoderRadix4::Connect(PORTS port, const wb_t &wires, size_t port_idx,
 }
 
 const wire_t BoothEncoderRadix4::GetWire(PORTS port, size_t index) const {
-	return wire_t();
+	auto error_undefined_port = [&]() {
+		cout << "[Error] Trying to get wire of undefined port of BoothEncoderRadix4 "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	};
+
+	switch (port) {
+	/* Inputs */
+	case PORTS::X_2I: return X1_b->GetWire(PORTS::B);
+	case PORTS::X_2I_MINUS_ONE: return X1_b->GetWire(PORTS::A);
+	case PORTS::X_2I_PLUS_ONE: return Z->GetWire(PORTS::A);
+	case PORTS::Y_LSB: return Row_LSB->GetWire(PORTS::B);
+	case PORTS::Y_MSB: return SE->GetWire(PORTS::A);
+	/* Outputs */
+	case PORTS::NEG: return Z->GetWire(PORTS::A);
+	case PORTS::ROW_LSB: return Row_LSB->GetWire(PORTS::O);
+	case PORTS::X1_b: return X1_b->GetWire(PORTS::O);
+	case PORTS::X2_b: return X2_b->GetWire(PORTS::O);
+	case PORTS::SE: return SE->GetWire(PORTS::O);
+	case PORTS::Z: return Z->GetWire(PORTS::O);
+	case PORTS::NEG_CIN: return Neg_cin_and->GetWire(PORTS::O);
+	default:
+		error_undefined_port();
+		return wire_t();
+	}
+}
+
+void BoothEncoderRadix4::PrintDebug() const {
+	cout << '\n' << name << ":\n";
+
+	const auto &x_2i = X1_b->GetWire(PORTS::B);
+	const auto &x_2i_m1 = X1_b->GetWire(PORTS::A);
+	const auto &x_2i_p1 = Z->GetWire(PORTS::A);
+	const auto &y_lsb = Row_LSB->GetWire(PORTS::B);
+	const auto &y_msb = SE->GetWire(PORTS::A);
+	const auto &row_lsb = Row_LSB->GetWire(PORTS::O);
+	const auto &x1_b = X1_b->GetWire(PORTS::O);
+	const auto &x2_b = X2_b->GetWire(PORTS::O);
+	const auto &se = SE->GetWire(PORTS::O);
+	const auto &z = Z->GetWire(PORTS::O);
+	const auto &neg_cin = Neg_cin_and->GetWire(PORTS::O);
+
+	if (x_2i_m1) cout << "X_2I_MINUS_ONE (" << x_2i_m1->GetName() << "): " << (*x_2i_m1)() << '\n';
+	if (x_2i) cout << "X_2I (" << x_2i->GetName() << "): " << (*x_2i)() << '\n';
+	if (x_2i_p1) cout << "X_2I_PLUS_ONE (" << x_2i_p1->GetName() << "): " << (*x_2i_p1)() << '\n';
+	if (y_lsb) cout << "Y_LSB (" << y_lsb->GetName() << "): " << (*y_lsb)() << '\n';
+	if (y_msb) cout << "Y_MSB (" << y_msb->GetName() << "): " << (*y_msb)() << '\n';
+	if (x1_b) cout << "X1_b (" << x1_b->GetName() << "): " << (*x1_b)() << '\n';
+	if (x2_b) cout << "X2_b (" << x2_b->GetName() << "): " << (*x2_b)() << '\n';
+	if (x_2i_p1) cout << "NEG (" << x_2i_p1->GetName() << "): " << (*x_2i_p1)() << '\n';
+	if (z) cout << "Z (" << z->GetName() << "): " << (*z)() << '\n';
+	if (row_lsb) cout << "ROW_LSB (" << row_lsb->GetName() << "): " << (*row_lsb)() << '\n';
+	if (se) cout << "SE (" << se->GetName() << "): " << (*se)() << '\n';
+	if (neg_cin) cout << "NEG_CIN (" << neg_cin->GetName() << "): " << (*neg_cin)() << '\n';
+
+	cout << '\n';
 }

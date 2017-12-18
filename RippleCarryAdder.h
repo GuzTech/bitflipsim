@@ -14,6 +14,7 @@ public:
 
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
+	void PrintDebug() const override;
 private:
 	size_t num_bits = 0;
 
