@@ -25,10 +25,18 @@ private:
 	size_t num_bits_O = 0;
 	size_t num_encoders = 0;
 	size_t num_decoders_per_row = 0;
+	size_t num_ppt_adders = 0;
+	size_t adder_size_level_0 = 0;
+	size_t final_adder_size = 0;
+	size_t sign_extend_B_input_size = 0;
 
 	vector<b_enc_t> encoders;
 	vector<b_r4d_t> decoders;
 	vector<csa_t> cs_adders;
+	rca_t final_adder;
+	not_t se_not;
+	wire_t se_not_o;
+	wire_t hardcoded_1;
 };
 
 #endif // MULTIPLIER_2C_BOOTH_H

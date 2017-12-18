@@ -25,6 +25,7 @@ void Connect(const comp_t &component, const string &port_name, const wire_t &wir
 	const auto &rca_comp  = dynamic_pointer_cast<RippleCarryAdder>(component);
 	const auto &m2C_comp  = dynamic_pointer_cast<Multiplier_2C>(component);
 	const auto &smag_comp = dynamic_pointer_cast<Multiplier_Smag>(component);
+	const auto &m2C_booth_comp = dynamic_pointer_cast<Multiplier_2C_Booth>(component);
 
 	auto error_non_existent_port = [&]() {
 		cout << "[Error] Wire \"" << wire->GetName() << "\" wants to connect to non-existent port \""
@@ -107,6 +108,11 @@ void Connect(const comp_t &component, const string &port_name, const wire_t &wir
 		if (port_name.compare("A") == 0)      smag_comp->Connect(PORTS::A, wire, index);
 		else if (port_name.compare("B") == 0) smag_comp->Connect(PORTS::B, wire, index);
 		else if (port_name.compare("O") == 0) smag_comp->Connect(PORTS::O, wire, index);
+		else error_non_existent_port();
+	} else if (m2C_booth_comp != nullptr) {
+		if (port_name.compare("A") == 0)      m2C_booth_comp->Connect(PORTS::A, wire, index);
+		else if (port_name.compare("B") == 0) m2C_booth_comp->Connect(PORTS::B, wire, index);
+		else if (port_name.compare("O") == 0) m2C_booth_comp->Connect(PORTS::O, wire, index);
 		else error_non_existent_port();
 	}
 }
@@ -266,6 +272,11 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 	LAYOUT layout = LAYOUT::NONE;
 	TYPE type = TYPE::NONE;
 
+	auto error_unsupported_configuration = [&]() {
+		cout << "[Error] Multiplier configuration not supported.\n";
+		exit(1);
+	};
+
 	if (multiplier["name"]) {
 		name = multiplier["name"].as<string>();
 	} else {
@@ -344,54 +355,54 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 			exit(1);
 		}
 	}
-	//else {
-	//	cout << "[Error] Property \"type\" for multiplier \"" << name << "\" is required, but was not found.\n";
-	//	exit(1);
-	//}
 
 	switch (format) {
 	case NUMFMT::TWOS_COMPLEMENT:
-		if (layout == LAYOUT::CARRY_PROPAGATE) {
-			if (type == TYPE::INVERSION) {
-				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_INVERSION);
-			} else if (type == TYPE::SIGN_EXTEND) {
-				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_SIGN_EXTEND);
-			} else if (type == TYPE::BAUGH_WOOLEY) {
-				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_BAUGH_WOOLEY);
-			} else if (type == TYPE::NONE) {
+		switch (layout) {
+		case LAYOUT::CARRY_PROPAGATE:
+			switch (type) {
+			case TYPE::INVERSION:    comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_INVERSION); break;
+			case TYPE::SIGN_EXTEND:	 comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_SIGN_EXTEND); break;
+			case TYPE::BAUGH_WOOLEY: comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_BAUGH_WOOLEY); break;
+			case TYPE::NONE:
 				cout << "[Error] Twos-complement multiplier \"" << name << "\" cannot have \"none\" as a type.\n";
 				exit(1);
-			} else {
-				cout << "[Error] Unsupported combination of properties for multiplier \"" << name << "\".\n";
-				exit(1);
+			default:
+				error_unsupported_configuration();
+				break;
 			}
-		} else if (layout == LAYOUT::CARRY_SAVE) {
-			if (type == TYPE::INVERSION) {
-				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_INVERSION);
-			} else if (type == TYPE::SIGN_EXTEND) {
-				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_SIGN_EXTEND);
-			} else if (type == TYPE::BAUGH_WOOLEY) {
-				comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_BAUGH_WOOLEY);
-			} else if (type == TYPE::NONE) {
+			break;
+		case LAYOUT::CARRY_SAVE:
+			switch (type) {
+			case TYPE::INVERSION:     comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_INVERSION); break;
+			case TYPE::SIGN_EXTEND:   comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_SIGN_EXTEND); break;
+			case TYPE::BAUGH_WOOLEY:  comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_BAUGH_WOOLEY); break;
+			case TYPE::NONE:
 				cout << "[Error] Twos-complement multiplier \"" << name << "\" cannot have \"none\" as a type.\n";
 				exit(1);
-			} else {
-				cout << "[Error] Unsupported combination of properties for multiplier \"" << name << "\".\n";
-				exit(1);
+			default:
+				error_unsupported_configuration();
+				break;
 			}
+			break;
+		case LAYOUT::BOOTH_RADIX_4: comps[name] = make_shared<Multiplier_2C_Booth>(name, num_bits_A, num_bits_B); break;
+		default:
+			error_unsupported_configuration();
+			break;
 		}
 		break;
 	case NUMFMT::SIGNED_MAGNITUDE:
-		if (layout == LAYOUT::CARRY_PROPAGATE) {
-			comps[name] = make_shared<Multiplier_Smag>(name, num_bits_A, num_bits_B, Multiplier_Smag::MUL_TYPE::CARRY_PROPAGATE);
-		} else if (layout == LAYOUT::CARRY_SAVE) {
-			comps[name] = make_shared<Multiplier_Smag>(name, num_bits_A, num_bits_B, Multiplier_Smag::MUL_TYPE::CARRY_SAVE);
-		} else {
-			cout << "[Error] Unsupported combination of properties for multiplier \"" << name << "\".\n";
-			exit(1);
+		switch (layout) {
+		case LAYOUT::CARRY_PROPAGATE: comps[name] = make_shared<Multiplier_Smag>(name, num_bits_A, num_bits_B, Multiplier_Smag::MUL_TYPE::CARRY_PROPAGATE);
+		case LAYOUT::CARRY_SAVE:      comps[name] = make_shared<Multiplier_Smag>(name, num_bits_A, num_bits_B, Multiplier_Smag::MUL_TYPE::CARRY_SAVE);
+			break;
+		default:
+			error_unsupported_configuration();
+			break;
 		}
 		break;
 	default:
+		error_unsupported_configuration();
 		break;
 	}
 }
@@ -438,20 +449,21 @@ void ParseComponents(map<string, comp_t> &comps, const YAML::Node &config) {
 			exit(1);
 		}
 
-		if (comp_type.compare("FullAdder") == 0)             comps[comp_name] = make_shared<FullAdder>(comp_name);
-		else if (comp_type.compare("HalfAdder") == 0)        comps[comp_name] = make_shared<HalfAdder>(comp_name);
-		else if (comp_type.compare("And") == 0)              comps[comp_name] = make_shared<And>(comp_name);
-		else if (comp_type.compare("Or") == 0)               comps[comp_name] = make_shared<Or>(comp_name);
-		else if (comp_type.compare("Xor") == 0)              comps[comp_name] = make_shared<Xor>(comp_name);
-		else if (comp_type.compare("Nand") == 0)             comps[comp_name] = make_shared<Nand>(comp_name);
-		else if (comp_type.compare("Nor") == 0)              comps[comp_name] = make_shared<Nor>(comp_name);
-		else if (comp_type.compare("Xnor") == 0)             comps[comp_name] = make_shared<Xnor>(comp_name);
-		else if (comp_type.compare("Not") == 0)              comps[comp_name] = make_shared<Not>(comp_name);
-		else if (comp_type.compare("Mux") == 0)              comps[comp_name] = make_shared<Mux>(comp_name);
-		else if (comp_type.compare("RippleCarryAdder") == 0) comps[comp_name] = make_shared<RippleCarryAdder>(comp_name, num_bits_A);
-		else if (comp_type.compare("Multiplier") == 0) 		 ParseMultiplierComponent(comps, it->second);
-		else if (comp_type.compare("Multiplier_2C") == 0)    comps[comp_name] = make_shared<Multiplier_2C>(comp_name, num_bits_A, num_bits_B);
-		else if (comp_type.compare("Multiplier_Smag") == 0)  comps[comp_name] = make_shared<Multiplier_Smag>(comp_name, num_bits_A, num_bits_B);
+		if (comp_type.compare("FullAdder") == 0)                comps[comp_name] = make_shared<FullAdder>(comp_name);
+		else if (comp_type.compare("HalfAdder") == 0)           comps[comp_name] = make_shared<HalfAdder>(comp_name);
+		else if (comp_type.compare("And") == 0)                 comps[comp_name] = make_shared<And>(comp_name);
+		else if (comp_type.compare("Or") == 0)                  comps[comp_name] = make_shared<Or>(comp_name);
+		else if (comp_type.compare("Xor") == 0)                 comps[comp_name] = make_shared<Xor>(comp_name);
+		else if (comp_type.compare("Nand") == 0)                comps[comp_name] = make_shared<Nand>(comp_name);
+		else if (comp_type.compare("Nor") == 0)                 comps[comp_name] = make_shared<Nor>(comp_name);
+		else if (comp_type.compare("Xnor") == 0)                comps[comp_name] = make_shared<Xnor>(comp_name);
+		else if (comp_type.compare("Not") == 0)                 comps[comp_name] = make_shared<Not>(comp_name);
+		else if (comp_type.compare("Mux") == 0)                 comps[comp_name] = make_shared<Mux>(comp_name);
+		else if (comp_type.compare("RippleCarryAdder") == 0)    comps[comp_name] = make_shared<RippleCarryAdder>(comp_name, num_bits_A);
+		else if (comp_type.compare("Multiplier") == 0) 		    ParseMultiplierComponent(comps, it->second);
+		else if (comp_type.compare("Multiplier_2C") == 0)       comps[comp_name] = make_shared<Multiplier_2C>(comp_name, num_bits_A, num_bits_B);
+		else if (comp_type.compare("Multiplier_Smag") == 0)     comps[comp_name] = make_shared<Multiplier_Smag>(comp_name, num_bits_A, num_bits_B);
+		else if (comp_type.compare("Multiplier_2C_Booth") == 0) comps[comp_name] = make_shared<Multiplier_2C_Booth>(comp_name, num_bits_A, num_bits_B);
 		else {
 			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
 			exit(1);
@@ -1281,7 +1293,7 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-#if 1
+#if 0
 	// Booth encoder radix-4
 	const auto be = make_shared<BoothEncoderRadix4>("be_0");
 	const auto bd1 = make_shared<BoothDecoderRadix4>("bd_1");
@@ -1514,6 +1526,7 @@ int main(int argc, char **argv) {
 	bm.Connect(PORTS::O, bm_o4, 4);
 	bm.Connect(PORTS::O, bm_o5, 5);
 
+	//bm.Update(true);
 	bm.Update(false);
 
 	const size_t ppt_bm = ((*bm_o5)() << 5)
@@ -1522,11 +1535,10 @@ int main(int argc, char **argv) {
 		| ((*bm_o2)() << 2)
 		| ((*bm_o1)() << 1)
 		| (*bm_o0)();
-	const size_t full_ppt_bm = ppt_bm +  size_t((*neg_cin)() << 1);
-	bitset<7> full_ppt_bin_bm(full_ppt_bm);
-	bitset<6> final_result_bm(full_ppt_bm & 0x3F);
+	cout << "\nppt_bm: " << ppt_bm;
+	bitset<6> final_result_bm(ppt_bm & 0x3F);
 
-	cout << "\nFull partial product: " << full_ppt_bin_bm << "\nFinal result: " << final_result_bm << '\n';
+	cout << "\nFinal result: " << final_result_bm << '\n';
 #endif
 	return 0;
 }
