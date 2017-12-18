@@ -29,18 +29,18 @@ FullAdder::FullAdder(string _name)
 	and_ab = make_shared<And>(_name + "_and_ab");
 	or_cout = make_shared<Or>(_name + "_or_cout");
 
-	const auto iw_1 = make_shared<Wire>(_name + "_iw_1");
+	iw_1 = make_shared<Wire>(_name + "_iw_1");
 	xor_ab->Connect(PORTS::O, iw_1);
 	xor_cin->Connect(PORTS::A, iw_1);
 	and_cin->Connect(PORTS::A, iw_1);
 	internal_wires.emplace_back(iw_1);
 
-	const auto iw_2 = make_shared<Wire>(_name + "_iw_2");
+	iw_2 = make_shared<Wire>(_name + "_iw_2");
 	and_cin->Connect(PORTS::O, iw_2);
 	or_cout->Connect(PORTS::A, iw_2);
 	internal_wires.emplace_back(iw_2);
 
-	const auto iw_3 = make_shared<Wire>(_name + "_iw_3");
+	iw_3 = make_shared<Wire>(_name + "_iw_3");
 	and_ab->Connect(PORTS::O, iw_3);
 	or_cout->Connect(PORTS::B, iw_3);
 	internal_wires.emplace_back(iw_3);
