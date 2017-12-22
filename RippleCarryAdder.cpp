@@ -78,7 +78,7 @@ void RippleCarryAdder::Update(bool propagating) {
 			}
 		}
 
-		if (print_debug) {
+		if (!propagating && print_debug) {
 			PrintDebug();
 		}
 
@@ -155,7 +155,9 @@ const wire_t RippleCarryAdder::GetWire(PORTS port, size_t index) const {
 }
 
 void RippleCarryAdder::PrintDebug() const {
-	cout << '\n' << name << ':';
+	cout << "\n========================================\n";
+	cout << name << ':';
+
 	for (const auto &fa : full_adders) {
 		const auto &A = fa->GetWire(PORTS::A);
 		const auto &B = fa->GetWire(PORTS::B);
@@ -170,5 +172,6 @@ void RippleCarryAdder::PrintDebug() const {
 		if (O)    cout << "O (" << O->GetName() << "): " << (*O)() << '\n';
 		if (Cout) cout << "Cout (" << Cout->GetName() << "): " << (*Cout)() << '\n';
 	}
-	cout << '\n';
+
+	cout << "========================================\n";
 }

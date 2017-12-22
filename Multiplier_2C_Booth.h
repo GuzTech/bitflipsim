@@ -37,6 +37,12 @@ private:
 	not_t se_not;
 	wire_t se_not_o;
 	wire_t hardcoded_1;
+
+	nor3_t se_nor3;
+	and3_t se_and3;
+	or_t se_or;
+	and_t se_and;
+	xor_t se_xor;
 };
 
 #endif // MULTIPLIER_2C_BOOTH_H

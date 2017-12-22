@@ -1,0 +1,25 @@
+components:
+  Multiplier: {
+    name: Booth,
+    A width: 32,
+    B width: 32,
+    number format: 2C,
+    layout: booth radix-4,
+    type: none
+  }
+wires:
+  A 32:
+    - from: input
+    - to: Booth
+      port: A 0 31
+  B 32:
+    - from: input
+    - to: Booth
+      port: B 0 31
+  O 64:
+    - from: Booth
+      port: O 0 63
+    - to: output
+stimuli:
+  - A: 0d-61
+    B: 0d40

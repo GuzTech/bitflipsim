@@ -32,7 +32,7 @@ void Radix4BoothDecoder::Update(bool propagating) {
 			}
 		}
 
-		if (print_debug) {
+		if (!propagating && print_debug) {
 			PrintDebug();
 		}
 
@@ -196,7 +196,8 @@ void Radix4BoothDecoder::CheckIfIndexIsInRange(PORTS port, size_t index) const {
 }
 
 void Radix4BoothDecoder::PrintDebug() const {
-	cout << '\n' << name << ":\n";
+	cout << "\n========================================\n";
+	cout << name << ":\n";
 
 	for (size_t i = 0; i < num_bits; ++i) {
 		const auto &wire = yj_neg[i]->GetWire(PORTS::A);
@@ -221,5 +222,5 @@ void Radix4BoothDecoder::PrintDebug() const {
 		}
 	}
 
-	cout << '\n';
+	cout << "========================================\n";
 }

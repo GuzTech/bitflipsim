@@ -25,7 +25,7 @@ void CarrySaveAdder::Update(bool propagating) {
 		needs_update = false;
 	}
 
-	if (print_debug) {
+	if (!propagating && print_debug) {
 		PrintDebug();
 	}
 }
@@ -125,7 +125,9 @@ void CarrySaveAdder::CheckIfIndexIsInRange(PORTS port, size_t index) const {
 }
 
 void CarrySaveAdder::PrintDebug() const {
-	cout << '\n' << name << ':';
+	cout << "\n========================================\n";
+	cout << name << ':';
+
 	for (const auto &fa : full_adders) {
 		const auto &A = fa->GetWire(PORTS::A);
 		const auto &B = fa->GetWire(PORTS::B);
@@ -140,5 +142,6 @@ void CarrySaveAdder::PrintDebug() const {
 		if (O) cout << "O (" << O->GetName() << "): " << (*O)() << '\n';
 		if (Cout) cout << "Cout (" << Cout->GetName() << "): " << (*Cout)() << '\n';
 	}
-	cout << '\n';
+
+	cout << "========================================\n";
 }

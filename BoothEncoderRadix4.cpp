@@ -3,9 +3,11 @@
 /*
  * Booth radix-4 encoder as described in
  * "High-Speed Booth Encoded Parallel Multiplier Design" by Yeh and Jen,
- * with the "Neg_cin" term implemented as described in
+ * the "Neg_cin" term implemented as described in
  * "High-Speed and Low-Power Multipliers Using the Baugh-Wooley Algorithm
- * and HPM Reduction Tree" by Sjalander and Larsson-Edefors.
+ * and HPM Reduction Tree" by Sjalander and Larsson-Edefors,
+ * and the "SE" term implemented as a corrected version of the final version of
+ * "Fast Multiplication: Algorithms and Implementation" by Bewick.
  *
  * Schematic:
  *
@@ -25,8 +27,18 @@
  *
  * Y_MSB ------|X|
  *             |N|
- *             |O|----------- SE
- * X_2i+1 -----|R|
+ *             |O|---|
+ * X_2i+1 -----|R|   |
+ *                   |
+ * X_2i-1 -----|N|   |
+ * X_2i -------|O|   |--|O|
+ * X_2i+1 -----|R|------|R|--- SE
+ *             |3|   |--|3|
+ *                   |
+ * X_2i-1 -----|A|   |
+ * X_2i -------|N|   |
+ * X_2i+1 -----|D|---|
+ *             |3|
  *
  * X_2i ---+--------|N|
  *         |        |O|---|
@@ -47,7 +59,6 @@ BoothEncoderRadix4::BoothEncoderRadix4(string _name)
 	X2_b = make_shared<Xor>(name + "_X2_b");
 	X1_b = make_shared<Xnor>(name + "_X1_b");
 	Z = make_shared<Xnor>(name + "_Z");
-	SE = make_shared<Xnor>(name + "_SE");
 	Row_LSB = make_shared<And>(name + "_Row_LSB");
 	Neg_cin_nor_1 = make_shared<Nor>(name + "_neg_cin_nor_1");
 	Neg_cin_nor_2 = make_shared<Nor>(name + "_neg_cin_nor_2");
@@ -55,10 +66,10 @@ BoothEncoderRadix4::BoothEncoderRadix4(string _name)
 	Neg_cin_or3 = make_shared<Or3>(name + "_neg_cin_or3");
 	Neg_cin_and = make_shared<And>(name + "_neg_cin_and");
 
-	nor_1_o = make_shared<Wire>(name + "_neg_cin_nor_1_O");
-	nor_2_o = make_shared<Wire>(name + "_neg_cin_nor_2_O");
-	nor_3_o = make_shared<Wire>(name + "_neg_cin_nor_3_O");
-	or3_o = make_shared<Wire>(name + "_neg_cin_or3_O");
+	const auto nor_1_o = make_shared<Wire>(name + "_neg_cin_nor_1_O");
+	const auto nor_2_o = make_shared<Wire>(name + "_neg_cin_nor_2_O");
+	const auto nor_3_o = make_shared<Wire>(name + "_neg_cin_nor_3_O");
+	const auto or3_o = make_shared<Wire>(name + "_neg_cin_or3_O");
 	Neg_cin_nor_1->Connect(PORTS::O, nor_1_o);
 	Neg_cin_nor_2->Connect(PORTS::O, nor_2_o);
 	Neg_cin_nor_3->Connect(PORTS::O, nor_3_o);
@@ -67,6 +78,58 @@ BoothEncoderRadix4::BoothEncoderRadix4(string _name)
 	Neg_cin_or3->Connect(PORTS::C, nor_3_o);
 	Neg_cin_or3->Connect(PORTS::O, or3_o);
 	Neg_cin_and->Connect(PORTS::B, or3_o);
+
+	internal_wires.emplace_back(nor_1_o);
+	internal_wires.emplace_back(nor_2_o);
+	internal_wires.emplace_back(nor_3_o);
+	internal_wires.emplace_back(or3_o);
+
+#ifdef METHOD_BEWICK
+	longest_path = 4;
+	SE_xnor = make_shared<Xnor>(name + "_SE_xnor");
+	SE_nor3 = make_shared<Nor3>(name + "_SE_nor3");
+	SE_and3 = make_shared<And3>(name + "_SE_and3");
+	SE_or = make_shared<Or>(name + "_SE_or");
+	SE_and = make_shared<And>(name + "_SE_and");
+	SE_xor = make_shared<Xor>(name + "_SE_xor");
+
+	const auto SE_nor3_o = make_shared<Wire>(name + "_SE_nor3_O");
+	const auto SE_and3_o = make_shared<Wire>(name + "_SE_and3_O");
+	const auto SE_or_o = make_shared<Wire>(name + "_SE_or_O");
+	const auto SE_and_o = make_shared<Wire>(name + "_SE_and_O");
+	const auto SE_xnor_o = make_shared<Wire>(name + "_SE_xnor_O");
+	SE_nor3->Connect(PORTS::O, SE_nor3_o);
+	SE_and3->Connect(PORTS::O, SE_and3_o);
+	SE_or->Connect(PORTS::A, SE_nor3_o);
+	SE_or->Connect(PORTS::B, SE_and3_o);
+	SE_or->Connect(PORTS::O, SE_or_o);
+	SE_and->Connect(PORTS::A, SE_or_o);
+	SE_xnor->Connect(PORTS::O, SE_xnor_o);
+	SE_xor->Connect(PORTS::A, SE_or_o);
+	SE_xor->Connect(PORTS::B, SE_xnor_o);
+
+	internal_wires.emplace_back(SE_nor3_o);
+	internal_wires.emplace_back(SE_and3_o);
+	internal_wires.emplace_back(SE_or_o);
+	internal_wires.emplace_back(SE_and_o);
+	internal_wires.emplace_back(SE_xnor_o);
+#else
+	longest_path = 3;
+	SE_xnor = make_shared<Xnor>(name + "_SE_xnor");
+	SE_nor3 = make_shared<Nor3>(name + "_SE_nor3");
+	SE_and3 = make_shared<And3>(name + "_SE_and3");
+	SE_or3 = make_shared<Or3>(name + "_SE_or3");
+
+	const auto SE_nor3_o = make_shared<Wire>(name + "_SE_nor3_O");
+	const auto SE_and3_o = make_shared<Wire>(name + "_SE_and3_O");
+	const auto SE_xnor_o = make_shared<Wire>(name + "_SE_xnor_O");
+	SE_nor3->Connect(PORTS::O, SE_nor3_o);
+	SE_and3->Connect(PORTS::O, SE_and3_o);
+	SE_xnor->Connect(PORTS::O, SE_xnor_o);
+	SE_or3->Connect(PORTS::A, SE_nor3_o);
+	SE_or3->Connect(PORTS::B, SE_and3_o);
+	SE_or3->Connect(PORTS::C, SE_xnor_o);
+#endif
 }
 
 void BoothEncoderRadix4::Update(bool propagating) {
@@ -76,7 +139,19 @@ void BoothEncoderRadix4::Update(bool propagating) {
 			X2_b->Update(propagating);
 			Z->Update(propagating);
 			Row_LSB->Update(propagating);
-			SE->Update(propagating);
+#ifdef METHOD_BEWICK
+			SE_nor3->Update(propagating);
+			SE_and3->Update(propagating);
+			SE_or->Update(propagating);
+			SE_and->Update(propagating);
+			SE_xnor->Update(propagating);
+			SE_xor->Update(propagating);
+#else
+			SE_nor3->Update(propagating);
+			SE_and3->Update(propagating);
+			SE_xnor->Update(propagating);
+			SE_or3->Update(propagating);
+#endif
 			Neg_cin_nor_1->Update(propagating);
 			Neg_cin_nor_2->Update(propagating);
 			Neg_cin_nor_3->Update(propagating);
@@ -84,7 +159,7 @@ void BoothEncoderRadix4::Update(bool propagating) {
 			Neg_cin_and->Update(propagating);
 		}
 
-		if (print_debug) {
+		if (!propagating && print_debug) {
 			PrintDebug();
 		}
 
@@ -108,6 +183,8 @@ void BoothEncoderRadix4::Connect(PORTS port, const wire_t &wire, size_t index) {
 		Z->Connect(PORTS::B, wire);
 		Neg_cin_nor_1->Connect(PORTS::A, wire);
 		Neg_cin_nor_3->Connect(PORTS::B, wire);
+		SE_nor3->Connect(PORTS::B, wire);
+		SE_and3->Connect(PORTS::B, wire);
 		input_wires.emplace_back(wire);
 		break;
 	case PORTS::X_2I_MINUS_ONE:
@@ -115,12 +192,16 @@ void BoothEncoderRadix4::Connect(PORTS port, const wire_t &wire, size_t index) {
 		X2_b->Connect(PORTS::A, wire);
 		Neg_cin_nor_1->Connect(PORTS::B, wire);
 		Neg_cin_nor_2->Connect(PORTS::A, wire);
+		SE_nor3->Connect(PORTS::A, wire);
+		SE_and3->Connect(PORTS::A, wire);
 		input_wires.emplace_back(wire);
 		break;
 	case PORTS::X_2I_PLUS_ONE:
 		Z->Connect(PORTS::A, wire);
 		Neg_cin_and->Connect(PORTS::A, wire);
-		SE->Connect(PORTS::B, wire);
+		SE_xnor->Connect(PORTS::B, wire);
+		SE_nor3->Connect(PORTS::C, wire);
+		SE_and3->Connect(PORTS::C, wire);
 		input_wires.emplace_back(wire);
 		break;
 	case PORTS::Y_LSB:
@@ -130,7 +211,10 @@ void BoothEncoderRadix4::Connect(PORTS port, const wire_t &wire, size_t index) {
 		input_wires.emplace_back(wire);
 		break;
 	case PORTS::Y_MSB:
-		SE->Connect(PORTS::A, wire);
+		SE_xnor->Connect(PORTS::A, wire);
+#ifdef METHOD_BEWICK
+		SE_and->Connect(PORTS::B, wire);
+#endif
 		input_wires.emplace_back(wire);
 		break;
 	/* Outputs */
@@ -150,7 +234,11 @@ void BoothEncoderRadix4::Connect(PORTS port, const wire_t &wire, size_t index) {
 		output_wires.emplace_back(wire);
 		break;
 	case PORTS::SE:
-		SE->Connect(PORTS::O, wire);
+#ifdef METHOD_BEWICK
+		SE_xor->Connect(PORTS::O, wire);
+#else
+		SE_or3->Connect(PORTS::O, wire);
+#endif
 		output_wires.emplace_back(wire);
 		break;
 	case PORTS::Z:
@@ -191,13 +279,18 @@ const wire_t BoothEncoderRadix4::GetWire(PORTS port, size_t index) const {
 	case PORTS::X_2I_MINUS_ONE: return X1_b->GetWire(PORTS::A);
 	case PORTS::X_2I_PLUS_ONE: return Z->GetWire(PORTS::A);
 	case PORTS::Y_LSB: return Row_LSB->GetWire(PORTS::B);
-	case PORTS::Y_MSB: return SE->GetWire(PORTS::A);
+	case PORTS::Y_MSB: return SE_xnor->GetWire(PORTS::A);
 	/* Outputs */
 	case PORTS::NEG: return Z->GetWire(PORTS::A);
 	case PORTS::ROW_LSB: return Row_LSB->GetWire(PORTS::O);
 	case PORTS::X1_b: return X1_b->GetWire(PORTS::O);
 	case PORTS::X2_b: return X2_b->GetWire(PORTS::O);
-	case PORTS::SE: return SE->GetWire(PORTS::O);
+	case PORTS::SE:
+#ifdef METHOD_BEWICK
+		return SE_xor->GetWire(PORTS::O);
+#else
+		return SE_or3->GetWire(PORTS::O);
+#endif
 	case PORTS::Z: return Z->GetWire(PORTS::O);
 	case PORTS::NEG_CIN: return Neg_cin_and->GetWire(PORTS::O);
 	default:
@@ -207,17 +300,30 @@ const wire_t BoothEncoderRadix4::GetWire(PORTS port, size_t index) const {
 }
 
 void BoothEncoderRadix4::PrintDebug() const {
-	cout << '\n' << name << ":\n";
+	cout << "\n========================================\n";
+	cout << name << ":\n";
 
 	const auto &x_2i = X1_b->GetWire(PORTS::B);
 	const auto &x_2i_m1 = X1_b->GetWire(PORTS::A);
 	const auto &x_2i_p1 = Z->GetWire(PORTS::A);
 	const auto &y_lsb = Row_LSB->GetWire(PORTS::B);
-	const auto &y_msb = SE->GetWire(PORTS::A);
+	const auto &y_msb = SE_xnor->GetWire(PORTS::A);
 	const auto &row_lsb = Row_LSB->GetWire(PORTS::O);
 	const auto &x1_b = X1_b->GetWire(PORTS::O);
 	const auto &x2_b = X2_b->GetWire(PORTS::O);
-	const auto &se = SE->GetWire(PORTS::O);
+#ifdef METHOD_BEWICK
+	const auto &se = SE_xor->GetWire(PORTS::O);
+	const auto &se_nor3_o = SE_nor3->GetWire(PORTS::O);
+	const auto &se_and3_o = SE_and3->GetWire(PORTS::O);
+	const auto &se_or_o = SE_or->GetWire(PORTS::O);
+	const auto &se_and_o = SE_and->GetWire(PORTS::O);
+	const auto &se_xnor_o = SE_xnor->GetWire(PORTS::O);
+#else
+	const auto &se = SE_or3->GetWire(PORTS::O);
+	const auto &se_nor3_o = SE_nor3->GetWire(PORTS::O);
+	const auto &se_and3_o = SE_and3->GetWire(PORTS::O);
+	const auto &se_xnor_o = SE_xnor->GetWire(PORTS::O);
+#endif
 	const auto &z = Z->GetWire(PORTS::O);
 	const auto &neg_cin = Neg_cin_and->GetWire(PORTS::O);
 
@@ -234,5 +340,19 @@ void BoothEncoderRadix4::PrintDebug() const {
 	if (se) cout << "SE (" << se->GetName() << "): " << (*se)() << '\n';
 	if (neg_cin) cout << "NEG_CIN (" << neg_cin->GetName() << "): " << (*neg_cin)() << '\n';
 
-	cout << '\n';
+	// Sign-extension internals
+	cout << "\nSign-extension internal signals:\n";
+#ifdef METHOD_BEWICK
+	if (se_nor3_o) cout << "SE_nor3_o (" << se_nor3_o->GetName() << "): " << (*se_nor3_o)() << '\n';
+	if (se_and3_o) cout << "SE_and3_o (" << se_and3_o->GetName() << "): " << (*se_and3_o)() << '\n';
+	if (se_or_o) cout << "SE_or_o (" << se_or_o->GetName() << "): " << (*se_or_o)() << '\n';
+	if (se_and_o) cout << "SE_and_o (" << se_and_o->GetName() << "): " << (*se_and_o)() << '\n';
+	if (se_xnor_o) cout << "SE_xnor_o (" << se_xnor_o->GetName() << "): " << (*se_xnor_o)() << '\n';
+#else
+	if (se_nor3_o) cout << "SE_nor3_o (" << se_nor3_o->GetName() << "): " << (*se_nor3_o)() << '\n';
+	if (se_and3_o) cout << "SE_and3_o (" << se_and3_o->GetName() << "): " << (*se_and3_o)() << '\n';
+	if (se_xnor_o) cout << "SE_xnor_o (" << se_xnor_o->GetName() << "): " << (*se_xnor_o)() << '\n';
+#endif
+
+	cout << "========================================\n";
 }
