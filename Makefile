@@ -27,7 +27,7 @@ debug: $(EXECUTABLE)
 lib/yaml-cpp/build/libyaml-cpp.a:
 	cd lib/yaml-cpp; mkdir build; cd build; cmake ..; make
 
-lib/ctemplate/libctemplate_nothreads.la:
+lib/ctemplate/.libs/libctemplate_nothreads.a:
 	cd lib/ctemplate; ./autogen.sh; ./configure; make
 
 init: lib/yaml-cpp/build/libyaml-cpp.a lib/ctemplate/.libs/libctemplate_nothreads.a $(OBJDIR)
