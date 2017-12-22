@@ -1295,5 +1295,12 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	//cout << "And type name: " << And::GetTypeName() << '\n';
+	ctemplate::TemplateDictionary dict("example");
+	dict.SetValue("NAME", "John Smith");
+	string output;
+	ctemplate::ExpandTemplate("example.tpl", ctemplate::DO_NOT_STRIP, &dict, &output);
+	cout << output;
+
 	return 0;
 }

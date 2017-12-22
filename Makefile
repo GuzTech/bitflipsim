@@ -1,9 +1,9 @@
 CC := clang++
 SANITIZER := #-fsanitize=memory -fsanitize-memory-track-origins
-INCLUDE_DIRS := lib/yaml-cpp/include
-CFLAGS := -I$(INCLUDE_DIRS) -O3 -std=c++1z -Wall -Werror $(SANITIZER)
-LIBS := -lyaml-cpp
-LDFLAGS := -Llib/yaml-cpp/build $(LIBS) $(SANITIZER)
+INCLUDE_DIRS := -Ilib/yaml-cpp/include -Ilib/ctemplate/src
+CFLAGS := $(INCLUDE_DIRS) -O3 -std=c++1z -Wall -Werror $(SANITIZER)
+LIBS := -lyaml-cpp -static -lctemplate_nothreads
+LDFLAGS := -Llib/yaml-cpp/build -Llib/ctemplate/.libs $(LIBS) $(SANITIZER)
 OBJDIR := obj
 OBJS := $(addprefix $(OBJDIR)/, Component.o FullAdder.o HalfAdder.o RippleCarryAdder.o CarrySaveAdder.o Multiplier_2C.o Multiplier_Smag.o BoothEncoderRadix4.o Radix4BoothDecoder.o Multiplier_2C_Booth.o And.o And3.o Or.o Or3.o Xor.o Nand.o Nor.o Nor3.o Xnor.o Not.o Mux.o WireBundle.o Wire.o System.o main.o)
 EXECUTABLE := bitflipsim
@@ -27,7 +27,10 @@ debug: $(EXECUTABLE)
 lib/yaml-cpp/build/libyaml-cpp.a:
 	cd lib/yaml-cpp; mkdir build; cd build; cmake ..; make
 
-init: lib/yaml-cpp/build/libyaml-cpp.a $(OBJDIR)
+lib/ctemplate/libctemplate_nothreads.la:
+	cd lib/ctemplate; ./autogen.sh; ./configure; make
+
+init: lib/yaml-cpp/build/libyaml-cpp.a lib/ctemplate/.libs/libctemplate_nothreads.a $(OBJDIR)
 
 .PHONY: clean
 

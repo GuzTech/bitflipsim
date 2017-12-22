@@ -2,3 +2,8 @@
 	path = lib/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
 	branch = master
+
+[submodule "lib/ctemplate"]
+	path = lib/ctemplate
+	url = https://github.com/OlafvdSpek/ctemplate.git
+    branch = master
