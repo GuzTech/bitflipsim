@@ -73,3 +73,11 @@ const wire_t And::GetWire(PORTS port, size_t index) const {
 		exit(1);
 	}
 }
+
+void And::GenerateVHDLEntity() const {
+	
+}
+
+void And::GenerateVHDLInstance() {
+
+}

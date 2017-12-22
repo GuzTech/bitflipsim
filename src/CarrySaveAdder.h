@@ -16,11 +16,17 @@ public:
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
 	void PrintDebug() const override;
+
+	void GenerateVHDLEntity() const override;
+	void GenerateVHDLInstance() override;
 private:
 	void CheckIfIndexIsInRange(PORTS port, size_t index) const override;
 	size_t num_bits = 0;
 
 	vector<fa_t> full_adders;
+
+	TemplateDictionary dict_entity;
+	TemplateDictionary dict_inst;
 };
 
 #endif // CARRY_SAVE_ADDER

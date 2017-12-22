@@ -13,7 +13,7 @@ all: $(OBJS) $(EXECUTABLE)
 $(EXECUTABLE): $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 
-$(OBJDIR)/%.o : %.cpp
+$(OBJDIR)/%.o : src/%.cpp
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(OBJS): | $(OBJDIR)

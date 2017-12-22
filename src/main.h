@@ -11,6 +11,7 @@
 #include <ctemplate/template.h>
 
 using namespace std;
+using namespace ctemplate;
 
 class Component;
 class HalfAdder;

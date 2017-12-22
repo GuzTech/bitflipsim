@@ -19,6 +19,7 @@ public:
 	void Reset() {needs_update = false;}
 
 	const string &GetName() const {return name;}
+	static const string &GetTypeName() {return type_name;};
 	const size_t GetLongestPath() const {return longest_path;}
 	const virtual vector<wire_t> GetWires() const;
 	const virtual vector<wire_t> GetInputWires() const {return input_wires;}
@@ -27,6 +28,9 @@ public:
 
 	void PrintDebugAfterUpdate(bool value) {print_debug = value;}
 	virtual void PrintDebug() const {};
+
+	virtual void GenerateVHDLEntity() const {};
+	virtual void GenerateVHDLInstance() {};
 protected:
 	template <typename Derived> shared_ptr<Derived> shared_from_base() {
 		return static_pointer_cast<Derived>(shared_from_this());
@@ -34,6 +38,7 @@ protected:
 
 	virtual void CheckIfIndexIsInRange(PORTS port, size_t index) const {return;}
 
+	static const string type_name;// = "Component";
 	string name;
 	bool needs_update = false;
 	size_t longest_path = 1; // Default path length is 1.

@@ -1,5 +1,7 @@
 #include "main.h"
 
+const string Component::type_name = "Component";
+
 const vector<wire_t> Component::GetWires() const {
 	vector<wire_t> wires;
 

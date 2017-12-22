@@ -40,6 +40,8 @@
 RippleCarryAdder::RippleCarryAdder(string _name, size_t _num_bits)
 	: Component(_name, _num_bits)
 	, num_bits(_num_bits)
+	, dict_entity("RippleCarryAdder")
+	, dict_inst("RippleCarryAdder")
 {
 	// Reserve space.
 	full_adders.reserve(num_bits);
@@ -174,4 +176,18 @@ void RippleCarryAdder::PrintDebug() const {
 	}
 
 	cout << "========================================\n";
+}
+
+void RippleCarryAdder::GenerateVHDLEntity() const {
+	string output;
+	ExpandTemplate("src/templates/VHDL/RippleCarryAdder_entity.tpl", DO_NOT_STRIP, &dict_entity, &output);
+	cout << output;
+}
+
+void RippleCarryAdder::GenerateVHDLInstance() {
+	string output;
+	dict_inst.SetValue("NAME", name);
+	dict_inst.SetValue("SIZE", to_string(num_bits));
+	ExpandTemplate("src/templates/VHDL/RippleCarryAdder_inst.tpl", DO_NOT_STRIP, &dict_inst, &output);
+	cout << output;
 }

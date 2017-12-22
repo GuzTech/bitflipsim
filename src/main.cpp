@@ -1296,11 +1296,14 @@ int main(int argc, char **argv) {
 	}
 
 	//cout << "And type name: " << And::GetTypeName() << '\n';
-	ctemplate::TemplateDictionary dict("example");
-	dict.SetValue("NAME", "John Smith");
-	string output;
-	ctemplate::ExpandTemplate("example.tpl", ctemplate::DO_NOT_STRIP, &dict, &output);
-	cout << output;
+
+	const auto rca = make_shared<RippleCarryAdder>("Ripple", 8);
+	rca->GenerateVHDLEntity();
+	rca->GenerateVHDLInstance();
+
+	const auto csa = make_shared<CarrySaveAdder>("Carry", 8);
+	csa->GenerateVHDLEntity();
+	csa->GenerateVHDLInstance();
 
 	return 0;
 }

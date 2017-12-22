@@ -6,7 +6,8 @@
 class And : public Component {
 public:
 	And(string _name)
-		: Component(_name) {}
+		: Component(_name)
+	{}
 	~And() = default;
 
 	void Update(bool propagating) override;
@@ -14,6 +15,9 @@ public:
 	void Connect(PORTS port, const wb_t &wires, size_t port_idx = 0, size_t wire_idx = 0) override;
 
 	const wire_t GetWire(PORTS port, size_t index = 0) const override;
+
+	void GenerateVHDLEntity() const override;
+	void GenerateVHDLInstance() override;
 
 private:
 	wire_t A;
