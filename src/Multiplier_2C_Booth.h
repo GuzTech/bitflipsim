@@ -16,6 +16,9 @@ public:
 
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
+	void GenerateVHDLEntity(const string &path) const override;
+	const string GenerateVHDLInstance() const override;
+
 private:
 	void CheckIfIndexIsInRange(PORTS port, size_t index) const override;
 	void Generate2CBoothHardware();
@@ -43,6 +46,8 @@ private:
 	or_t se_or;
 	and_t se_and;
 	xor_t se_xor;
+
+	static bool entityGenerated; // Used for generating HDL
 };
 
 #endif // MULTIPLIER_2C_BOOTH_H

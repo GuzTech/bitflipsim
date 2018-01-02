@@ -14,6 +14,9 @@ public:
 
 	const wire_t GetWire(PORTS port, size_t index = 0) const override;
 
+	void GenerateVHDLEntity(const string &path) const override;
+	const string GenerateVHDLInstance() const override;
+
 private:
 	xor_t xor_ab = nullptr;
 	xor_t xor_cin = nullptr;
@@ -24,6 +27,8 @@ private:
 	wire_t iw_1 = nullptr;
 	wire_t iw_2 = nullptr;
 	wire_t iw_3 = nullptr;
+
+	static bool entityGenerated; // Used for HDL generation.
 };
 
 #endif // FULLADDER_H

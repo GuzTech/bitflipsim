@@ -17,8 +17,9 @@ public:
 
 	void PrintDebug() const override;
 
-	void GenerateVHDLEntity() const override;
-	void GenerateVHDLInstance() override;
+	void GenerateVHDLEntity(const string &path) const override;
+	const string GenerateVHDLInstance() const override;
+
 private:
 	void CheckIfIndexIsInRange(PORTS port, size_t index) const override;
 	size_t num_bits = 0;

@@ -15,6 +15,9 @@ public:
 
 	const wire_t GetWire(PORTS port, size_t index = 0) const override;
 
+	void GenerateVHDLEntity(const string &path) const override;
+	const string GenerateVHDLInstance() const override;
+
 private:
 	wire_t A;
 	wire_t B;

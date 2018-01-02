@@ -14,9 +14,14 @@ public:
 
 	const wire_t GetWire(PORTS port, size_t index = 0) const override;
 
+	void GenerateVHDLEntity(const string &path) const override;
+	const string GenerateVHDLInstance() const override;
+
 private:
 	xor_t xor_ha = nullptr;
 	and_t and_ha = nullptr;
+
+	static bool entityGenerated; // Used for HDL generation.
 };
 
 #endif // HALFADDER_H

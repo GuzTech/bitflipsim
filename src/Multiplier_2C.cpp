@@ -1555,3 +1555,11 @@ void Multiplier_2C::GenerateCarrySaveBaughWooleyHardware() {
 		internal_wires.emplace_back(wire);
 	}
 }
+
+void Multiplier_2C::GenerateVHDLEntity(const string &path) const {
+
+}
+
+const string Multiplier_2C::GenerateVHDLInstance() const {
+	return string("");
+}

@@ -1,4 +1,5 @@
 #include "main.h"
+#include <experimental/filesystem>
 
 void System::AddComponent(comp_t component) {
 	components.insert(pair<string, comp_t>(component->GetName(), component));
@@ -172,5 +173,15 @@ const wb_t System::GetWireBundle(const string &bundle_name) const {
 		return wire_bundles.at(bundle_name);
 	} else {
 		return nullptr;
+	}
+}
+
+const void System::GenerateVHDL(const string &path) const {
+	// Recursively create the folders of the path.
+	//
+	experimental::filesystem::create_directory(path);
+
+	for (const auto &comp : components) {
+		comp.second->GenerateVHDLEntity(path);
 	}
 }

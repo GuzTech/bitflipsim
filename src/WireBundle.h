@@ -21,6 +21,7 @@ public:
 	const bool IsOutputBundle() const {return is_output_bundle;}
 
 	const wire_t &operator [] (size_t i) const {return wires[i];}
+	const optional<size_t> GetWireIndex(const wire_t &wire) const;
 
 	void Init();
 	void SetValue(int64_t value, bool propagating = true);
@@ -31,7 +32,7 @@ private:
 	string name;
 	size_t size;
 	vector<wire_t> wires;
-	REPR repr;
+	REPR repr; // Number representation format.
 	bool is_input_bundle = false;
 	bool is_output_bundle = false;
 };

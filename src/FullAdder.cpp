@@ -20,6 +20,8 @@
        |----------------|D|
  */
 
+bool FullAdder::entityGenerated = false;
+
 FullAdder::FullAdder(string _name)
 	: Component(_name, 3)
 {
@@ -116,4 +118,28 @@ const wire_t FullAdder::GetWire(PORTS port, size_t index) const {
 			 << "\"" << name << "\".\n";
 		exit(1);
 	}
+}
+
+void FullAdder::GenerateVHDLEntity(const string &path) const {
+	// We only need to do it once, since all instances of the FullAdder are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("FullAdder");
+		ExpandTemplate("src/templates/VHDL/FullAdder_entity.tpl", DO_NOT_STRIP, &entity, &output);
+
+		auto outfile = ofstream(path + "/FullAdder.vhd");
+		outfile << output;
+		outfile.close();
+
+		entityGenerated = true;
+	}
+}
+
+const string FullAdder::GenerateVHDLInstance() const {
+	string output;
+	TemplateDictionary inst("FullAdder");
+	inst.SetValue("NAME", name);
+	ExpandTemplate("src/templates/VHDL/FullAdder_inst.tpl", DO_NOT_STRIP, &inst, &output);
+
+	return output;
 }

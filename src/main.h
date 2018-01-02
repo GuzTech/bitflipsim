@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <climits>
+#include <fstream>
 #include <ctemplate/template.h>
 
 using namespace std;

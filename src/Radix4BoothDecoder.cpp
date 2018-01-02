@@ -1,5 +1,7 @@
 #include "main.h"
 
+bool Radix4BoothDecoder::entityGenerated = false;
+
 Radix4BoothDecoder::Radix4BoothDecoder(string _name,
 									   size_t _num_bits)
 	: Component(_name, 3)
@@ -223,4 +225,24 @@ void Radix4BoothDecoder::PrintDebug() const {
 	}
 
 	cout << "========================================\n";
+}
+
+void Radix4BoothDecoder::GenerateVHDLEntity(const string &path) const {
+	// We only need to generate it once, since all
+	// instances of Radix4BoothDecoder are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("Radix4BoothDecoder");
+		ExpandTemplate("src/templates/VHDL/Radix4BoothDecoder_entity.tpl", DO_NOT_STRIP, &entity, &output);
+
+		auto outfile = ofstream(path + "/Radix4BoothDecoder.vhd");
+		outfile << output;
+		outfile.close();
+
+		entityGenerated = true;
+	}
+}
+
+const string Radix4BoothDecoder::GenerateVHDLInstance() const {
+	return string("");
 }

@@ -19,6 +19,9 @@ public:
 
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
+	void GenerateVHDLEntity(const string &path) const override;
+	const string GenerateVHDLInstance() const override;
+
 private:
 	void GenerateCarryPropagateArrayHardware();
 	void GenerateCarrySaveArrayHardware();
@@ -36,6 +39,8 @@ private:
 	xor_t sign = nullptr;
 
 	MUL_TYPE type = MUL_TYPE::CARRY_PROPAGATE;
+
+	static bool entityGenerated; // Used for HDL generation.
 };
 
 #endif // MULTIPLIER_SMAG_H

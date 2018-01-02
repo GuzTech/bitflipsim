@@ -14,6 +14,8 @@
       |---|D|
  */
 
+bool HalfAdder::entityGenerated = false;
+
 HalfAdder::HalfAdder(string _name)
 	: Component(_name)
 {
@@ -82,4 +84,28 @@ const wire_t HalfAdder::GetWire(PORTS port, size_t index) const {
 			 << "\"" << name << "\".\n";
 		exit(1);
 	}
+}
+
+void HalfAdder::GenerateVHDLEntity(const string &path) const {
+	// We only need to do it once, since all instances of the HalfAdder are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("HalfAdder");
+		ExpandTemplate("src/templates/VHDL/HalfAdder_entity.tpl", DO_NOT_STRIP, &entity, &output);
+
+		auto outfile = ofstream(path + "/HalfAdder.vhd");
+		outfile << output;
+		outfile.close();
+
+		entityGenerated = true;
+	}
+}
+
+const string HalfAdder::GenerateVHDLInstance() const {
+	string output;
+	TemplateDictionary inst("HalfAdder");
+	inst.SetValue("NAME", name);
+	ExpandTemplate("src/templates/VHDL/HalfAdder_inst.tpl", DO_NOT_STRIP, &inst, &output);
+
+	return output;
 }

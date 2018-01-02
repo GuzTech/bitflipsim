@@ -10,6 +10,8 @@
        |T|
 */
 
+bool Not::entityGenerated = false;
+
 void Not::Update(bool propagating) {
 	if (needs_update || !propagating) {
 		bool in;
@@ -65,4 +67,24 @@ const wire_t Not::GetWire(PORTS port, size_t index) const {
 			 << "\"" << name << "\".\n";
 		exit(1);
 	}
+}
+
+void Not::GenerateVHDLEntity(const string &path) const {
+	// We only need to generate it one, since all instances of
+	// the Not gate are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("Not");
+		ExpandTemplate("src/templates/VHDL/Not_entity.tpl", DO_NOT_STRIP, &entity, &output);
+
+		auto outfile = ofstream(path + "/Not.vhd");
+		outfile << output;
+		outfile.close();
+
+		entityGenerated = true;
+	}
+}
+
+const string Not::GenerateVHDLInstance() const {
+	return string("");
 }

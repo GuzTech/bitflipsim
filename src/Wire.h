@@ -29,6 +29,9 @@ public:
 
 	const bool operator ()() {return curr_value;}
 
+	void GenerateVHDLDeclaration() const;
+	void GenerateVHDLIOAssignment() const;
+
 private:
 	bool curr_value = false; // The current value on the wire.
 	bool prev_value = false; // The value on the wire before propagation started.
@@ -43,6 +46,8 @@ private:
 	vector<comp_wt> outputs; // The components that are driven by this wire.
 	size_t num_outputs = 1; // The number of components that are driven by this wire.
 	wb_t part_of_bundle = nullptr; // Indicates whether this wire is part of a bundle.
+
+	static bool declarationGenerated; // Used for generating HDL.
 };
 
 #endif // WIRE_H

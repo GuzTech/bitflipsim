@@ -148,23 +148,29 @@ void CarrySaveAdder::PrintDebug() const {
 	cout << "========================================\n";
 }
 
-void CarrySaveAdder::GenerateVHDLEntity() const {
+void CarrySaveAdder::GenerateVHDLEntity(const string &path) const {
 	// We only need to do it once, since all instances of the CarrySaveAdder are identical.
 	if (!entityGenerated) {
 		string output;
 		TemplateDictionary entity("CarrySaveAdder");
 		ExpandTemplate("src/templates/VHDL/CarrySaveAdder_entity.tpl", DO_NOT_STRIP, &entity, &output);
-		cout << output;
+
+		auto outfile = ofstream(path + "/CarrySaveAdder.vhd");
+		outfile << output;
+		outfile.close();
+
+		full_adders.front()->GenerateVHDLEntity(path);
 
 		entityGenerated = true;
 	}
 }
 
-void CarrySaveAdder::GenerateVHDLInstance() {
+const string CarrySaveAdder::GenerateVHDLInstance() const {
 	string output;
 	TemplateDictionary inst("CarrySaveAdder");
 	inst.SetValue("NAME", name);
 	inst.SetValue("SIZE", to_string(num_bits));
 	ExpandTemplate("src/templates/VHDL/CarrySaveAdder_inst.tpl", DO_NOT_STRIP, &inst, &output);
-	cout << output;
+
+	return output;
 }

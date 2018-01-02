@@ -16,8 +16,8 @@ public:
 
 	void PrintDebug() const override;
 
-	void GenerateVHDLEntity() const override;
-	void GenerateVHDLInstance() override;
+	void GenerateVHDLEntity(const string &path) const override;
+	const string GenerateVHDLInstance() const override;
 private:
 	size_t num_bits = 0;
 

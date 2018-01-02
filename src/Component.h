@@ -29,8 +29,8 @@ public:
 	void PrintDebugAfterUpdate(bool value) {print_debug = value;}
 	virtual void PrintDebug() const {};
 
-	virtual void GenerateVHDLEntity() const {};
-	virtual void GenerateVHDLInstance() {};
+	virtual void GenerateVHDLEntity(const string &path) const {};
+	const virtual string GenerateVHDLInstance() const =0;
 protected:
 	template <typename Derived> shared_ptr<Derived> shared_from_base() {
 		return static_pointer_cast<Derived>(shared_from_this());

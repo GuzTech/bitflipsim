@@ -74,22 +74,26 @@ const wire_t Nor::GetWire(PORTS port, size_t index) const {
 	}
 }
 
-void Nor::GenerateVHDLEntity() const {
+void Nor::GenerateVHDLEntity(const string &path) const {
 	// We only need to do it once, since all instances of the Nor gate are identical.
 	if (!entityGenerated) {
 		string output;
 		TemplateDictionary entity("Nor");
 		ExpandTemplate("src/templates/VHDL/Nor_entity.tpl", DO_NOT_STRIP, &entity, &output);
-		cout << output;
+
+		auto outfile = ofstream(path + "/Nor.vhd");
+		outfile << output;
+		outfile.close();
 
 		entityGenerated = true;
 	}
 }
 
-void Nor::GenerateVHDLInstance() {
+const string Nor::GenerateVHDLInstance() const {
 	string output;
 	TemplateDictionary inst("Nor");
 	inst.SetValue("NAME", name);
 	ExpandTemplate("src/templates/VHDL/Nor_inst.tpl", DO_NOT_STRIP, &inst, &output);
-	cout << output;
+
+	return output;
 }

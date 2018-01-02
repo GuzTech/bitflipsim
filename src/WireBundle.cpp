@@ -54,6 +54,16 @@ const int64_t WireBundle::Get2CValue() const {
 	return result;
 }
 
+const optional<size_t> WireBundle::GetWireIndex(const wire_t &wire) const {
+	for (size_t i = 0; i < size; ++i) {
+		if (wires[i] == wire) {
+			return i;
+		}
+	}
+
+	return nullopt;
+}
+
 void WireBundle::Init() {
 	for (size_t i = 0; i < size; ++i) {
 		wires.push_back(

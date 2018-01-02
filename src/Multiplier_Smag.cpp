@@ -4,6 +4,8 @@
   Signed magnitude multiplier implementation.
 */
 
+bool Multiplier_Smag::entityGenerated = false;
+
 Multiplier_Smag::Multiplier_Smag(string _name,
 								 size_t _num_bits_A,
 								 size_t _num_bits_B,
@@ -507,4 +509,12 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 
 		internal_wires.emplace_back(wire);
 	}
+}
+
+void Multiplier_Smag::GenerateVHDLEntity(const string &path) const {
+
+}
+
+const string Multiplier_Smag::GenerateVHDLInstance() const {
+	return string("");
 }

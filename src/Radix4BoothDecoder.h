@@ -15,6 +15,9 @@ public:
 
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
+	void GenerateVHDLEntity(const string &path) const override;
+	const string GenerateVHDLInstance() const override;
+
 	void PrintDebug() const override;
 private:
 	void GenerateDecoderHardware();
@@ -27,6 +30,8 @@ private:
 	vector<or_t> yj_x1b;
 	vector<or3_t> yj_m1_z_x2b;
 	vector<nand_t> ppt_j;
+
+	static bool entityGenerated; // Used for HDL generation.
 };
 
 #endif // RADIX4_BOOTH_DECODER

@@ -19,6 +19,9 @@ public:
 
 	const wire_t GetWire(PORTS port, size_t index) const override;
 
+	void GenerateVHDLEntity(const string &path) const override;
+	const string GenerateVHDLInstance() const override;
+
 private:
 	void GenerateCarryPropagateSignExtendHardware();
 	void GenerateCarrySaveSignExtendHardware();

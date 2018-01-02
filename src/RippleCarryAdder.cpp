@@ -178,23 +178,29 @@ void RippleCarryAdder::PrintDebug() const {
 	cout << "========================================\n";
 }
 
-void RippleCarryAdder::GenerateVHDLEntity() const {
+void RippleCarryAdder::GenerateVHDLEntity(const string &path) const {
 	// We only need to do it once, since all instances of the RippleCarryAdder are identical.
 	if (!entityGenerated) {
 		string output;
 		TemplateDictionary entity("RippleCarryAdder");
 		ExpandTemplate("src/templates/VHDL/RippleCarryAdder_entity.tpl", DO_NOT_STRIP, &entity, &output);
-		cout << output;
+
+		auto outfile = ofstream(path + "/RippleCarryAdder.vhd");
+		outfile << output;
+		outfile.close();
+
+		full_adders.front()->GenerateVHDLEntity(path);
 
 		entityGenerated = true;
 	}
 }
 
-void RippleCarryAdder::GenerateVHDLInstance() {
+const string RippleCarryAdder::GenerateVHDLInstance() const {
 	string output;
 	TemplateDictionary inst("RippleCarryAdder");
 	inst.SetValue("NAME", name);
 	inst.SetValue("SIZE", to_string(num_bits));
 	ExpandTemplate("src/templates/VHDL/RippleCarryAdder_inst.tpl", DO_NOT_STRIP, &inst, &output);
-	cout << output;
+
+	return output;
 }

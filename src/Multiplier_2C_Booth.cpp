@@ -6,6 +6,8 @@
   "High-Speed Booth Encoded Parallel Multiplier Design" by Yeh and Jen.
 */
 
+bool Multiplier_2C_Booth::entityGenerated = false;
+
 Multiplier_2C_Booth::Multiplier_2C_Booth(string _name,
 										 size_t _num_bits_A,
 										 size_t _num_bits_B)
@@ -441,4 +443,37 @@ void Multiplier_2C_Booth::CheckIfIndexIsInRange(PORTS port, size_t index) const 
 			 << "bounds for Multiplier_2C_Booth \"" << name << "\".\n";
 		exit(1);
 	}
+}
+
+void Multiplier_2C_Booth::GenerateVHDLEntity(const string &path) const {
+	// We only need to do it once, since all instances of Multiplier_2C_Booth are identical.
+	if (!entityGenerated) {
+//		string output;
+//		TemplateDictionary entity("Multiplier_2C_Booth");
+//		ExpandTemplate("src/templates/VHDL/Multiplier_2C_Booth_entity.tpl", DO_NOT_STRIP, &entity, &output);
+//
+//		auto outfile = ofstream(path + "/Multiplier_2C_Booth.vhd");
+//		outfile << output;
+//		outfile.close();
+
+		string enc_string("");
+		encoders.front()->GenerateVHDLEntity(path);
+		for (const auto &enc : encoders) {
+			enc_string += enc->GenerateVHDLInstance() + '\n';
+		}
+		cout << enc_string;
+
+		string dec_string("");
+		decoders.front()->GenerateVHDLEntity(path);
+		for (const auto &dec : decoders) {
+			dec_string += dec->GenerateVHDLInstance() + '\n';
+		}
+		cout << dec_string;
+
+		entityGenerated = true;
+	}
+}
+
+const string Multiplier_2C_Booth::GenerateVHDLInstance() const {
+	return string("");
 }

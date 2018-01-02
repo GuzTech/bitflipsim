@@ -81,3 +81,11 @@ const wire_t Mux::GetWire(PORTS port, size_t index) const {
 		exit(1);
 	}
 }
+
+void Mux::GenerateVHDLEntity(const string &path) const {
+
+}
+
+const string Mux::GenerateVHDLInstance() const {
+	return string("");
+}

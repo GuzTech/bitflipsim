@@ -53,6 +53,8 @@
  *         |--------|R|
  */
 
+bool BoothEncoderRadix4::entityGenerated = false;
+
 BoothEncoderRadix4::BoothEncoderRadix4(string _name)
 	: Component(_name, 3)
 {
@@ -355,4 +357,278 @@ void BoothEncoderRadix4::PrintDebug() const {
 #endif
 
 	cout << "========================================\n";
+}
+
+void BoothEncoderRadix4::GenerateVHDLEntity(const string &path) const {
+	// We only need to do it once, since all instances of the BoothEncoderRadix4 are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("BoothEncoderRadix4");
+		ExpandTemplate("src/templates/VHDL/BoothEncoderRadix4_entity.tpl", DO_NOT_STRIP, &entity, &output);
+
+		auto outfile = ofstream(path + "/BoothEncoderRadix4.vhd");
+		outfile << output;
+		outfile.close();
+
+		entityGenerated = true;
+	}
+}
+
+const string BoothEncoderRadix4::GenerateVHDLInstance() const {
+	const auto errorInconsistentWireBundle = [](const auto &wire, const auto &wb) {
+		cout << "[Error] Wire \"" << wire->GetName() << "\" is part of bundle \""
+			 << wb->GetName() << "\" but has no index.\n";
+		exit(1);
+	};
+
+	string output;
+	TemplateDictionary inst("BoothEncoderRadix4");
+
+	// Set up the I/O wires.
+	inst.SetValue("NAME", name);
+	// X_2I
+	{
+		const auto &wire = GetWire(PORTS::X_2I);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				const auto idx = wb->GetWireIndex(wire);
+
+				if (idx) {
+					inst.SetValue("X_2I_WIRE", wb->GetName() + "(" + to_string(*idx) + ")");
+				} else {
+					errorInconsistentWireBundle(wire, wb);
+				}
+			} else {
+				inst.SetValue("X_2I_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("X_2I_WIRE", "'0'");
+		}
+	}
+
+	// X_2I_M1
+	{
+		const auto &wire = GetWire(PORTS::X_2I_MINUS_ONE);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				const auto idx = wb->GetWireIndex(wire);
+
+				if (idx) {
+					inst.SetValue("X_2I_M1_WIRE", wb->GetName() + "(" + to_string(*idx) + ")");
+				} else {
+					errorInconsistentWireBundle(wire, wb);
+				}
+			} else {
+				inst.SetValue("X_2I_M1_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("X_2I_M1_WIRE", "'0'");
+		}
+	}
+
+	// X_2I_P1
+	{
+		const auto &wire = GetWire(PORTS::X_2I_PLUS_ONE);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				const auto idx = wb->GetWireIndex(wire);
+
+				if (idx) {
+					inst.SetValue("X_2I_P1_WIRE", wb->GetName() + "(" + to_string(*idx) + ")");
+				} else {
+					errorInconsistentWireBundle(wire, wb);
+				}
+			} else {
+				inst.SetValue("X_2I_P1_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("X_2I_P1_WIRE", "'0'");
+		}
+	}
+
+	// Y_LSB
+	{
+		const auto &wire = GetWire(PORTS::Y_LSB);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				const auto idx = wb->GetWireIndex(wire);
+
+				if (idx) {
+					inst.SetValue("Y_LSB_WIRE", wb->GetName() + "(" + to_string(*idx) + ")");
+				} else {
+					errorInconsistentWireBundle(wire, wb);
+				}
+			} else {
+				inst.SetValue("Y_LSB_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("Y_LSB_WIRE", "'0'");
+		}
+	}
+
+	// Y_MSB
+	{
+		const auto &wire = GetWire(PORTS::Y_MSB);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				const auto idx = wb->GetWireIndex(wire);
+
+				if (idx) {
+					inst.SetValue("Y_MSB_WIRE", wb->GetName() + "(" + to_string(*idx) + ")");
+				} else {
+					errorInconsistentWireBundle(wire, wb);
+				}
+			} else {
+				inst.SetValue("Y_MSB_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("Y_MSB_WIRE", "'0'");
+		}
+	}
+
+	// ROW_LSB
+	{
+		const auto &wire = GetWire(PORTS::ROW_LSB);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				const auto idx = wb->GetWireIndex(wire);
+
+				if (idx) {
+					inst.SetValue("ROW_LSB_WIRE", wb->GetName() + "(" + to_string(*idx) + ")");
+				} else {
+					errorInconsistentWireBundle(wire, wb);
+				}
+			} else {
+				inst.SetValue("ROW_LSB_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("ROW_LSB_WIRE", "'0'");
+		}
+	}
+
+	// X1_b
+	{
+		const auto &wire = GetWire(PORTS::X1_b);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				const auto idx = wb->GetWireIndex(wire);
+
+				if (idx) {
+					inst.SetValue("X1_b_WIRE", wb->GetName() + "(" + to_string(*idx) + ")");
+				} else {
+					errorInconsistentWireBundle(wire, wb);
+				}
+			} else {
+				inst.SetValue("X1_b_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("X1_b_WIRE", "'0'");
+		}
+	}
+
+	// X2_b
+	{
+		const auto &wire = GetWire(PORTS::X2_b);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				const auto idx = wb->GetWireIndex(wire);
+
+				if (idx) {
+					inst.SetValue("X2_b_WIRE", wb->GetName() + "(" + to_string(*idx) + ")");
+				} else {
+					errorInconsistentWireBundle(wire, wb);
+				}
+			} else {
+				inst.SetValue("X2_b_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("X2_b_WIRE", "'0'");
+		}
+	}
+
+	// SE
+	{
+		const auto &wire = GetWire(PORTS::SE);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				const auto idx = wb->GetWireIndex(wire);
+
+				if (idx) {
+					inst.SetValue("SE_WIRE", wb->GetName() + "(" + to_string(*idx) + ")");
+				} else {
+					errorInconsistentWireBundle(wire, wb);
+				}
+			} else {
+				inst.SetValue("SE_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("SE_WIRE", "'0'");
+		}
+	}
+
+	// Z
+	{
+		const auto &wire = GetWire(PORTS::Z);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				const auto idx = wb->GetWireIndex(wire);
+
+				if (idx) {
+					inst.SetValue("Z_WIRE", wb->GetName() + "(" + to_string(*idx) + ")");
+				} else {
+					errorInconsistentWireBundle(wire, wb);
+				}
+			} else {
+				inst.SetValue("Z_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("Z_WIRE", "'0'");
+		}
+	}
+
+	// NEG_CIN
+	{
+		const auto &wire = GetWire(PORTS::NEG_CIN);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				const auto idx = wb->GetWireIndex(wire);
+
+				if (idx) {
+					inst.SetValue("NEG_CIN_WIRE", wb->GetName() + "(" + to_string(*idx) + ")");
+				} else {
+					errorInconsistentWireBundle(wire, wb);
+				}
+			} else {
+				inst.SetValue("NEG_CIN_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("NEG_CIN_WIRE", "'0'");
+		}
+	}
+
+	ExpandTemplate("src/templates/VHDL/BoothEncoderRadix4_inst.tpl", DO_NOT_STRIP, &inst, &output);
+
+	return output;
 }

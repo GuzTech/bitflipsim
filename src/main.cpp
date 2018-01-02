@@ -1,7 +1,6 @@
 #include "main.h"
 #include <yaml-cpp/yaml.h>
 #include <random>
-#include <fstream>
 #include <bitset>
 
 using namespace std;
@@ -1167,6 +1166,7 @@ int main(int argc, char **argv) {
 	YAML::Node config;
 	System system;
 	string config_file_name;
+	string output_file_path;
 	
 	// Check if a configuration file was supplied.
 	if (argc == 2) {
@@ -1174,6 +1174,7 @@ int main(int argc, char **argv) {
 
 		try {
 			config = YAML::LoadFile(config_file_name.c_str());
+			output_file_path = config_file_name.substr(0, config_file_name.find_last_of(".")) + '/';
 		} catch (YAML::BadFile e) {
 			cout << "[Error] Could not load file \"" <<
 				config_file_name.c_str() << "\": " << e.msg << '\n';
@@ -1297,13 +1298,15 @@ int main(int argc, char **argv) {
 
 	//cout << "And type name: " << And::GetTypeName() << '\n';
 
-	const auto rca = make_shared<RippleCarryAdder>("Ripple", 8);
-	rca->GenerateVHDLEntity();
-	rca->GenerateVHDLInstance();
+//	const auto rca = make_shared<RippleCarryAdder>("Ripple", 8);
+//	rca->GenerateVHDLEntity();
+//	rca->GenerateVHDLInstance();
+//
+//	const auto csa = make_shared<CarrySaveAdder>("Carry", 8);
+//	csa->GenerateVHDLEntity();
+//	csa->GenerateVHDLInstance();
 
-	const auto csa = make_shared<CarrySaveAdder>("Carry", 8);
-	csa->GenerateVHDLEntity();
-	csa->GenerateVHDLInstance();
+	system.GenerateVHDL(output_file_path);
 
 	return 0;
 }

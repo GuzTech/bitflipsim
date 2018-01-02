@@ -16,6 +16,9 @@ public:
 
 	const wire_t GetWire(PORTS port, size_t index = 0) const override;
 
+	void GenerateVHDLEntity(const string &path) const override;
+	const string GenerateVHDLInstance() const override;
+
 	void PrintDebug() const override;
 private:
 	xor_t X2_b;		// x2 / x-2
@@ -43,6 +46,8 @@ private:
 #endif
 
 	wire_t x2_neg;	// Wire that connects X_2i+1 to Neg.
+
+	static bool entityGenerated; // Used for generating HDL
 };
 
 #endif // BOOTH_ENCODER_RADIX_4

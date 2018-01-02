@@ -74,22 +74,26 @@ const wire_t Or::GetWire(PORTS port, size_t index) const {
 	}
 }
 
-void Or::GenerateVHDLEntity() const {
+void Or::GenerateVHDLEntity(const string &path) const {
 	// We only need to do it once, since all instances of the Or gate are identical.
 	if (!entityGenerated) {
 		string output;
 		TemplateDictionary entity("Or");
 		ExpandTemplate("src/templates/VHDL/Or_entity.tpl", DO_NOT_STRIP, &entity, &output);
-		cout << output;
+
+		auto outfile = ofstream(path + "/Or.vhd");
+		outfile << output;
+		outfile.close();
 
 		entityGenerated = true;
 	}
 }
 
-void Or::GenerateVHDLInstance() {
+const string Or::GenerateVHDLInstance() const {
 	string output;
 	TemplateDictionary inst("Or");
 	inst.SetValue("NAME", name);
 	ExpandTemplate("src/templates/VHDL/Or_inst.tpl", DO_NOT_STRIP, &inst, &output);
-	cout << output;
+
+	return output;
 }

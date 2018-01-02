@@ -75,22 +75,26 @@ const wire_t Nand::GetWire(PORTS port, size_t index) const {
 	}
 }
 
-void Nand::GenerateVHDLEntity() const {
+void Nand::GenerateVHDLEntity(const string &path) const {
 	// We only need to do it once, since all instances of the Nand gate are identical.
 	if (!entityGenerated) {
 		string output;
 		TemplateDictionary entity("Nand");
 		ExpandTemplate("src/templates/VHDL/Nand_entity.tpl", DO_NOT_STRIP, &entity, &output);
-		cout << output;
+
+		auto outfile = ofstream(path + "/Nand.vhd");
+		outfile << output;
+		outfile.close();
 
 		entityGenerated = true;
 	}
 }
 
-void Nand::GenerateVHDLInstance() {
+const string Nand::GenerateVHDLInstance() const {
 	string output;
 	TemplateDictionary inst("Nand");
 	inst.SetValue("NAME", name);
 	ExpandTemplate("src/templates/VHDL/Nand_inst.tpl", DO_NOT_STRIP, &inst, &output);
-	cout << output;
+
+	return output;
 }

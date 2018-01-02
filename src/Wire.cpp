@@ -1,5 +1,7 @@
 #include "main.h"
 
+bool Wire::declarationGenerated = false;
+
 void Wire::SetValue(bool val, bool propagating) {
 	if (propagating) {
 		has_changed = curr_value ^ val;
@@ -26,4 +28,20 @@ void Wire::SetValue(bool val, bool propagating) {
 void Wire::AddOutput(comp_t component) {
 	outputs.push_back(component);
 	num_outputs = outputs.size();
+}
+
+void Wire::GenerateVHDLDeclaration() const {
+	// Signal declarations only happen once.
+	if (!declarationGenerated) {
+		string output;
+		TemplateDictionary decl("Wire");
+		ExpandTemplate("src/templates/VHDL/Wire_decl.tpl", DO_NOT_STRIP, &decl, &output);
+		cout << output;
+
+		declarationGenerated = true;
+	}
+}
+
+void Wire::GenerateVHDLIOAssignment() const {
+	
 }

@@ -75,22 +75,26 @@ const wire_t Xnor::GetWire(PORTS port, size_t index) const {
 	}
 }
 
-void Xnor::GenerateVHDLEntity() const {
+void Xnor::GenerateVHDLEntity(const string &path) const {
 	// We only need to do it once, since all instances of the Xnor gate are identical.
 	if (!entityGenerated) {
 		string output;
 		TemplateDictionary entity("Xnor");
 		ExpandTemplate("src/templates/VHDL/Xnor_entity.tpl", DO_NOT_STRIP, &entity, &output);
-		cout << output;
+
+		auto outfile = ofstream(path + "/Xnor.vhd");
+		outfile << output;
+		outfile.close();
 
 		entityGenerated = true;
 	}
 }
 
-void Xnor::GenerateVHDLInstance() {
+const string Xnor::GenerateVHDLInstance() const {
 	string output;
 	TemplateDictionary inst("Xnor");
 	inst.SetValue("NAME", name);
 	ExpandTemplate("src/templates/VHDL/Xnor_inst.tpl", DO_NOT_STRIP, &inst, &output);
-	cout << output;
+
+	return output;
 }
