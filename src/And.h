@@ -23,6 +23,9 @@ private:
 	wire_t A;
 	wire_t B;
 	wire_t O;
+
+	// Used for generating HDL
+	static bool entityGenerated;
 };
 
 #endif // AND_H

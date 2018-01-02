@@ -10,6 +10,8 @@
   C ---|D|
 */
 
+bool And3::entityGenerated = false;
+
 void And3::Update(bool propagating) {
 	if (needs_update || !propagating) {
 		bool inA, inB, inC;
@@ -79,4 +81,24 @@ const wire_t And3::GetWire(PORTS port, size_t index) const {
 			 << "\"" << name << "\".\n";
 		exit(1);
 	}
+}
+
+void And3::GenerateVHDLEntity() const {
+	// We only need to do it once, since all instances of the And3 gate are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("And3");
+		ExpandTemplate("src/templates/VHDL/And3_entity.tpl", DO_NOT_STRIP, &entity, &output);
+		cout << output;
+
+		entityGenerated = true;
+	}
+}
+
+void And3::GenerateVHDLInstance() {
+	string output;
+	TemplateDictionary inst("And3");
+	inst.SetValue("NAME", name);
+	ExpandTemplate("src/templates/VHDL/And3_inst.tpl", DO_NOT_STRIP, &inst, &output);
+	cout << output;
 }

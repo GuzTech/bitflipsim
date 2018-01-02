@@ -10,6 +10,8 @@
   B ---|D|
 */
 
+bool And::entityGenerated = false;
+
 void And::Update(bool propagating) {
 	if (needs_update || !propagating) {
 		bool inA, inB;
@@ -75,9 +77,21 @@ const wire_t And::GetWire(PORTS port, size_t index) const {
 }
 
 void And::GenerateVHDLEntity() const {
-	
+	// We only need to do it once, since all instances of the And gate are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("And");
+		ExpandTemplate("src/templates/VHDL/And_entity.tpl", DO_NOT_STRIP, &entity, &output);
+		cout << output;
+
+		entityGenerated = true;
+	}
 }
 
 void And::GenerateVHDLInstance() {
-
+	string output;
+	TemplateDictionary inst("And");
+	inst.SetValue("NAME", name);
+	ExpandTemplate("src/templates/VHDL/And_inst.tpl", DO_NOT_STRIP, &inst, &output);
+	cout << output;
 }

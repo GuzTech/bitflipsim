@@ -1,11 +1,11 @@
 #include "main.h"
 
+bool CarrySaveAdder::entityGenerated = false;
+
 CarrySaveAdder::CarrySaveAdder(string _name,
 							   size_t _num_bits)
 	: Component(_name)
 	, num_bits(_num_bits)
-	, dict_entity("CarrySaveAdder")
-	, dict_inst("CarrySaveAdder")
 {
 	if (num_bits == 0) {
 		cout << "[Error] Number of bits in CarrySaveAdder \"" << _name
@@ -149,15 +149,22 @@ void CarrySaveAdder::PrintDebug() const {
 }
 
 void CarrySaveAdder::GenerateVHDLEntity() const {
-	string output;
-	ExpandTemplate("src/templates/VHDL/CarrySaveAdder_entity.tpl", DO_NOT_STRIP, &dict_entity, &output);
-	cout << output;
+	// We only need to do it once, since all instances of the CarrySaveAdder are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("CarrySaveAdder");
+		ExpandTemplate("src/templates/VHDL/CarrySaveAdder_entity.tpl", DO_NOT_STRIP, &entity, &output);
+		cout << output;
+
+		entityGenerated = true;
+	}
 }
 
 void CarrySaveAdder::GenerateVHDLInstance() {
 	string output;
-	dict_inst.SetValue("NAME", name);
-	dict_inst.SetValue("SIZE", to_string(num_bits));
-	ExpandTemplate("src/templates/VHDL/CarrySaveAdder_inst.tpl", DO_NOT_STRIP, &dict_inst, &output);
+	TemplateDictionary inst("CarrySaveAdder");
+	inst.SetValue("NAME", name);
+	inst.SetValue("SIZE", to_string(num_bits));
+	ExpandTemplate("src/templates/VHDL/CarrySaveAdder_inst.tpl", DO_NOT_STRIP, &inst, &output);
 	cout << output;
 }

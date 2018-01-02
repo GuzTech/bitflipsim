@@ -11,6 +11,8 @@
   B ---|R|
 */
 
+bool Xnor::entityGenerated = false;
+
 void Xnor::Update(bool propagating) {
 	if (needs_update || !propagating) {
 		bool inA, inB;
@@ -71,4 +73,24 @@ const wire_t Xnor::GetWire(PORTS port, size_t index) const {
 			 << "\"" << name << "\".\n";
 		exit(1);
 	}
+}
+
+void Xnor::GenerateVHDLEntity() const {
+	// We only need to do it once, since all instances of the Xnor gate are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("Xnor");
+		ExpandTemplate("src/templates/VHDL/Xnor_entity.tpl", DO_NOT_STRIP, &entity, &output);
+		cout << output;
+
+		entityGenerated = true;
+	}
+}
+
+void Xnor::GenerateVHDLInstance() {
+	string output;
+	TemplateDictionary inst("Xnor");
+	inst.SetValue("NAME", name);
+	ExpandTemplate("src/templates/VHDL/Xnor_inst.tpl", DO_NOT_STRIP, &inst, &output);
+	cout << output;
 }

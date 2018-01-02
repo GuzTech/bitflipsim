@@ -10,6 +10,8 @@
   B ---|R|
 */
 
+bool Xor::entityGenerated = false;
+
 void Xor::Update(bool propagating) {
 	if (needs_update || !propagating) {
 		bool inA, inB;
@@ -70,4 +72,24 @@ const wire_t Xor::GetWire(PORTS port, size_t index) const {
 			 << "\"" << name << "\".\n";
 		exit(1);
 	}
+}
+
+void Xor::GenerateVHDLEntity() const {
+	// We only need to do it once, since all instances of the Xor gate are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("Xor");
+		ExpandTemplate("src/templates/VHDL/Xor_entity.tpl", DO_NOT_STRIP, &entity, &output);
+		cout << output;
+
+		entityGenerated = true;
+	}
+}
+
+void Xor::GenerateVHDLInstance() {
+	string output;
+	TemplateDictionary inst("Xor");
+	inst.SetValue("NAME", name);
+	ExpandTemplate("src/templates/VHDL/Xor_inst.tpl", DO_NOT_STRIP, &inst, &output);
+	cout << output;
 }

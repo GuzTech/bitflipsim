@@ -10,6 +10,8 @@
   B ---|R|
 */
 
+bool Nor::entityGenerated = false;
+
 void Nor::Update(bool propagating) {
 	if (needs_update || !propagating) {
 		bool inA, inB;
@@ -70,4 +72,24 @@ const wire_t Nor::GetWire(PORTS port, size_t index) const {
 			 << "\"" << name << "\".\n";
 		exit(1);
 	}
+}
+
+void Nor::GenerateVHDLEntity() const {
+	// We only need to do it once, since all instances of the Nor gate are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("Nor");
+		ExpandTemplate("src/templates/VHDL/Nor_entity.tpl", DO_NOT_STRIP, &entity, &output);
+		cout << output;
+
+		entityGenerated = true;
+	}
+}
+
+void Nor::GenerateVHDLInstance() {
+	string output;
+	TemplateDictionary inst("Nor");
+	inst.SetValue("NAME", name);
+	ExpandTemplate("src/templates/VHDL/Nor_inst.tpl", DO_NOT_STRIP, &inst, &output);
+	cout << output;
 }

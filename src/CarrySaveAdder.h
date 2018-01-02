@@ -25,8 +25,8 @@ private:
 
 	vector<fa_t> full_adders;
 
-	TemplateDictionary dict_entity;
-	TemplateDictionary dict_inst;
+	// Used for generating HDL
+	static bool entityGenerated;
 };
 
 #endif // CARRY_SAVE_ADDER

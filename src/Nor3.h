@@ -15,11 +15,17 @@ public:
 
 	const wire_t GetWire(PORTS port, size_t index = 0) const override;
 
+	void GenerateVHDLEntity() const override;
+	void GenerateVHDLInstance() override;
+
 private:
 	wire_t A;
 	wire_t B;
 	wire_t C;
 	wire_t O;
+
+	// Used for generating HDL
+	static bool entityGenerated;
 };
 
 #endif // NOR3_H

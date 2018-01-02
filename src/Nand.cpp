@@ -11,6 +11,8 @@
   B ---|D|
 */
 
+bool Nand::entityGenerated = false;
+
 void Nand::Update(bool propagating) {
 	if (needs_update || !propagating) {
 		bool inA, inB;
@@ -71,4 +73,24 @@ const wire_t Nand::GetWire(PORTS port, size_t index) const {
 			 << "\"" << name << "\".\n";
 		exit(1);
 	}
+}
+
+void Nand::GenerateVHDLEntity() const {
+	// We only need to do it once, since all instances of the Nand gate are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("Nand");
+		ExpandTemplate("src/templates/VHDL/Nand_entity.tpl", DO_NOT_STRIP, &entity, &output);
+		cout << output;
+
+		entityGenerated = true;
+	}
+}
+
+void Nand::GenerateVHDLInstance() {
+	string output;
+	TemplateDictionary inst("Nand");
+	inst.SetValue("NAME", name);
+	ExpandTemplate("src/templates/VHDL/Nand_inst.tpl", DO_NOT_STRIP, &inst, &output);
+	cout << output;
 }
