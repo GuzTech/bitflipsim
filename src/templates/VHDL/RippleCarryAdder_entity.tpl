@@ -20,23 +20,23 @@ ARCHITECTURE arch OF RippleCarryAdder IS
 BEGIN
     gen_full_adders: FOR I IN 0 TO NUM_BITS - 1 GENERATE
         lsb: IF I = 0 GENERATE
-            FA_i : work.FullAdder
+            FA_i : ENTITY work.FullAdder(arch)
             PORT MAP (
-                A => A(I),
-                B => B(I),
-                Cin => Cin,
-                O => O(I),
+                A    => A(I),
+                B    => B(I),
+                Cin  => Cin,
+                O    => O(I),
                 Cout => fa_cout(I)
             );
 		END GENERATE lsb;
     
         FAs : IF I > 0 GENERATE
-            FA_i : work.FullAdder
+            FA_i : ENTITY work.FullAdder(arch)
             PORT MAP (
-                A => A(I),
-                B => B(I),
-                Cin => fa_cout(I - 1),
-                O => O(I),
+                A    => A(I),
+                B    => B(I),
+                Cin  => fa_cout(I - 1),
+                O    => O(I),
                 Cout => fa_cout(I)
             );
         END GENERATE FAs;

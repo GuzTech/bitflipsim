@@ -18,12 +18,12 @@ END CarrySaveAdder;
 ARCHITECTURE arch OF CarrySaveAdder IS
 BEGIN
     GEN_FULL_ADDERS: FOR I in 0 to NUM_BITS - 1 GENERATE
-        FA_i : work.FullAdder
+        FA_i : ENTITY work.FullAdder(arch)
         PORT MAP (
-            A => A(I),
-            B => B(I),
-            Cin => Cin(I),
-            O => O(I),
+            A    => A(I),
+            B    => B(I),
+            Cin  => Cin(I),
+            O    => O(I),
             Cout => Cout(I)
         );
     END GENERATE GEN_FULL_ADDERS;
