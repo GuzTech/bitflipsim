@@ -29,7 +29,7 @@ ARCHITECTURE arch OF BoothEncoderRadix4 IS
 	SIGNAL x2_b_O          : STD_LOGIC;
 BEGIN
 	neg_cin_nor_1_O <= X_2I NOR X_2I_M1;
-	neg_cin_nor_2_O <= X_2I_P1 NOR Y_LSB;
+	neg_cin_nor_2_O <= X_2I_M1 NOR Y_LSB;
 	neg_cin_nor_3_O <= X_2I NOR Y_LSB;
 	neg_cin_or3_O   <= neg_cin_nor_1_O OR neg_cin_nor_2_O OR neg_cin_nor_3_O;
 	NEG_CIN <= neg_cin_or3_O AND X_2I_P1;
