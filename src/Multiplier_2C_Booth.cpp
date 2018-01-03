@@ -456,6 +456,11 @@ void Multiplier_2C_Booth::GenerateVHDLEntity(const string &path) const {
 		outfile << output;
 		outfile.close();
 
+		encoders.front()->GenerateVHDLEntity(path);
+		decoders.front()->GenerateVHDLEntity(path);
+		cs_adders.front()->GenerateVHDLEntity(path);
+		final_adder->GenerateVHDLEntity(path);
+
 //		string enc_string("");
 //		encoders.front()->GenerateVHDLEntity(path);
 //		for (const auto &enc : encoders) {
