@@ -35,6 +35,7 @@ ARCHITECTURE arch OF Multiplier_2C_Booth IS
 	SIGNAL cs_Cin     : array_cs;
 	SIGNAL cs_O       : array_cs;
 	SIGNAL cs_Cout    : array_cs;
+	SIGNAL final_A    : STD_LOGIC_VECTOR(FINAL_ADD_SIZE - 1 DOWNTO 0);
 	SIGNAL final_O    : STD_LOGIC_VECTOR(FINAL_ADD_SIZE - 1 DOWNTO 0);
 
 	TYPE array_ppts IS ARRAY (0 TO NUM_ENCODERS - 1) OF STD_LOGIC_VECTOR(NUM_BITS_A - 2 DOWNTO 0);
@@ -127,9 +128,9 @@ BEGIN
             cs_Cin(i)(i + 1 DOWNTO 0)                           <= (others => '0');
 
 			-- Assign lower bits
-			cs_A(i)(ADD_SIZE_LVL_0 + i - 1 DOWNTO 0) <= '1' & se(i + 1) & cs_O(i - 1)(ADD_SIZE_LVL_0 + i - 2 DOWNTO 1); -- cs_O(i - 1)
-			cs_B(i)(ADD_SIZE_LVL_0 + i - 2 DOWNTO 0) <= cs_Cout(i - 1)(ADD_SIZE_LVL_0 + i - 2 DOWNTO 0); -- cs_Cout(i - 1)
-			cs_Cin(i)(ADD_SIZE_LVL_0 + i - 1 DOWNTO i + 2) <= ppts(i + 2) & row_lsb(i + 2) & neg_cin(i + 1); -- PPT_(i + 2)
+			cs_A(i)  (ADD_SIZE_LVL_0 + i - 1 DOWNTO 0)     <= '1' & se(i + 1) & cs_O(i - 1)(ADD_SIZE_LVL_0 + i - 2 DOWNTO 1); -- cs_O(i - 1)
+			cs_B(i)  (ADD_SIZE_LVL_0 + i - 2 DOWNTO 0)     <= cs_Cout(i - 1)(ADD_SIZE_LVL_0 + i - 2 DOWNTO 0);                -- cs_Cout(i - 1)
+			cs_Cin(i)(ADD_SIZE_LVL_0 + i - 1 DOWNTO i + 2) <= ppts(i + 2) & row_lsb(i + 2) & neg_cin(i + 1);                  -- PPT_(i + 2)
 
 			csa : ENTITY work.CarrySaveAdder(arch)
 			GENERIC MAP (
@@ -146,9 +147,9 @@ BEGIN
 
 		final_csa: IF i = (NUM_PPT_ADDERS - 1) GENERATE
 			-- Assign '0' to all unused bits
-			cs_A(i)(cs_A(i)'HIGH DOWNTO ADD_SIZE_LVL_0 + i)     <= (others => '0');
-			cs_Cin(i)(cs_Cin(i)'HIGH DOWNTO i + 3)              <= (others => '0');
-			cs_Cin(i)(i + 1 DOWNTO 0)                           <= (others => '0');
+			cs_A(i)(cs_A(i)'HIGH DOWNTO ADD_SIZE_LVL_0 + i) <= (others => '0');
+			cs_Cin(i)(cs_Cin(i)'HIGH DOWNTO i + 3)          <= (others => '0');
+			cs_Cin(i)(i + 1 DOWNTO 0)                       <= (others => '0');
 
 			-- Assign lower bits
 			cs_A(i)(FINAL_ADD_SIZE - 1 DOWNTO 0) <= se(i + 1) & cs_O(i - 1)(FINAL_ADD_SIZE - 1 DOWNTO 1);
@@ -169,12 +170,14 @@ BEGIN
 		END GENERATE final_csa;
 	END GENERATE gen_cs_adders;
 
+	final_A <= '1' & cs_O(NUM_PPT_ADDERS - 1)(FINAL_ADD_SIZE - 1 DOWNTO 1);
+
 	rca : ENTITY work.RippleCarryAdder(arch)
 	GENERIC MAP (
 		NUM_BITS => FINAL_ADD_SIZE
 	)
 	PORT MAP (
-		A    => cs_O(NUM_PPT_ADDERS - 1),
+		A    => final_A,
 		B    => cs_Cout(NUM_PPT_ADDERS - 1),
 		Cin  => '0',
 		O    => final_O,
