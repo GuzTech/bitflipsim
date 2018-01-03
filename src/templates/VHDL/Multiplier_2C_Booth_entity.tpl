@@ -4,8 +4,8 @@ USE IEEE.NUMERIC_STD.ALL;
 
 ENTITY Multiplier_2C_Booth IS
 GENERIC (
-	NUM_BITS_A : INTEGER,
-	NUM_BITS_B : INTEGER
+	NUM_BITS_A : INTEGER := 4;
+	NUM_BITS_B : INTEGER := 4
 );
 PORT (
 	 A : IN  STD_LOGIC_VECTOR(NUM_BITS_A - 1 DOWNTO 0);
@@ -15,7 +15,8 @@ PORT (
 END Multiplier_2C_Booth;
 
 ARCHITECTURE arch OF Multiplier_2C_Booth IS
-	CONSTANT NUM_ENCODERS = (NUM_BITS_B + 1) / 2;
+	CONSTANT NUM_ENCODERS   : INTEGER := (NUM_BITS_B + 1) / 2;
+	CONSTANT NUM_PPT_ADDERS : INTEGER := NUM_ENCODERS - 1;
 
 	SIGNAL dec_0_se_n : STD_LOGIC;
 	SIGNAL row_lsb    : STD_LOGIC_VECTOR(NUM_ENCODERS - 1 DOWNTO 0);
@@ -30,7 +31,7 @@ ARCHITECTURE arch OF Multiplier_2C_Booth IS
 BEGIN
 	gen_encoders: FOR i IN 0 TO NUM_ENCODERS GENERATE
 		enc0: IF i = 0 GENERATE
-			enc : work.BoothEncoderRadix4
+			enc : ENTITY work.BoothEncoderRadix4(arch)
 			PORT MAP (
 				X_2I    => B(0),
 				X_2I_M1 => '0',
@@ -46,8 +47,8 @@ BEGIN
 			);
 		END GENERATE enc0;
 
-		enc: IF i > 0 GENERATE
-			enc : work.BoothEncoderRadix4
+		encs: IF i > 0 GENERATE
+			enc : ENTITY work.BoothEncoderRadix4(arch)
 			PORT MAP (
 				X_2I    => B(i * 2),
 				X_2I_M1 => B((i * 2) - 1),
@@ -65,7 +66,7 @@ BEGIN
 	END GENERATE gen_encoders;
 
 	gen_decoders: FOR i IN 0 TO NUM_ENCODERS GENERATE
-		dec : work.Radix4BoothDecoder
+		dec : ENTITY work.Radix4BoothDecoder(arch)
 		PORT MAP (
 			Yj   => A,
 			NEG  => B((i * 2) + 1),
