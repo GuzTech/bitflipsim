@@ -176,10 +176,113 @@ const wb_t System::GetWireBundle(const string &bundle_name) const {
 	}
 }
 
-const void System::GenerateVHDL(const string &path) const {
+const void System::GenerateVHDL(const string &template_name, const string &path) const {
 	// Recursively create the folders of the path.
-	//
 	experimental::filesystem::create_directory(path);
+
+	// Create the top level file.
+	string output;
+	TemplateDictionary toplevel("top");
+	toplevel.SetValue("TOP_NAME", template_name);
+
+	// Create the ports.
+	{
+		string ports;
+
+		// Input wire bundles.
+		if (input_bundles.size() > 0) {
+			for (const auto &ib : input_bundles) {
+				ports += ib->GetName() + " : IN  STD_LOGIC_VECTOR(" +
+					to_string(ib->GetSize() - 1) + " DOWNTO 0);\n\t";
+			}
+		}
+
+		// Output wire bundles.
+		if (output_bundles.size() > 0) {
+			for (const auto &ob : output_bundles) {
+				ports += ob->GetName() + " : OUT STD_LOGIC_VECTOR(" +
+					to_string(ob->GetSize() - 1) + " DOWNTO 0);\n\t";
+			}
+		}
+
+		// Input wires.
+		for (const auto &iw : input_wires) {
+			const auto &ib = iw->GetWireBundle();
+			if (ib) {
+				if (find(input_bundles.begin(),
+						 input_bundles.end(),
+						 ib) == input_bundles.end()) {
+					// Something went wrong, because it's not possible for
+					// an input wire to be part of a bundle that is not an
+					// input bundle.
+					cout << "[Error] Input wire that is part of a non-input wire bundle "
+						 << "detected. This should not be possible.\n";
+					exit(1);
+				}
+			} else {
+				// This wire was declared as not part of a bundle.
+				ports += iw->GetName() + " : IN  STD_LOGIC;\n\t";
+			}
+		}
+
+		// Output wires.
+		for (const auto &ow : output_wires) {
+			const auto &ob = ow->GetWireBundle();
+			if (ob) {
+				if (find(output_bundles.begin(),
+						 output_bundles.end(),
+						 ob) == output_bundles.end()) {
+					// Something went wrong, because it's not possible for
+					// an output wire to be part of a bundle that is not an
+					// output bundle.
+					cout << "[Error] Output wire that is part of a non-output wire bundle "
+						 << "detected. This should not be possible.\n";
+					exit(1);
+				}
+			} else {
+				// This wire was declared as not part of a bundle.
+				ports += ow->GetName() + " : OUT STD_LOGIC;\n\t";
+			}
+		}
+
+		// Remove last ";" from the ports string.
+		ports = ports.substr(0, ports.find_last_of(";"));
+
+		toplevel.SetValue("PORTS", ports);
+	}
+
+	// Constants
+	{
+
+	}
+
+	// Signals
+	{
+
+	}
+
+	// Assignments
+	{
+
+	}
+
+	// Instances
+	{
+		string instances;
+
+		for (const auto &comp : components) {
+			instances += comp.second->GenerateVHDLInstance() + '\n';
+		}
+
+		cout << instances;
+		toplevel.SetValue("INSTANCES", instances);
+	}
+
+	ExpandTemplate("src/templates/VHDL/top_level.tpl", DO_NOT_STRIP, &toplevel, &output);
+	auto outfile = ofstream(path + "/top.vhd");
+	outfile << output;
+	outfile.close();
+	cout << output;
 
 	for (const auto &comp : components) {
 		comp.second->GenerateVHDLEntity(path);

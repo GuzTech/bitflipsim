@@ -1296,17 +1296,18 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	//cout << "And type name: " << And::GetTypeName() << '\n';
+	size_t found = config_file_name.find_last_of("/\\");
+	string file_name = config_file_name.substr(found + 1);
+	string top_level_name;
+	found = file_name.find_last_of(".");
 
-//	const auto rca = make_shared<RippleCarryAdder>("Ripple", 8);
-//	rca->GenerateVHDLEntity();
-//	rca->GenerateVHDLInstance();
-//
-//	const auto csa = make_shared<CarrySaveAdder>("Carry", 8);
-//	csa->GenerateVHDLEntity();
-//	csa->GenerateVHDLInstance();
+	if (found != string::npos) {
+		top_level_name = file_name.substr(0, found);
+	} else {
+		top_level_name = file_name;
+	}
 
-	system.GenerateVHDL(output_file_path);
+	system.GenerateVHDL("top_" + top_level_name, output_file_path);
 
 	return 0;
 }

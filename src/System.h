@@ -26,7 +26,7 @@ public:
 	const vector<wb_t> &GetOutputWireBundles() const {return output_bundles;}
 	const size_t GetLongestPath() const {return longest_path;}
 
-	const void GenerateVHDL(const string &path) const;
+	const void GenerateVHDL(const string &config_filename, const string &path) const;
 protected:
 
 private:
