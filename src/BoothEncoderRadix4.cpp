@@ -269,12 +269,6 @@ void BoothEncoderRadix4::Connect(PORTS port, const wb_t &wires, size_t port_idx,
 }
 
 const wire_t BoothEncoderRadix4::GetWire(PORTS port, size_t index) const {
-	auto error_undefined_port = [&]() {
-		cout << "[Error] Trying to get wire of undefined port of BoothEncoderRadix4 "
-			 << "\"" << name << "\".\n";
-		exit(1);
-	};
-
 	switch (port) {
 	/* Inputs */
 	case PORTS::X_2I: return X1_b->GetWire(PORTS::B);
@@ -296,8 +290,10 @@ const wire_t BoothEncoderRadix4::GetWire(PORTS port, size_t index) const {
 	case PORTS::Z: return Z->GetWire(PORTS::O);
 	case PORTS::NEG_CIN: return Neg_cin_and->GetWire(PORTS::O);
 	default:
-		error_undefined_port();
-		return wire_t();
+		cout << "[Error] Trying to get wire of undefined port of BoothEncoderRadix4 "
+			 << "\"" << name << "\".\n";
+		exit(1);
+//		return nullptr;
 	}
 }
 
