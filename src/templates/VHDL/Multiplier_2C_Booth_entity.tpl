@@ -20,6 +20,7 @@ ARCHITECTURE arch OF Multiplier_2C_Booth IS
 	CONSTANT NUM_PPT_ADDERS : INTEGER := NUM_ENCODERS - 1;
 	CONSTANT ADD_SIZE_LVL_0 : INTEGER := NUM_BITS_A + 3;
 	CONSTANT FINAL_ADD_SIZE : INTEGER := NUM_BITS_O - NUM_ENCODERS;
+	CONSTANT SIGN_EXT_BITS  : INTEGER := NUM_BITS_B MOD 2;
 
 	SIGNAL dec_0_se_n : STD_LOGIC;
 	SIGNAL row_lsb    : STD_LOGIC_VECTOR(NUM_ENCODERS - 1 DOWNTO 0);
@@ -61,7 +62,7 @@ BEGIN
 			);
 		END GENERATE enc0;
 
-		encs: IF i > 0 GENERATE
+		encs: IF (i > 0 AND i /= (NUM_ENCODERS - 1)) GENERATE
 			enc : ENTITY work.BoothEncoderRadix4(arch)
 			PORT MAP (
 				X_2I    => B(i * 2),
@@ -77,21 +78,91 @@ BEGIN
 				NEG_CIN => neg_cin(i)
 			);
 		END GENERATE encs;
+
+		enc_final: IF i = (NUM_ENCODERS - 1) GENERATE
+			no_ext: IF SIGN_EXT_BITS = 0 GENERATE
+				enc : ENTITY work.BoothEncoderRadix4(arch)
+				PORT MAP (
+					X_2I    => B(i * 2),
+					X_2I_M1 => B((i * 2) - 1),
+					X_2I_P1 => B((i * 2) + 1),
+					Y_LSB   => A(0),
+					Y_MSB   => A(NUM_BITS_A - 1),
+					ROW_LSB => row_lsb(i),
+					X1_b    => x1_b(i),
+					X2_b    => x2_b(i),
+					SE      => se(i),
+					Z       => z(i),
+					NEG_CIN => neg_cin(i)
+				);
+			END GENERATE no_ext;
+
+			ext: IF SIGN_EXT_BITS = 1 GENERATE
+				enc : ENTITY work.BoothEncoderRadix4(arch)
+				PORT MAP (
+					X_2I    => B(i * 2),
+					X_2I_M1 => B((i * 2) - 1),
+					X_2I_P1 => B(i * 2),
+					Y_LSB   => A(0),
+					Y_MSB   => A(NUM_BITS_A - 1),
+					ROW_LSB => row_lsb(i),
+					X1_b    => x1_b(i),
+					X2_b    => x2_b(i),
+					SE      => se(i),
+					Z       => z(i),
+					NEG_CIN => neg_cin(i)
+				);
+			END GENERATE ext;
+		END GENERATE enc_final;
 	END GENERATE gen_encoders;
 
 	gen_decoders: FOR i IN 0 TO (NUM_ENCODERS - 1) GENERATE
-		dec : ENTITY work.Radix4BoothDecoder(arch)
-		GENERIC MAP (
-			SIZE => NUM_BITS_A
-		)
-		PORT MAP (
-			Yj   => A,
-			NEG  => B((i * 2) + 1),
-			X1_b => x1_b(i),
-			X2_b => x2_b(i),
-			Z    => z(i),
-			PPTj => ppts(i)
-		);
+		dec_n: IF i < (NUM_ENCODERS - 1) GENERATE
+			dec : ENTITY work.Radix4BoothDecoder(arch)
+			GENERIC MAP (
+				SIZE => NUM_BITS_A
+			)
+			PORT MAP (
+				Yj   => A,
+				NEG  => B((i * 2) + 1),
+				X1_b => x1_b(i),
+				X2_b => x2_b(i),
+				Z    => z(i),
+				PPTj => ppts(i)
+			);
+		END GENERATE dec_n;
+
+		final_dec: IF i = (NUM_ENCODERS - 1) GENERATE
+			no_ext: IF SIGN_EXT_BITS = 0 GENERATE
+				dec : ENTITY work.Radix4BoothDecoder(arch)
+				GENERIC MAP (
+					SIZE => NUM_BITS_A
+				)
+				PORT MAP (
+					Yj   => A,
+					NEG  => B((i * 2) + 1),
+					X1_b => x1_b(i),
+					X2_b => x2_b(i),
+					Z    => z(i),
+					PPTj => ppts(i)
+				);
+			END GENERATE no_ext;
+
+			ext: IF SIGN_EXT_BITS = 1 GENERATE
+				dec : ENTITY work.Radix4BoothDecoder(arch)
+				GENERIC MAP (
+					SIZE => NUM_BITS_A
+				)
+				PORT MAP (
+					Yj   => A,
+					NEG  => B(i * 2),
+					X1_b => x1_b(i),
+					X2_b => x2_b(i),
+					Z    => z(i),
+					PPTj => ppts(i)
+				);
+			END GENERATE ext;
+		END GENERATE final_dec;
 	END GENERATE gen_decoders;
 
 	gen_cs_adders: FOR i IN 0 TO (NUM_PPT_ADDERS - 1) GENERATE
