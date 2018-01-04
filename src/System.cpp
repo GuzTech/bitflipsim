@@ -274,7 +274,6 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 			instances += comp.second->GenerateVHDLInstance() + '\n';
 		}
 
-		cout << instances;
 		toplevel.SetValue("INSTANCES", instances);
 	}
 
@@ -282,7 +281,6 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 	auto outfile = ofstream(path + "/top.vhd");
 	outfile << output;
 	outfile.close();
-	cout << output;
 
 	for (const auto &comp : components) {
 		comp.second->GenerateVHDLEntity(path);
