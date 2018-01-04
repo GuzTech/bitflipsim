@@ -1,0 +1,5 @@
+config/*.txt
+config/*/*.vhd
+src/GTAGS
+src/GRTAGS
+src/GPATH
