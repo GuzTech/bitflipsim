@@ -461,24 +461,68 @@ void Multiplier_2C_Booth::GenerateVHDLEntity(const string &path) const {
 		cs_adders.front()->GenerateVHDLEntity(path);
 		final_adder->GenerateVHDLEntity(path);
 
-//		string enc_string("");
-//		encoders.front()->GenerateVHDLEntity(path);
-//		for (const auto &enc : encoders) {
-//			enc_string += enc->GenerateVHDLInstance() + '\n';
-//		}
-//		cout << enc_string;
-//
-//		string dec_string("");
-//		decoders.front()->GenerateVHDLEntity(path);
-//		for (const auto &dec : decoders) {
-//			dec_string += dec->GenerateVHDLInstance() + '\n';
-//		}
-//		cout << dec_string;
-
 		entityGenerated = true;
 	}
 }
 
 const string Multiplier_2C_Booth::GenerateVHDLInstance() const {
-	return string("");
+	string output;
+	TemplateDictionary inst("Multiplier_2C_Booth");
+
+	// Set up the I/O wires.
+	inst.SetValue("NAME", name);
+	inst.SetValue("NUM_BITS_A", to_string(num_bits_A));
+	inst.SetValue("NUM_BITS_B", to_string(num_bits_B));
+
+	// A
+	{
+		const auto &wire = encoders.front()->GetWire(PORTS::Y_LSB);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				inst.SetValue("A_WIRE", wb->GetName());
+			} else {
+				inst.SetValue("A_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("A_WIRE", "(OTHERS => '0')");
+		}
+	}
+
+	// B
+	{
+		const auto &wire = encoders.front()->GetWire(PORTS::NEG);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				inst.SetValue("B_WIRE", wb->GetName());
+			} else {
+				inst.SetValue("B_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("B_WIRE", "(OTHERS => '0')");
+		}
+	}
+
+	// O
+	{
+		const auto &wire = encoders.front()->GetWire(PORTS::ROW_LSB);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				inst.SetValue("O_WIRE", wb->GetName());
+			} else {
+				inst.SetValue("O_WIRE", wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("O_WIRE", "(OTHERS => '0')");
+		}
+	}
+
+	ExpandTemplate("src/templates/VHDL/Multiplier_2C_Booth_inst.tpl", DO_NOT_STRIP, &inst, &output);
+
+	return output;
 }
