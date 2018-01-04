@@ -512,7 +512,20 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 }
 
 void Multiplier_Smag::GenerateVHDLEntity(const string &path) const {
+	// We only need to generate it once, since all instances of Multiplier_Smag are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("Multiplier_Smag");
+		ExpandTemplate("src/templates/VHDL/Multiplier_Smag_entity.tpl", DO_NOT_STRIP, &output);
 
+		auto outfile = ofstream(path + "/Multiplier_Smag.vhd");
+		outfile << output;
+		outfile.close();
+
+		// Generate entities of other components used by this component.
+
+		entityGenerated = true;
+	}
 }
 
 const string Multiplier_Smag::GenerateVHDLInstance() const {
