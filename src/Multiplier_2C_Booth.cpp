@@ -143,7 +143,36 @@ void Multiplier_2C_Booth::Connect(PORTS port, const wb_t &wires, size_t port_idx
 const wire_t Multiplier_2C_Booth::GetWire(PORTS port, size_t index) const {
 	CheckIfIndexIsInRange(port, index);
 
-	
+	switch (port) {
+		/* Inputs */
+	case PORTS::A: return decoders.front()->GetWire(PORTS::Yj, index);
+	case PORTS::B:
+	{
+		const size_t enc_idx = index / 2;
+		const size_t enc_bit_idx = (index + 1) % 2;
+
+		switch (enc_bit_idx) {
+		case 0: return decoders[enc_idx]->GetWire(PORTS::NEG);
+		case 1: return encoders[enc_idx]->GetWire(PORTS::X_2I);
+		default:
+			// Cannot happen.
+			assert(false);
+			return nullptr;
+		}
+	}
+	case PORTS::O:
+		if (index == 0) {
+			return encoders.front()->GetWire(PORTS::ROW_LSB);
+		} else if (index < (num_bits_O - final_adder_size)) {
+			return cs_adders[index - 1]->GetWire(PORTS::O, 0);
+		} else {
+			return final_adder->GetWire(PORTS::O, index - (num_bits_O - final_adder_size));
+		}
+	default:
+		cout << "[Error] Trying to get wire of undefined port of Multiplier_2C_Booth "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
 
 	return nullptr;
 }
@@ -476,7 +505,8 @@ const string Multiplier_2C_Booth::GenerateVHDLInstance() const {
 
 	// A
 	{
-		const auto &wire = encoders.front()->GetWire(PORTS::Y_LSB);
+		//const auto &wire = encoders.front()->GetWire(PORTS::Y_LSB);
+		const auto &wire = GetWire(PORTS::A);
 		if (wire) {
 			const auto &wb = wire->GetWireBundle();
 			if (wb) {
@@ -492,7 +522,8 @@ const string Multiplier_2C_Booth::GenerateVHDLInstance() const {
 
 	// B
 	{
-		const auto &wire = encoders.front()->GetWire(PORTS::NEG);
+		//const auto &wire = encoders.front()->GetWire(PORTS::NEG);
+		const auto &wire = GetWire(PORTS::B);
 		if (wire) {
 			const auto &wb = wire->GetWireBundle();
 			if (wb) {
@@ -508,7 +539,8 @@ const string Multiplier_2C_Booth::GenerateVHDLInstance() const {
 
 	// O
 	{
-		const auto &wire = encoders.front()->GetWire(PORTS::ROW_LSB);
+		//const auto &wire = encoders.front()->GetWire(PORTS::ROW_LSB);
+		const auto &wire = GetWire(PORTS::O);
 		if (wire) {
 			const auto &wb = wire->GetWireBundle();
 			if (wb) {
