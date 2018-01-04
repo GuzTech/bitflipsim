@@ -192,7 +192,7 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 		// Input wire bundles.
 		if (input_bundles.size() > 0) {
 			for (const auto &ib : input_bundles) {
-				ports += ib->GetName() + " : IN  STD_LOGIC_VECTOR(" +
+				ports += ib->GetName() + " : IN STD_LOGIC_VECTOR(" +
 					to_string(ib->GetSize() - 1) + " DOWNTO 0);\n\t";
 			}
 		}
@@ -221,7 +221,7 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 				}
 			} else {
 				// This wire was declared as not part of a bundle.
-				ports += iw->GetName() + " : IN  STD_LOGIC;\n\t";
+				ports += iw->GetName() + " : IN STD_LOGIC;\n\t";
 			}
 		}
 
@@ -251,14 +251,24 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 		toplevel.SetValue("PORTS", ports);
 	}
 
-	// Constants
+	// Signals and output signal assignments
 	{
+		string signals;
+		string output_assignments;
 
-	}
+		for (const auto &ob : output_bundles) {
+			signals += "SIGNAL int_" + ob->GetName() + " : STD_LOGIC_VECTOR(" +
+				to_string(ob->GetSize() - 1) + " DOWNTO 0);\n\t";
+			output_assignments += ob->GetName() + " <= int_" + ob->GetName() + ";\n\t\t\t";
+		}
 
-	// Signals
-	{
+		size_t found = signals.find_last_of("\n");
+		signals = signals.substr(0, found);
+		found = output_assignments.find_last_of("\n");
+		output_assignments = output_assignments.substr(0, found);
 
+		toplevel.SetValue("SIGNALS", signals);
+		toplevel.SetValue("OUTPUT_ASSIGNMENTS", output_assignments);
 	}
 
 	// Assignments

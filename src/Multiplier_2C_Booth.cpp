@@ -544,9 +544,9 @@ const string Multiplier_2C_Booth::GenerateVHDLInstance() const {
 		if (wire) {
 			const auto &wb = wire->GetWireBundle();
 			if (wb) {
-				inst.SetValue("O_WIRE", wb->GetName());
+				inst.SetValue("O_WIRE", "int_" + wb->GetName());
 			} else {
-				inst.SetValue("O_WIRE", wire->GetName());
+				inst.SetValue("O_WIRE", "int_" + wire->GetName());
 			}
 		} else {
 			// No wire, so assign a '0';
