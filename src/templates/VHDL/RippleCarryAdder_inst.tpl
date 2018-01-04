@@ -1,4 +1,4 @@
-{{NAME}} : work.RippleCarryAdder
+{{NAME}} : ENTITY work.RippleCarryAdder
 GENERIC MAP (
     NUM_BITS => {{SIZE}}
 );

@@ -1,4 +1,4 @@
-{{NAME}} : work.Or3
+{{NAME}} : ENTITY work.Or3
 PORT MAP (
     A => i_{{NAME}}_A,
     B => i_{{NAME}}_B,

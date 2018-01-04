@@ -1,4 +1,4 @@
-{{NAME}} : work.Xor
+{{NAME}} : ENTITY work.Xor
 PORT MAP (
     A => i_{{NAME}}_A,
     B => i_{{NAME}}_B,

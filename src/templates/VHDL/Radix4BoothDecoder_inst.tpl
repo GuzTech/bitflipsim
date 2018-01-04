@@ -1,4 +1,4 @@
-{{NAME}} : work.Radix4BoothDecoder
+{{NAME}} : ENTITY work.Radix4BoothDecoder
 GENERIC MAP (
 	SIZE => {{SIZE}}
 );

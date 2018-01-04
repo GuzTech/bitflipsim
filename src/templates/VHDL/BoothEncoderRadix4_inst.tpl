@@ -1,4 +1,4 @@
-{{NAME}} : work.BoothEncoderRadix4
+{{NAME}} : ENTITY work.BoothEncoderRadix4
 PORT MAP (
 	X_2I    => {{X_2I_WIRE}},
 	X_2I_M1 => {{X_2I_M1_WIRE}},

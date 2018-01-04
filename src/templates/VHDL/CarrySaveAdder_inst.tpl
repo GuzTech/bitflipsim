@@ -1,4 +1,4 @@
-{{NAME}} : work.CarrySaveAdder
+{{NAME}} : ENTITY work.CarrySaveAdder
 GENERIC MAP (
     NUM_BITS => {{SIZE}}
 );
