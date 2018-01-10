@@ -799,6 +799,11 @@ struct Constraint {
 		uniform_int_distr = uniform_int_distribution<int32_t>(0, 1);
 	}
 
+	bool GenerateRandomBit() {
+		const auto rnd_val = uniform_int_distr(generator);
+		return (rnd_val < 0.0f);
+	}
+
 	string wire_name;
 	size_t begin_index;
 	size_t end_index;
@@ -925,22 +930,15 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		exit(1);
 	};
 
-	auto process_wire_rng = [](const auto &wire, const auto &constraint, auto &system) {
-		for (size_t i = 0; i < constraint->times; ++i) {
-			auto rnd_val = constraint->uniform_int_distr(constraint->generator);
-			if (rnd_val < 0.0f) {
-				wire->SetValue(false, false);
-			} else {
-				wire->SetValue(true, false);
-			}
-			system.Update();
-		}
-	};
-
+	// Helper struct used for storing input stimuli.
 	struct in_bundle {
-		in_bundle()
-			: wire(nullptr),
+		in_bundle(const wire_t &_wire)
+			: wire(_wire),
 			  wb(nullptr)
+			{};
+		in_bundle(const wb_t &_wb)
+			: wire(nullptr),
+			  wb(_wb)
 			{};
 
 	    vector<int64_t> values;
@@ -948,37 +946,46 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 	    wb_t wb;
 	};
 
-	//map<string, vector<int64_t>> io_values;
 	map<string, shared_ptr<in_bundle>> in_values;
 	map<string, vector<int64_t>> out_values;
 
+	// Create enough space for wire bundles.
 	for (const auto &[name, bundle] : system.GetWireBundles()) {
 	    if (bundle->IsInputBundle()) {
-			in_values[name] = make_shared<in_bundle>();
+			in_values[name] = make_shared<in_bundle>(bundle);
 		} else if (bundle->IsOutputBundle()) {
 			out_values[name] = vector<int64_t>();
 		}
 	}
 
+	// Do the same for input wires.
+	for (const auto &iw : system.GetInputWires()) {
+		in_values[iw->GetName()] = make_shared<in_bundle>(iw);
+	}
+
 	vector<size_t> toggles = {};
 	vector<float> sigmas = {};
 
-	auto process_wire_bundle_rng = [&](const auto &wb, const auto &constraint, auto &system) {
+	auto process_wire_rng = [&](const auto &wire, const auto &constraint, auto &system, const size_t num_times) {
+		for (size_t i = 0; i < num_times; ++i) {
+			const bool rnd_val = constraint->GenerateRandomBit() < 0.0f;
+			const int64_t val = rnd_val ? 1 : 0;
+
+			wire->SetValue(rnd_val, false);
+			in_values[wire->GetName()]->values.emplace_back(val);
+		}
+	};
+
+	auto process_wire_bundle_rng = [&](const auto &wb, const auto &constraint, auto &system, const size_t num_times) {
 		const float scale_factor = (float)((1l << wb->GetSize()) - 1);
-		for (size_t i = 0; i < constraint->times; ++i) {
+		for (size_t i = 0; i < num_times; ++i) {
 			auto rnd_val = constraint->norm_distr(constraint->generator) * scale_factor;
 			if (rnd_val > scale_factor) {
 				rnd_val = scale_factor;
 			}
 
 			wb->SetValue((int64_t)rnd_val, false);
-
-			const auto &io_val = in_values[wb->GetName()];
-			io_val->values.emplace_back((int64_t)rnd_val);
-			if (io_val->wb == nullptr) {
-				io_val->wb = wb;
-			}
-			system.Update();
+			in_values[wb->GetName()]->values.emplace_back((int64_t)rnd_val);
 		}
 	};
 
@@ -1020,12 +1027,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 								if (w) {
 									switch (c->type) {
 									case Constraint::TYPE::RNG: {
-										auto rnd_val = c->uniform_int_distr(c->generator);
-										if (rnd_val < 0.0f) {
-											w->SetValue(false, false);
-										} else {
-											w->SetValue(true, false);
-										}
+										process_wire_rng(w, c, system, 1);
 										break;
 									}
 									case Constraint::TYPE::NONE: break;
@@ -1033,20 +1035,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 								} else if (wb) {
 									switch (c->type) {
 									case Constraint::TYPE::RNG: {
-										const float scale_factor = (float)((1l << wb->GetSize()) - 1);
-										auto rnd_val = c->norm_distr(c->generator) * scale_factor;
-
-										if (rnd_val > scale_factor) {
-											rnd_val = scale_factor;
-										}
-
-										wb->SetValue((int64_t)rnd_val, false);
-
-										const auto &io_val = in_values[wb->GetName()];
-										io_val->values.emplace_back((int64_t)rnd_val);
-										if (io_val->wb == nullptr) {
-											io_val->wb = wb;
-										}
+										process_wire_bundle_rng(wb, c, system, 1);
 										break;
 									}
 									case Constraint::TYPE::NONE: break;
@@ -1072,12 +1061,20 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 					if (w) {
 						switch (c->type) {
-						case Constraint::TYPE::RNG: process_wire_rng(w, c, system); break;
+						case Constraint::TYPE::RNG: {
+							process_wire_rng(w, c, system, c->times);
+							system.Update();
+							break;
+						}
 						case Constraint::TYPE::NONE: break;
 						}
 					} else if (wb) {
 						switch (c->type) {
-						case Constraint::TYPE::RNG: process_wire_bundle_rng(wb, c, system); break;
+						case Constraint::TYPE::RNG: {
+							process_wire_bundle_rng(wb, c, system, c->times);
+							system.Update();
+							break;
+						}
 						case Constraint::TYPE::NONE: break;
 						}
 					} else {
