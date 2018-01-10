@@ -1,7 +1,7 @@
 #include "main.h"
 #include <yaml-cpp/yaml.h>
 #include <random>
-#include <bitset>
+#include <experimental/filesystem>
 
 using namespace std;
 
@@ -937,10 +937,29 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		}
 	};
 
-	map<string, vector<int64_t>> io_values;
+	struct in_bundle {
+		in_bundle()
+			: wire(nullptr),
+			  wb(nullptr)
+			{};
+
+	    vector<int64_t> values;
+	    wire_t wire;
+	    wb_t wb;
+	};
+
+	//map<string, vector<int64_t>> io_values;
+	map<string, shared_ptr<in_bundle>> in_values;
+	map<string, vector<int64_t>> out_values;
+
 	for (const auto &[name, bundle] : system.GetWireBundles()) {
-		io_values[name] = vector<int64_t>();
+	    if (bundle->IsInputBundle()) {
+			in_values[name] = make_shared<in_bundle>();
+		} else if (bundle->IsOutputBundle()) {
+			out_values[name] = vector<int64_t>();
+		}
 	}
+
 	vector<size_t> toggles = {};
 	vector<float> sigmas = {};
 
@@ -953,7 +972,12 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 			}
 
 			wb->SetValue((int64_t)rnd_val, false);
-			io_values[wb->GetName()].emplace_back((int64_t)rnd_val);
+
+			const auto &io_val = in_values[wb->GetName()];
+			io_val->values.emplace_back((int64_t)rnd_val);
+			if (io_val->wb == nullptr) {
+				io_val->wb = wb;
+			}
 			system.Update();
 		}
 	};
@@ -1018,7 +1042,11 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 										wb->SetValue((int64_t)rnd_val, false);
 
-										io_values[wb->GetName()].emplace_back((int64_t)rnd_val);
+										const auto &io_val = in_values[wb->GetName()];
+										io_val->values.emplace_back((int64_t)rnd_val);
+										if (io_val->wb == nullptr) {
+											io_val->wb = wb;
+										}
 										break;
 									}
 									case Constraint::TYPE::NONE: break;
@@ -1029,7 +1057,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 						system.Update();
 						for (const auto &o : system.GetOutputWireBundles()) {
-							io_values[o->GetName()].emplace_back(o->Get2CValue());
+							out_values[o->GetName()].emplace_back(o->Get2CValue());
 						}
 
 						const size_t curr_toggles = system.GetNumToggles();
@@ -1080,6 +1108,12 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 					}
 					wire->SetValue(value, false);
 
+					const auto &io_val = in_values[wire->GetName()];
+					io_val->values.emplace_back((int64_t)value);
+					if (io_val->wire == nullptr) {
+						io_val->wire = wire;
+					}
+
 					// Print the wire name and value.
 					cout << key_name << ": " << value << '\n';
 				} else if (wb) {
@@ -1112,6 +1146,12 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 						const int64_t value = stol(value_string, 0, base);
 						wb->SetValue(value, false);
 
+						const auto &io_val = in_values[wb->GetName()];
+						io_val->values.emplace_back((int64_t)value);
+						if (io_val->wb == nullptr) {
+							io_val->wb = wb;
+						}
+
 						// Print the bundle name and value in hex and binary.
 						cout << wb->GetName() << ": "
 							 << wb->Get2CValue() << " "
@@ -1137,10 +1177,12 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		prev_toggles = curr_toggles;
 	}
 
+	// Output file that has the values given to the inputs,
+	// is produced on the outputs, and how many toggles each input caused.
 	auto outfile_name = config_file_name.substr(0, config_file_name.find_last_of("."));
 	auto outfile = ofstream(outfile_name + ".txt");
 	size_t i = 0;
-	for (const auto &[name, vals] : io_values) {
+	for (const auto &[name, bundle] : in_values) {
 		outfile << name << ' ' << system.GetWireBundle(name)->GetSize();
 
 		if (sigmas.size()) {
@@ -1149,7 +1191,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 			outfile << '\n';
 		}
 
-		for (const auto &val : vals) {
+		for (const auto &val : bundle->values) {
 			outfile << val << ',';
 		}
 		outfile << '\n';
@@ -1159,6 +1201,60 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		outfile << val << ',';
 	}
 	outfile.close();
+
+	// Write a stimulus file for the testbench.
+	size_t max_iterations = 0;
+	for (const auto &[name, bundle] : in_values) {
+		const auto &vals = bundle->values;
+		if (vals.size() > max_iterations) {
+			max_iterations = vals.size();
+		}
+	}
+
+	size_t found = config_file_name.find_last_of(".");
+	string stimfile_path = "";
+	if (found != string::npos) {
+		stimfile_path = config_file_name.substr(0, config_file_name.find_last_of("."));
+	}
+
+	auto stim_file = ofstream(stimfile_path + "/stim_file.txt");
+	for (size_t i = 0; i < max_iterations; ++i) {
+		for (const auto &[name, bundle] : in_values) {
+			const auto &vals = bundle->values;
+			if (i < vals.size()) {
+				const auto &val = vals[i];
+				for (int j = bundle->wb->GetSize() - 1; j >= 0; --j) {
+					stim_file << ((val >> j) & 1);
+				}
+				stim_file << ' ';
+			} else {
+				for (size_t j = 0; j < bundle->wb->GetSize(); ++j) {
+					stim_file << '0';
+				}
+				stim_file << ' ';
+			}
+		}
+		stim_file << '\n';
+	}
+	stim_file.close();
+}
+
+YAML::Node LoadConfigurationFile(const string &config_file_name) {
+	YAML::Node config;
+
+	try {
+		config = YAML::LoadFile(config_file_name.c_str());
+	} catch (YAML::BadFile e) {
+		cout << "[Error] Could not load file \"" <<
+			config_file_name.c_str() << "\": " << e.msg << '\n';
+		exit(1);
+	} catch (YAML::ParserException e) {
+		cout << "[Error] Could not parse file \"" <<
+			config_file_name.c_str() << "\": " << e.msg << '\n';
+		exit(1);
+	}
+
+	return config;
 }
 
 int main(int argc, char **argv) {
@@ -1166,28 +1262,31 @@ int main(int argc, char **argv) {
 	YAML::Node config;
 	System system;
 	string config_file_name;
-	string output_file_path;
-	
+	bool generate_vhdl = false;
+
+	auto error_usage = []() {
+		cout << "Usage: ./bitflipsim <configuration file>\n";
+		exit(0);
+	};
+
 	// Check if a configuration file was supplied.
 	if (argc == 2) {
 		config_file_name = string(argv[1]);
+	} else if (argc == 3) {
+		string cmdline_option(argv[1]);
 
-		try {
-			config = YAML::LoadFile(config_file_name.c_str());
-			output_file_path = config_file_name.substr(0, config_file_name.find_last_of(".")) + '/';
-		} catch (YAML::BadFile e) {
-			cout << "[Error] Could not load file \"" <<
-				config_file_name.c_str() << "\": " << e.msg << '\n';
-			exit(1);
-		} catch (YAML::ParserException e) {
-			cout << "[Error] Could not parse file \"" <<
-				config_file_name.c_str() << "\": " << e.msg << '\n';
-			exit(1);
+		if (cmdline_option.compare("--vhdl") == 0) {
+			config_file_name = string(argv[2]);
+			generate_vhdl = true;
+		} else {
+			error_usage();
 		}
 	} else {
-		cout << "Usage: ./bitflipsim <configuration file>\n";
-		exit(0);
+		error_usage();
 	}
+
+	config = LoadConfigurationFile(config_file_name);
+	string output_file_path = config_file_name.substr(0, config_file_name.find_last_of(".")) + '/';
 
 	if (!config.IsNull()) {
 		// First check for obvious errors.
@@ -1230,6 +1329,11 @@ int main(int argc, char **argv) {
 		system.FindLongestPathInSystem();
 		system.FindInitialState();
 
+		if (generate_vhdl) {
+			// Recursively create the folders of the path.
+			experimental::filesystem::create_directory(output_file_path);
+		}
+
 		cout << "Longest path in the system: " << system.GetLongestPath() << '\n';
 		cout << "Number of components: " << system.GetNumComponents() <<
 			"\nNumber of wires: " << system.GetNumWires() << '\n';
@@ -1252,7 +1356,7 @@ int main(int argc, char **argv) {
 		cout << "\nInputs:\n";
 		vector<wb_t> processed_wire_bundles;
 
-		for (const auto &iw : system.GetInputWires()) {
+		for (const auto &iw : system.GetAllInputWires()) {
 			const auto &wb = iw->GetWireBundle();
 			if (wb) {
 				if (find(processed_wire_bundles.begin(),
@@ -1296,18 +1400,20 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	size_t found = config_file_name.find_last_of("/\\");
-	string file_name = config_file_name.substr(found + 1);
-	string top_level_name;
-	found = file_name.find_last_of(".");
+	if (generate_vhdl) {
+		size_t found = config_file_name.find_last_of("/\\");
+		string file_name = config_file_name.substr(found + 1);
+		string top_level_name;
+		found = file_name.find_last_of(".");
 
-	if (found != string::npos) {
-		top_level_name = file_name.substr(0, found);
-	} else {
-		top_level_name = file_name;
+		if (found != string::npos) {
+			top_level_name = file_name.substr(0, found);
+		} else {
+			top_level_name = file_name;
+		}
+
+		system.GenerateVHDL("top_" + top_level_name, output_file_path);
 	}
-
-	system.GenerateVHDL("top_" + top_level_name, output_file_path);
 
 	return 0;
 }

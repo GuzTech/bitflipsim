@@ -19,6 +19,7 @@ public:
 	const wire_t GetWire(const string &wire_name) const;
 	const map<string, wire_t> &GetWires() const {return wires;}
 	const vector<wire_t> &GetInputWires() const {return input_wires;}
+	const vector<wire_t> &GetAllInputWires() const {return all_input_wires;}
 	const vector<wire_t> &GetOutputWires() const {return output_wires;}
 	const wb_t GetWireBundle(const string &bundle_name) const;
 	const map<string, wb_t> &GetWireBundles() const {return wire_bundles;}
@@ -34,7 +35,10 @@ private:
 	map<string, wire_t> wires;
 	map<string, wb_t> wire_bundles;
 
+	// Only wires that have been defined as input wires (not part of wire bundles).
 	vector<wire_t> input_wires;
+	// All input wires, including those of input wire bundles.
+	vector<wire_t> all_input_wires;
 	vector<wire_t> output_wires;
 
 	vector<wb_t> input_bundles;

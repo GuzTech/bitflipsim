@@ -1,5 +1,4 @@
 #include "main.h"
-#include <experimental/filesystem>
 
 void System::AddComponent(comp_t component) {
 	components.insert(pair<string, comp_t>(component->GetName(), component));
@@ -11,23 +10,6 @@ void System::AddComponent(comp_t component) {
 				 << "\" has one or more ports that are not connected.\n";
 		} else {
 			wires.insert(pair<string, wire_t>(w->GetName(), w));
-
-			if (w->IsInputWire()) {
-				// Add this wire to the list of input wires
-				// if we haven't done so already.
-				if (find(input_wires.begin(),
-						 input_wires.end(),
-						 w) == input_wires.end())
-				{
-					input_wires.emplace_back(w);
-				}
-			} else if (w->IsOutputWire()) {
-				// Since outputs can only be driven by one
-				// component only, we do not have to check if
-				// we already have this wire is the list of
-				// output wires.
-				output_wires.emplace_back(w);
-			}
 
 			const auto &wb = w->GetWireBundle();
 			if (wb) {
@@ -53,6 +35,40 @@ void System::AddComponent(comp_t component) {
 						output_bundles.emplace_back(wb);
 					}
 				}
+			} else {
+				if (w->IsInputWire()) {
+					// Add this wire to the list of input wires
+					// if we haven't done so already.
+					if (find(input_wires.begin(),
+							 input_wires.end(),
+							 w) == input_wires.end())
+					{
+						input_wires.emplace_back(w);
+					}
+				} else if (w->IsOutputWire()) {
+					// Since outputs can only be driven by one
+					// component only, we do not have to check if
+					// we already have this wire is the list of
+					// output wires.
+					output_wires.emplace_back(w);
+				}
+			}
+
+			if (w->IsInputWire()) {
+				// Add this wire to the list of input wires
+				// if we haven't done so already.
+				if (find(all_input_wires.begin(),
+						 all_input_wires.end(),
+						 w) == all_input_wires.end())
+				{
+					all_input_wires.emplace_back(w);
+				}
+			} else if (w->IsOutputWire()) {
+				// Since outputs can only be driven by one
+				// component only, we do not have to check if
+				// we already have this wire is the list of
+				// output wires.
+				output_wires.emplace_back(w);
 			}
 		}
 	}
@@ -60,7 +76,7 @@ void System::AddComponent(comp_t component) {
 
 void System::FindLongestPathInSystem() {
 	// Start with the global input wires.
-	vector<wire_t> wires_to_process(input_wires);
+	vector<wire_t> wires_to_process(all_input_wires);
 	vector<comp_t> components_to_process;
 
 	cout << "Finding longest path in the system.\n";
@@ -99,6 +115,8 @@ void System::FindLongestPathInSystem() {
 			}
 		}
 	} while (!components_to_process.empty());
+
+	assert(longest_path != 0);
 }
 
 // Finds the initial state which is the state of the system
@@ -177,23 +195,27 @@ const wb_t System::GetWireBundle(const string &bundle_name) const {
 }
 
 const void System::GenerateVHDL(const string &template_name, const string &path) const {
-	// Recursively create the folders of the path.
-	experimental::filesystem::create_directory(path);
-
-	// Create the top level file.
+	// Create the top level and testbench files.
 	string output;
 	TemplateDictionary toplevel("top");
+	TemplateDictionary tb("tb");
 	toplevel.SetValue("TOP_NAME", template_name);
+	tb.SetValue("TOP_NAME", template_name);
 
 	// Create the ports.
 	{
 		string ports;
+		string variables;
 
 		// Input wire bundles.
 		if (input_bundles.size() > 0) {
 			for (const auto &ib : input_bundles) {
-				ports += ib->GetName() + " : IN STD_LOGIC_VECTOR(" +
-					to_string(ib->GetSize() - 1) + " DOWNTO 0);\n\t";
+			    const auto &name = ib->GetName();
+			    const auto &size_str =
+			        "STD_LOGIC_VECTOR(" + to_string(ib->GetSize() - 1) + " DOWNTO 0);";
+
+				ports += name + " : IN " + size_str + "\n\t";
+				variables += "VARIABLE " + name + "_val : " + size_str + "\n\t\t";
 			}
 		}
 
@@ -249,12 +271,20 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 		ports = ports.substr(0, ports.find_last_of(";"));
 
 		toplevel.SetValue("PORTS", ports);
+		tb.SetValue("VARIABLES", variables);
 	}
 
 	// Signals and output signal assignments
 	{
 		string signals;
+		string input_assignments;
 		string output_assignments;
+
+		for (const auto &ib : input_bundles) {
+			signals += "SIGNAL int_" + ib->GetName() + " : STD_LOGIC_VECTOR(" +
+				to_string(ib->GetSize() - 1) + " DOWNTO 0);\n\t";
+			input_assignments += "int_" + ib->GetName() + " <= " + ib->GetName() + ";\n\t\t\t";
+		}
 
 		for (const auto &ob : output_bundles) {
 			signals += "SIGNAL int_" + ob->GetName() + " : STD_LOGIC_VECTOR(" +
@@ -267,8 +297,14 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 		found = output_assignments.find_last_of("\n");
 		output_assignments = output_assignments.substr(0, found);
 
+		if (found == string::npos) {
+			found = input_assignments.find_last_of("\n");
+			input_assignments = input_assignments.substr(0, found);
+		}
+
 		toplevel.SetValue("SIGNALS", signals);
-		toplevel.SetValue("OUTPUT_ASSIGNMENTS", output_assignments);
+		tb.SetValue("SIGNALS", signals);
+		toplevel.SetValue("REG_ASSIGNMENTS", input_assignments + output_assignments);
 	}
 
 	// Assignments
@@ -278,13 +314,51 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 
 	// Instances
 	{
-		string instances;
+	    // Top-level
+		string instances_top_level;
 
 		for (const auto &comp : components) {
-			instances += comp.second->GenerateVHDLInstance() + '\n';
+			instances_top_level += comp.second->GenerateVHDLInstance() + '\n';
 		}
 
-		toplevel.SetValue("INSTANCES", instances);
+		toplevel.SetValue("INSTANCES", instances_top_level);
+
+        // Testbench
+        string instances_tb = "\tDUT : ENTITY work." + template_name;
+        instances_tb += "\n\tPORT MAP (";
+        instances_tb += "\n\t\ti_clk => i_clk,";
+        instances_tb += "\n\t\ti_rst => i_rst,";
+
+        for (const auto &ib : input_bundles) {
+            const auto &name = ib->GetName();
+            instances_tb += "\n\t\t" + name + " => int_" + name + ',';
+        }
+
+        for (const auto &ob : output_bundles) {
+            const auto &name = ob->GetName();
+            instances_tb += "\n\t\t" + name + " => int_" + name + ',';
+        }
+
+        instances_tb = instances_tb.substr(0, instances_tb.find_last_of(","));
+
+        instances_tb += "\n\t);";
+		tb.SetValue("INSTANCES", instances_tb);
+	}
+
+	// Testbench assignments.
+	{
+	    string read_stimuli;
+	    string assign_stimuli;
+
+	    for (const auto &ib : input_bundles) {
+	        const auto &name = ib->GetName();
+
+            read_stimuli += "READ(rdline, " + name + "_val);\n\t\t\t";
+            assign_stimuli += "int_" + name + " <= " + name + "_val;\n\t\t\t";
+        }
+
+        tb.SetValue("READ_STIMULI", read_stimuli);
+        tb.SetValue("ASSIGN_STIMULI", assign_stimuli);
 	}
 
 	ExpandTemplate("src/templates/VHDL/top_level.tpl", DO_NOT_STRIP, &toplevel, &output);
@@ -295,4 +369,10 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 	for (const auto &comp : components) {
 		comp.second->GenerateVHDLEntity(path);
 	}
+
+    output.clear();
+	ExpandTemplate("src/templates/VHDL/top_level_tb.tpl", DO_NOT_STRIP, &tb, &output);
+	outfile = ofstream(path + "/top_tb.vhd");
+	outfile << output;
+	outfile.close();
 }

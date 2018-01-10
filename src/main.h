@@ -9,6 +9,7 @@
 #include <map>
 #include <climits>
 #include <fstream>
+#include <bitset>
 #include <ctemplate/template.h>
 
 using namespace std;
