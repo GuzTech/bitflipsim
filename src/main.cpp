@@ -1179,8 +1179,10 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 	auto outfile_name = config_file_name.substr(0, config_file_name.find_last_of("."));
 	auto outfile = ofstream(outfile_name + ".txt");
 	size_t i = 0;
+
+	// Write all input values.
 	for (const auto &[name, bundle] : in_values) {
-		outfile << name << ' ' << system.GetWireBundle(name)->GetSize();
+		outfile << name << ' ' << bundle->wb->GetSize();
 
 		if (sigmas.size()) {
 			outfile << ' ' << sigmas[i++] << '\n';
@@ -1193,6 +1195,17 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		}
 		outfile << '\n';
 	}
+
+	// Write all output values.
+	for (const auto &[name, ob] : out_values) {
+		outfile << name << ' ' << system.GetWireBundle(name)->GetSize() << '\n';
+
+		for (const auto &val : ob) {
+			outfile << val << ',';
+		}
+		outfile << '\n';
+	}
+
 	outfile << "toggles\n";
 	for (const auto &val : toggles) {
 		outfile << val << ',';
