@@ -516,7 +516,7 @@ void Multiplier_Smag::GenerateVHDLEntity(const string &path) const {
 	if (!entityGenerated) {
 		string output;
 		TemplateDictionary entity("Multiplier_Smag");
-		ExpandTemplate("src/templates/VHDL/Multiplier_Smag_entity.tpl", DO_NOT_STRIP, &output);
+		ExpandTemplate("src/templates/VHDL/Multiplier_Smag_entity.tpl", DO_NOT_STRIP, &entity, &output);
 
 		auto outfile = ofstream(path + "/Multiplier_Smag.vhd");
 		outfile << output;
