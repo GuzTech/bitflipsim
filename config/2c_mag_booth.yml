@@ -7,42 +7,19 @@ components:
     layout: booth radix-4,
     type: none
   }
-  Multiplier: {
-    name: Smag,
-    A width: 8,
-    B width: 8,
-    number format: SMAG,
-    layout: carry save,
-    type: none
-  }
 wires:
-  A_2C 8 2C:
+  A 8:
     - from: input
     - to: Booth
       port: A 0 7
-  B_2C 8 2C:
+  B 8:
     - from: input
     - to: Booth
       port: B 0 7
-  O_2C 16 2C:
+  O 16:
     - from: Booth
       port: O 0 15
     - to: output
-
-  A_smag 8 smag:
-    - from: input
-    - to: Smag
-      port: A 0 7
-  B_smag 8 smag:
-    - from: input
-    - to: Smag
-      port: B 0 7
-  O_smag 15 smag:
-    - from: Smag
-      port: O 0 14
-    - to: output
 stimuli:
-  - A_2C: 0d-61
-    B_2C: 0d40
-    A_smag: 0d-61
-    B_smag: 0d40
+  - A: 0d-61
+    B: 0d40
