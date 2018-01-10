@@ -194,7 +194,7 @@ BEGIN
 		csas: IF (i > 0 AND i < (NUM_PPT_ADDERS - 1)) GENERATE
 			-- Assign '0' to all unused bits
             cs_A(i)(cs_A(i)'HIGH DOWNTO ADD_SIZE_LVL_0 + i)     <= (others => '0');
-            cs_B(i)(cs_B(i)'HIGH DOWNTO ADD_SIZE_LVL_0 + 1 - 1) <= (others => '0');
+            cs_B(i)(cs_B(i)'HIGH DOWNTO ADD_SIZE_LVL_0 + i - 1) <= (others => '0');
             cs_Cin(i)(cs_Cin(i)'HIGH DOWNTO ADD_SIZE_LVL_0 + i) <= (others => '0');
             cs_Cin(i)(i + 1 DOWNTO 0)                           <= (others => '0');
 
