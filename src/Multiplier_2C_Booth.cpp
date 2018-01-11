@@ -505,14 +505,13 @@ const string Multiplier_2C_Booth::GenerateVHDLInstance() const {
 
 	// A
 	{
-		//const auto &wire = encoders.front()->GetWire(PORTS::Y_LSB);
 		const auto &wire = GetWire(PORTS::A);
 		if (wire) {
 			const auto &wb = wire->GetWireBundle();
 			if (wb) {
-				inst.SetValue("A_WIRE", wb->GetName());
+				inst.SetValue("A_WIRE", "int_" + wb->GetName());
 			} else {
-				inst.SetValue("A_WIRE", wire->GetName());
+				inst.SetValue("A_WIRE", "int_" + wire->GetName());
 			}
 		} else {
 			// No wire, so assign a '0';
@@ -522,14 +521,13 @@ const string Multiplier_2C_Booth::GenerateVHDLInstance() const {
 
 	// B
 	{
-		//const auto &wire = encoders.front()->GetWire(PORTS::NEG);
 		const auto &wire = GetWire(PORTS::B);
 		if (wire) {
 			const auto &wb = wire->GetWireBundle();
 			if (wb) {
-				inst.SetValue("B_WIRE", wb->GetName());
+				inst.SetValue("B_WIRE", "int_" + wb->GetName());
 			} else {
-				inst.SetValue("B_WIRE", wire->GetName());
+				inst.SetValue("B_WIRE", "int_" + wire->GetName());
 			}
 		} else {
 			// No wire, so assign a '0';
@@ -539,7 +537,6 @@ const string Multiplier_2C_Booth::GenerateVHDLInstance() const {
 
 	// O
 	{
-		//const auto &wire = encoders.front()->GetWire(PORTS::ROW_LSB);
 		const auto &wire = GetWire(PORTS::O);
 		if (wire) {
 			const auto &wb = wire->GetWireBundle();
