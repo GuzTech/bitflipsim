@@ -68,19 +68,7 @@ void Multiplier_Smag::Update(bool propagating) {
 }
 
 void Multiplier_Smag::Connect(PORTS port, const wire_t &wire, size_t index) {
-	if (port == PORTS::A && index > num_bits_A) {
-		cout << "[Error] Index " << index << " of port A is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
-		exit(1);
-	} else if (port == PORTS::B && index > num_bits_B) {
-		cout << "[Error] Index " << index << " of port B is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
-		exit(1);
-	} else if (port == PORTS::O && index >= num_bits_O) {
-		cout << "[Error] Index " << index << " of port O is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
-		exit(1);
-	}
+	CheckIfIndexIsInRange(port, index);
 
 	auto error_undefined_port = [&](const auto &wire) {
 		cout << "[Error] Trying to connect wire \"" << wire->GetName()
@@ -156,6 +144,43 @@ void Multiplier_Smag::Connect(PORTS port, const wb_t &wires, size_t port_idx, si
 }
 
 const wire_t Multiplier_Smag::GetWire(PORTS port, size_t index) const {
+	CheckIfIndexIsInRange(port, index);
+
+	switch (port) {
+		/* Inputs */
+	case PORTS::A:
+		if (index == num_adders_per_level) {
+			return sign->GetWire(PORTS::A);
+		} else {
+			return ands[0][index]->GetWire(PORTS::A);
+		}
+		break;
+	case PORTS::B:
+		if (index == num_adders_per_level) {
+			return sign->GetWire(PORTS::B);
+		} else {
+			return ands[index][0]->GetWire(PORTS::B);
+		}
+		break;
+	case PORTS::O:
+		if (index == (num_bits_O - 1)) {
+			return sign->GetWire(PORTS::O);
+		} else if (index == (num_bits_O - 2)) {
+			return adders.back().back()->GetWire(PORTS::Cout);
+		} else if (index > (num_bits_O - num_adders_per_level - 2)) {
+			return adders.back()[index - num_adders_per_level + 1]->GetWire(PORTS::O);
+		} else if (index == 0) {
+			return ands[0][0]->GetWire(PORTS::O);
+		} else {
+			return adders[index - 1][0]->GetWire(PORTS::O);
+		}
+		break;
+	default:
+		cout << "[Error] Trying to get wire of undefined port of Multiplier_Smag "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+
 	return nullptr;
 }
 
@@ -511,6 +536,22 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 	}
 }
 
+void Multiplier_Smag::CheckIfIndexIsInRange(PORTS port, size_t index) const {
+	if (port == PORTS::A && index > num_bits_A) {
+		cout << "[Error] Index " << index << " of port A is out of "
+			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
+		exit(1);
+	} else if (port == PORTS::B && index > num_bits_B) {
+		cout << "[Error] Index " << index << " of port B is out of "
+			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
+		exit(1);
+	} else if (port == PORTS::O && index >= num_bits_O) {
+		cout << "[Error] Index " << index << " of port O is out of "
+			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void Multiplier_Smag::GenerateVHDLEntity(const string &path) const {
 	// We only need to generate it once, since all instances of Multiplier_Smag are identical.
 	if (!entityGenerated) {
@@ -529,5 +570,74 @@ void Multiplier_Smag::GenerateVHDLEntity(const string &path) const {
 }
 
 const string Multiplier_Smag::GenerateVHDLInstance() const {
-	return string("");
+	string output;
+	TemplateDictionary inst("Multiplier_Smag");
+
+	// Set up the I/O wires.
+	inst.SetValue("NAME", name);
+	inst.SetValue("NUM_BITS_A", to_string(num_bits_A));
+	inst.SetValue("NUM_BITS_B", to_string(num_bits_B));
+	string arch_str;
+	switch (type) {
+	case MUL_TYPE::CARRY_PROPAGATE:
+		arch_str = "carry_propagate";
+		break;
+	case MUL_TYPE::CARRY_SAVE:
+		arch_str = "carry_save";
+		break;
+	}
+
+	inst.SetValue("ARCH", arch_str);
+
+	// A
+	{
+		const auto &wire = GetWire(PORTS::A);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				inst.SetValue("A_WIRE", "int_" + wb->GetName());
+			} else {
+				inst.SetValue("A_WIRE", "int_" + wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("A_WIRE", "(OTHERS => '0')");
+		}
+	}
+
+	// B
+	{
+		const auto &wire = GetWire(PORTS::B);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				inst.SetValue("B_WIRE", "int_" + wb->GetName());
+			} else {
+				inst.SetValue("B_WIRE", "int_" + wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("B_WIRE", "(OTHERS => '0')");
+		}
+	}
+
+	// O
+	{
+		const auto &wire = GetWire(PORTS::O);
+		if (wire) {
+			const auto &wb = wire->GetWireBundle();
+			if (wb) {
+				inst.SetValue("O_WIRE", "int_" + wb->GetName());
+			} else {
+				inst.SetValue("O_WIRE", "int_" + wire->GetName());
+			}
+		} else {
+			// No wire, so assign a '0';
+			inst.SetValue("O_WIRE", "(OTHERS => '0')");
+		}
+	}
+
+	ExpandTemplate("src/templates/VHDL/Multiplier_Smag_inst.tpl", DO_NOT_STRIP, &inst, &output);
+
+	return output;
 }

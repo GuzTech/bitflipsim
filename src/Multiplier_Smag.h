@@ -17,12 +17,13 @@ public:
 	void Connect(PORTS port, const wire_t &wire, size_t index) override;
 	void Connect(PORTS port, const wb_t &wires, size_t port_idx = 0, size_t wire_idx = 0) override;
 
-	const wire_t GetWire(PORTS port, size_t index) const override;
+	const wire_t GetWire(PORTS port, size_t index = 0) const override;
 
 	void GenerateVHDLEntity(const string &path) const override;
 	const string GenerateVHDLInstance() const override;
 
 private:
+	void CheckIfIndexIsInRange(PORTS port, size_t index) const override;
 	void GenerateCarryPropagateArrayHardware();
 	void GenerateCarrySaveArrayHardware();
 
