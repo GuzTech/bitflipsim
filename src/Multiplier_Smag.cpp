@@ -34,6 +34,7 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 	switch (type) {
 	case MUL_TYPE::CARRY_PROPAGATE: GenerateCarryPropagateArrayHardware(); break;
 	case MUL_TYPE::CARRY_SAVE: 		GenerateCarrySaveArrayHardware(); break;
+		//case MUL_TYPE::CARRY_SAVE: 		gen2(); break;
 	default:
 		cout << "[Error] Unknown type supplied for generating Multiplier_Smag \""
 			 << name << "\".\n";
@@ -114,12 +115,15 @@ void Multiplier_Smag::Connect(PORTS port, const wire_t &wire, size_t index) {
 				if (index == (num_bits_O - 2)) {
 					// One bit less than the sign bit is the carry out of the last full adder.
 					adders.back().back()->Connect(PORTS::Cout, wire);
+					//cs_adders.back()->Connect(PORTS::Cout, wire, 0);
 				} else if (index > (num_bits_O - num_adders_per_level - 2)) {
 					adders.back()[index - num_adders_per_level + 1]->Connect(PORTS::O, wire);
+					//cs_adders.back()->Connect(PORTS::O, wire, index - num_adders_per_level + 1);
 				} else if (index == 0) {
 					ands[0][0]->Connect(PORTS::O, wire);
 				} else {
 					adders[index - 1][0]->Connect(PORTS::O, wire);
+					//cs_adders[index - 1]->Connect(PORTS::O, wire, 0);
 				}
 			}
 			output_wires.emplace_back(wire);
@@ -166,13 +170,16 @@ const wire_t Multiplier_Smag::GetWire(PORTS port, size_t index) const {
 		if (index == (num_bits_O - 1)) {
 			return sign->GetWire(PORTS::O);
 		} else if (index == (num_bits_O - 2)) {
-			return adders.back().back()->GetWire(PORTS::Cout);
+			//return adders.back().back()->GetWire(PORTS::Cout);
+			return cs_adders.back()->GetWire(PORTS::Cout, 0);
 		} else if (index > (num_bits_O - num_adders_per_level - 2)) {
-			return adders.back()[index - num_adders_per_level + 1]->GetWire(PORTS::O);
+			//return adders.back()[index - num_adders_per_level + 1]->GetWire(PORTS::O);
+			return cs_adders.back()->GetWire(PORTS::O, index - num_adders_per_level + 1);
 		} else if (index == 0) {
 			return ands[0][0]->GetWire(PORTS::O);
 		} else {
-			return adders[index - 1][0]->GetWire(PORTS::O);
+			//return adders[index - 1][0]->GetWire(PORTS::O);
+			return cs_adders[index - 1]->GetWire(PORTS::O, 0);
 		}
 		break;
 	default:
@@ -350,6 +357,161 @@ void Multiplier_Smag::GenerateCarryPropagateArrayHardware() {
 				}
 			}
 		}
+	}
+}
+
+void Multiplier_Smag::gen2() {
+	sign = make_shared<Xor>(name + "_sign");
+
+	string name_prefix = name + "_csa_";
+
+	for (size_t i = 0; i < num_adder_levels; ++i) {
+		cs_adders.emplace_back(
+			make_shared<CarrySaveAdder>(
+				name_prefix + to_string(i), num_adders_per_level));
+	}
+
+	// Connect the O outputs of the full adders.
+	for (size_t y = 0; y < (num_adder_levels - 1); ++y) {
+		name_prefix = name + "_S_" + to_string(y);
+
+		for (size_t x = 1; x < num_adders_per_level; ++x) {
+			const string row_name = name_prefix + '_' + to_string(x) + "_O";
+
+			const auto wire = make_shared<Wire>(row_name);
+			cs_adders[y]->Connect(PORTS::O, wire, x);
+			cs_adders[y + 1]->Connect(PORTS::A, wire, x - 1);
+			internal_wires.emplace_back(wire);
+		}
+	}
+
+	// Create the AND gates that connect to the inputs of the adders.
+	vector<and_t> ands_row;
+
+	// First three levels of AND gates are slightly different, so handle
+	// it separately. The first AND gate is directly connected to bit 0
+	// of the result.
+	name_prefix = name + "_AND_0_";
+	ands_row.emplace_back(make_shared<And>(name_prefix + '0'));
+
+	// Level 0
+	for (size_t a = 1; a < num_ands_per_level; ++a) {
+		const string row_name = name_prefix + to_string(a);
+
+		const auto and_gate = make_shared<And>(row_name);
+		const auto and_wire = make_shared<Wire>(row_name + "_O");
+		and_gate->Connect(PORTS::O, and_wire);
+		cs_adders[0]->Connect(PORTS::A, and_wire, a - 1);
+		ands_row.emplace_back(and_gate);
+
+		internal_wires.emplace_back(and_wire);
+	}
+	ands.emplace_back(ands_row);
+	ands_row.clear();
+
+	// Level 1
+	name_prefix = name + "_AND_1_";
+	for (size_t a = 0; a < num_ands_per_level; ++a) {
+		const string row_name = name_prefix + to_string(a);
+
+		const auto and_gate = make_shared<And>(row_name);
+		const auto and_wire = make_shared<Wire>(row_name + "_O");
+		and_gate->Connect(PORTS::O, and_wire);
+		cs_adders[0]->Connect(PORTS::B, and_wire, a);
+		ands_row.emplace_back(and_gate);
+
+		internal_wires.emplace_back(and_wire);
+	}
+	ands.emplace_back(ands_row);
+	ands_row.clear();
+
+	// Level 2
+	name_prefix = name + "_AND_2_";
+	{
+		size_t x = 1;
+		size_t y = 0;
+
+		for (size_t a = 0; a < num_ands_per_level; ++a) {
+			const string row_name = name_prefix + to_string(a);
+
+			const auto and_gate = make_shared<And>(row_name);
+			const auto and_wire = make_shared<Wire>(row_name + "_O");
+			and_gate->Connect(PORTS::O, and_wire);
+
+			if (x == num_adders_per_level) {
+				x = (num_adders_per_level - 1);
+				y++;
+			}
+
+			if (x == (num_adders_per_level - 1)) {
+				cs_adders[y]->Connect(PORTS::A, and_wire, x++);
+			} else {
+				cs_adders[y]->Connect(PORTS::Cin, and_wire, x++);
+			}
+			ands_row.emplace_back(and_gate);
+
+			internal_wires.emplace_back(and_wire);
+		}
+	}
+	ands.emplace_back(ands_row);
+	ands_row.clear();
+
+	// Now handle the rest of the AND gate levels.
+	for (size_t b = 3; b < num_and_levels; ++b) {
+		name_prefix = name + "_AND_" + to_string(b) + '_';
+
+		size_t x = 1;		// Starting x position in the row.
+		size_t y = b - 2;	// Starting y position is level - 2.
+
+		for (size_t a = 0; a < num_ands_per_level; ++a) {
+			const string row_name = name_prefix + to_string(a);
+
+			const auto and_gate = make_shared<And>(row_name);
+			const auto and_wire = make_shared<Wire>(row_name + "_O");
+			and_gate->Connect(PORTS::O, and_wire);
+
+			if (x == num_adders_per_level) {
+				x = (num_adders_per_level - 1);
+				y++;
+			}
+
+			if (a >= (num_adders_per_level - 1)) {
+				cs_adders[y]->Connect(PORTS::A, and_wire, x++);
+			} else {
+				cs_adders[y]->Connect(PORTS::Cin, and_wire, x++);
+			}
+			ands_row.emplace_back(and_gate);
+
+			internal_wires.emplace_back(and_wire);
+		}
+
+		ands.emplace_back(ands_row);
+		ands_row.clear();
+	}
+
+	// Create the Cout connections for each adder level except the last.
+	for (size_t b = 0; b < (num_adder_levels - 1); ++b) {
+		name_prefix = name + "_Cout_" + to_string(b) + '_';
+
+		for (size_t a = 0; a < num_adders_per_level; ++a) {
+			const string row_name = name_prefix + to_string(a);
+			const auto wire = make_shared<Wire>(row_name);
+			cs_adders[b]->Connect(PORTS::Cout, wire, a);
+			cs_adders[b + 1]->Connect(PORTS::B, wire, a);
+
+			internal_wires.emplace_back(wire);
+		}
+	}
+
+	// Create the Cout connections for the last level.
+	name_prefix = name + "_Cout_" + to_string(num_adders_per_level - 1) + '_';
+	for (size_t a = 0; a < (num_adders_per_level - 1); ++a) {
+		const string row_name = name_prefix + to_string(a);
+		const auto wire = make_shared<Wire>(row_name);
+		cs_adders.back()->Connect(PORTS::Cout, wire, a);
+		cs_adders.back()->Connect(PORTS::Cin, wire, a + 1);
+
+		internal_wires.emplace_back(wire);
 	}
 }
 
