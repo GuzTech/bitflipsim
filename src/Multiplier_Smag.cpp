@@ -33,8 +33,8 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 	// Generate the requested hardware.
 	switch (type) {
 	case MUL_TYPE::CARRY_PROPAGATE: GenerateCarryPropagateArrayHardware(); break;
-	case MUL_TYPE::CARRY_SAVE: 		GenerateCarrySaveArrayHardware(); break;
-		//case MUL_TYPE::CARRY_SAVE: 		gen2(); break;
+		//case MUL_TYPE::CARRY_SAVE: 		GenerateCarrySaveArrayHardware(); break;
+	case MUL_TYPE::CARRY_SAVE: 		gen2(); break;
 	default:
 		cout << "[Error] Unknown type supplied for generating Multiplier_Smag \""
 			 << name << "\".\n";
@@ -57,6 +57,9 @@ void Multiplier_Smag::Update(bool propagating) {
 					for (const auto &a : adder_row) {
 						a->Update(propagating);
 					}
+				}
+				for (const auto &adder_row : cs_adders) {
+					adder_row->Update(propagating);
 				}
 			}
 
@@ -114,16 +117,16 @@ void Multiplier_Smag::Connect(PORTS port, const wire_t &wire, size_t index) {
 			} else {
 				if (index == (num_bits_O - 2)) {
 					// One bit less than the sign bit is the carry out of the last full adder.
-					adders.back().back()->Connect(PORTS::Cout, wire);
-					//cs_adders.back()->Connect(PORTS::Cout, wire, 0);
+					//adders.back().back()->Connect(PORTS::Cout, wire);
+					cs_adders.back()->Connect(PORTS::Cout, wire, 0);
 				} else if (index > (num_bits_O - num_adders_per_level - 2)) {
-					adders.back()[index - num_adders_per_level + 1]->Connect(PORTS::O, wire);
-					//cs_adders.back()->Connect(PORTS::O, wire, index - num_adders_per_level + 1);
+					//adders.back()[index - num_adders_per_level + 1]->Connect(PORTS::O, wire);
+					cs_adders.back()->Connect(PORTS::O, wire, index - num_adders_per_level + 1);
 				} else if (index == 0) {
 					ands[0][0]->Connect(PORTS::O, wire);
 				} else {
-					adders[index - 1][0]->Connect(PORTS::O, wire);
-					//cs_adders[index - 1]->Connect(PORTS::O, wire, 0);
+					//adders[index - 1][0]->Connect(PORTS::O, wire);
+					cs_adders[index - 1]->Connect(PORTS::O, wire, 0);
 				}
 			}
 			output_wires.emplace_back(wire);
