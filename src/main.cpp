@@ -777,7 +777,7 @@ const string ValueToHexString(int64_t value) {
 }
 
 struct Constraint {
-	enum class TYPE {NONE, RNG};
+	enum class TYPE {NONE, RNG, UNIFORM};
 
 	Constraint(const string _wire_name,
 			   const size_t _begin_index,
@@ -785,6 +785,8 @@ struct Constraint {
 			   const TYPE _type,
 			   const size_t _seed,
 			   const float _sigma,
+			   const int32_t _ub,
+			   const int32_t _lb,
 			   const size_t _times)
 		: wire_name(_wire_name)
 		, begin_index(_begin_index)
@@ -792,16 +794,27 @@ struct Constraint {
 		, type(_type)
 		, seed(_seed)
 		, sigma(_sigma)
+		, ub(_ub)
+		, lb(_lb)
 		, times(_times)
 	{
 		generator = default_random_engine(seed);
 		norm_distr = normal_distribution<float>(0.0f, sigma);
-		uniform_int_distr = uniform_int_distribution<int32_t>(0, 1);
+		int_gen = uniform_int_distribution<int32_t>(lb, ub);
+		bit_gen = uniform_int_distribution<uint8_t>(0, 1);
+	}
+
+	float GenerateRandomNorm() {
+		return norm_distr(generator);
+	}
+
+	int32_t GenerateUniformInteger() {
+		return int_gen(generator);
 	}
 
 	bool GenerateRandomBit() {
-		const auto rnd_val = uniform_int_distr(generator);
-		return (rnd_val < 0.0f);
+		const auto rnd_val = bit_gen(generator);
+		return (rnd_val < 0.5f);
 	}
 
 	string wire_name;
@@ -810,9 +823,12 @@ struct Constraint {
 	TYPE type;
 	size_t seed;
 	float  sigma;
+	int32_t ub;
+	int32_t lb;
 	default_random_engine generator;
 	normal_distribution<float> norm_distr;
-	uniform_int_distribution<int32_t> uniform_int_distr;
+	uniform_int_distribution<int32_t> int_gen;
+	uniform_int_distribution<uint8_t> bit_gen;
 	size_t times;
 };
 
@@ -826,6 +842,8 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 	size_t seed = 0;
 	float sigma = 1.0f;
 	size_t times = 1;
+	int32_t ub = 1;
+	int32_t lb = -1;
 
 	if (node["wire"]) {
 		wire_name = node["wire"].as<string>();
@@ -857,6 +875,8 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 
 		if (type_string.compare("rng") == 0) {
 			type = Constraint::TYPE::RNG;
+		} else if (type_string.compare("uniform") == 0) {
+			type = Constraint::TYPE::UNIFORM;
 		} else {
 			type = Constraint::TYPE::NONE;
 		}
@@ -866,8 +886,8 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 	}
 
 	if (node["seed"]) {
-		if (type != Constraint::TYPE::RNG) {
-			cout << "[Warning] Constraint type is not \"rng\", so \"seed\" is ignored.\n";
+		if ((type != Constraint::TYPE::RNG) && (type != Constraint::TYPE::UNIFORM)) {
+			cout << "[Warning] Constraint type is not \"rng\" or \"uniform\", so \"seed\" is ignored.\n";
 		} else {
 			try {
 				seed = node["seed"].as<size_t>();
@@ -895,6 +915,36 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 		}
 	}
 
+	if (node["ub"]) {
+		if (type != Constraint::TYPE::UNIFORM) {
+			cout << "[Warning] Constraint type is not \"uniform\", so \"ub\" is ignored.\n";
+		} else {
+			try {
+				ub = node["ub"].as<int32_t>();
+			} catch (YAML::TypedBadConversion<size_t> e) {
+				cout << "[Error] \"ub\" is not a number: " << e.msg << '\n';
+				exit(1);
+			}
+		}
+	}
+
+	if (node["lb"]) {
+		if (type != Constraint::TYPE::UNIFORM) {
+			cout << "[Warning] Constraint type is not \"uniform\", so \"lb\" is ignored.\n";
+		} else {
+			try {
+				lb = node["lb"].as<int32_t>();
+				if (lb > ub) {
+					cout << "[Error] \"lb\" is larger than \"ub\".\n";
+					exit(1);
+				}
+			} catch (YAML::TypedBadConversion<size_t> e) {
+				cout << "[Error] \"lb\" is not a number: " << e.msg << '\n';
+				exit(1);
+			}
+		}
+	}
+
 	if (node["times"]) {
 		try {
 			times = node["times"].as<size_t>();
@@ -904,7 +954,7 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 		}
 	}
 
-	return make_shared<Constraint>(wire_name, beg_idx, end_idx, type, seed, sigma, times);
+	return make_shared<Constraint>(wire_name, beg_idx, end_idx, type, seed, sigma, ub, lb, times);
 }
 
 void ParseStimuli(System &system, YAML::Node config, const string &config_file_name) {
@@ -979,10 +1029,19 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 	auto process_wire_bundle_rng = [&](const auto &wb, const auto &constraint, auto &system, const size_t num_times) {
 		const float scale_factor = (float)((1l << wb->GetSize()) - 1);
 		for (size_t i = 0; i < num_times; ++i) {
-			auto rnd_val = constraint->norm_distr(constraint->generator) * scale_factor;
+			auto rnd_val = constraint->GenerateRandomNorm() * scale_factor;
 			if (rnd_val > scale_factor) {
 				rnd_val = scale_factor;
 			}
+
+			wb->SetValue((int64_t)rnd_val, false);
+			in_values[wb->GetName()]->values.emplace_back((int64_t)rnd_val);
+		}
+	};
+
+	auto process_wire_bundle_uniform = [&](const auto &wb, const auto &constraint, auto &system, const size_t num_times) {
+		for (size_t i = 0; i < num_times; ++i) {
+			auto rnd_val = constraint->GenerateUniformInteger();
 
 			wb->SetValue((int64_t)rnd_val, false);
 			in_values[wb->GetName()]->values.emplace_back((int64_t)rnd_val);
@@ -1026,7 +1085,8 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 								if (w) {
 									switch (c->type) {
-									case Constraint::TYPE::RNG: {
+									case Constraint::TYPE::RNG:
+									case Constraint::TYPE::UNIFORM: {
 										process_wire_rng(w, c, system, 1);
 										break;
 									}
@@ -1036,6 +1096,10 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 									switch (c->type) {
 									case Constraint::TYPE::RNG: {
 										process_wire_bundle_rng(wb, c, system, 1);
+										break;
+									}
+									case Constraint::TYPE::UNIFORM: {
+										process_wire_bundle_uniform(wb, c, system, 1);
 										break;
 									}
 									case Constraint::TYPE::NONE: break;
@@ -1061,7 +1125,8 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 					if (w) {
 						switch (c->type) {
-						case Constraint::TYPE::RNG: {
+						case Constraint::TYPE::RNG:
+						case Constraint::TYPE::UNIFORM: {
 							process_wire_rng(w, c, system, c->times);
 							system.Update();
 							break;
@@ -1073,6 +1138,10 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 						case Constraint::TYPE::RNG: {
 							process_wire_bundle_rng(wb, c, system, c->times);
 							system.Update();
+							break;
+						}
+						case Constraint::TYPE::UNIFORM: {
+							process_wire_bundle_uniform(wb, c, system, c->times);
 							break;
 						}
 						case Constraint::TYPE::NONE: break;
