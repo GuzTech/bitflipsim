@@ -393,8 +393,8 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 		break;
 	case NUMFMT::SIGNED_MAGNITUDE:
 		switch (layout) {
-		case LAYOUT::CARRY_PROPAGATE: comps[name] = make_shared<Multiplier_Smag>(name, num_bits_A, num_bits_B, Multiplier_Smag::MUL_TYPE::CARRY_PROPAGATE);
-		case LAYOUT::CARRY_SAVE:      comps[name] = make_shared<Multiplier_Smag>(name, num_bits_A, num_bits_B, Multiplier_Smag::MUL_TYPE::CARRY_SAVE);
+		case LAYOUT::CARRY_PROPAGATE: comps[name] = make_shared<Multiplier_Smag>(name, num_bits_A, num_bits_B, Multiplier_Smag::MUL_TYPE::CARRY_PROPAGATE); break;
+		case LAYOUT::CARRY_SAVE:      comps[name] = make_shared<Multiplier_Smag>(name, num_bits_A, num_bits_B, Multiplier_Smag::MUL_TYPE::CARRY_SAVE); break;
 			break;
 		default:
 			error_unsupported_configuration();
