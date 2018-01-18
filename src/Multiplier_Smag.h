@@ -26,7 +26,6 @@ private:
 	void CheckIfIndexIsInRange(PORTS port, size_t index) const override;
 	void GenerateCarryPropagateArrayHardware();
 	void GenerateCarrySaveArrayHardware();
-	void gen2();
 
 	size_t num_bits_A = 0;
 	size_t num_bits_B = 0;
@@ -39,7 +38,6 @@ private:
 	vector<csa_t> cs_adders;
 	vector<rca_t> rc_adders;
 
-	vector<vector<comp_t>> adders;
 	vector<vector<and_t>> ands;
 	xor_t sign = nullptr;
 
