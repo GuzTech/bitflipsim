@@ -1,5 +1,44 @@
 #include "main.h"
 
+/*
+  Carry-save adder implementation.
+  Instantiates num_bits amount of Full-adders.
+
+  Schematic:
+
+  Cin0 --------
+              |
+          ---------
+          |  Cin  |
+  A0 -----|A     S|----- S0
+          |   FA  |
+  B0 -----|B  Cout|----- Cout0
+          |       |
+          ---------
+
+  Cin1 --------
+              |
+          ---------
+          |  Cin  |
+  A1 -----|A     S|----- S1
+          |   FA  |
+  B1 -----|B  Cout|----- Cout1
+          |       |
+          ---------
+
+		     ...
+
+  Cinn --------
+              |
+          ---------
+          |  Cin  |
+  An -----|A     S|----- Sn
+          |   FA  |
+  Bn -----|B  Cout|----- Coutn
+          |       |
+          ---------
+*/
+
 bool CarrySaveAdder::entityGenerated = false;
 
 CarrySaveAdder::CarrySaveAdder(string _name,
@@ -14,7 +53,12 @@ CarrySaveAdder::CarrySaveAdder(string _name,
 	}
 
 	for (size_t i = 0; i < num_bits; ++i) {
-		full_adders.emplace_back(make_shared<FullAdder>(name + "_fa_" + to_string(i)));
+		const auto fa = make_shared<FullAdder>(name + "_fa_" + to_string(i));
+		full_adders.emplace_back(fa);
+
+		for (const auto &w : fa->GetInternalWires()) {
+			internal_wires.emplace_back(w);
+		}
 	}
 }
 
@@ -131,17 +175,17 @@ void CarrySaveAdder::PrintDebug() const {
 	cout << name << ':';
 
 	for (const auto &fa : full_adders) {
-		const auto &A = fa->GetWire(PORTS::A);
-		const auto &B = fa->GetWire(PORTS::B);
-		const auto &Cin = fa->GetWire(PORTS::Cin);
+		const auto &A    = fa->GetWire(PORTS::A);
+		const auto &B    = fa->GetWire(PORTS::B);
+		const auto &Cin  = fa->GetWire(PORTS::Cin);
 		const auto &Cout = fa->GetWire(PORTS::Cout);
-		const auto &O = fa->GetWire(PORTS::O);
+		const auto &O    = fa->GetWire(PORTS::O);
 
 		cout << '\n' << fa->GetName() << '\n';
-		if (A) cout << "A (" << A->GetName() << "): " << (*A)() << '\n';
-		if (B) cout << "B (" << B->GetName() << "): " << (*B)() << '\n';
-		if (Cin) cout << "Cin (" << Cin->GetName() << "): " << (*Cin)() << '\n';
-		if (O) cout << "O (" << O->GetName() << "): " << (*O)() << '\n';
+		if (A)    cout << "A ("    << A->GetName()    << "): " << (*A)()    << '\n';
+		if (B)    cout << "B ("    << B->GetName()    << "): " << (*B)()    << '\n';
+		if (Cin)  cout << "Cin ("  << Cin->GetName()  << "): " << (*Cin)()  << '\n';
+		if (O)    cout << "O ("    << O->GetName()    << "): " << (*O)()    << '\n';
 		if (Cout) cout << "Cout (" << Cout->GetName() << "): " << (*Cout)() << '\n';
 	}
 

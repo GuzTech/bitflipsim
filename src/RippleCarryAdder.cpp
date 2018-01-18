@@ -12,21 +12,21 @@
           |  Cin  |
   A0 -----|A     S|----- S0
           |   FA  |
-  B0 -----|B     C|---
-          |  Cout |  |
-          ---------  |
-                     |
-              --------
+  B0 -----|B      |
+          |  Cout |
+          ---------
+              |
+              |
               |
           ---------
           |  Cin  |
   A1 -----|A     S|----- S1
           |   FA  |
-  B1 -----|B     C|---
-          |  Cout |  |
-          ---------  |
-                     |
-              --------
+  B1 -----|B      |
+          |  Cout |
+          ---------
+              |
+             ...
               |
           ---------
           |  Cin  |
@@ -51,14 +51,19 @@ RippleCarryAdder::RippleCarryAdder(string _name, size_t _num_bits)
 		string fa_name(_name);
 		fa_name += "_fa_";
 		fa_name += to_string(i);
-		
-		full_adders.push_back(make_shared<FullAdder>(fa_name));
+
+		const auto fa = make_shared<FullAdder>(fa_name);
+		full_adders.emplace_back(fa);
+
+		for (const auto &w : fa->GetInternalWires()) {
+			internal_wires.emplace_back(w);
+		}
 	}
 
 	// Create the wires between the carry ports of the full-adders.
 	for (size_t i = 1; i < num_bits; ++i) {
 		string wire_name(_name);
-		wire_name += "_fa_wire_";
+		wire_name += "_fa_cout_";
 		wire_name += to_string(i - 1);
 		wire_name += "_to_";
 		wire_name += to_string(i);
@@ -69,6 +74,8 @@ RippleCarryAdder::RippleCarryAdder(string _name, size_t _num_bits)
 
 		fa_prev->Connect(PORTS::Cout, wire);
 		fa_curr->Connect(PORTS::Cin, wire);
+
+		internal_wires.emplace_back(wire);
 	}
 }
 
@@ -146,9 +153,11 @@ const wire_t RippleCarryAdder::GetWire(PORTS port, size_t index) const {
 	case PORTS::A:
 	case PORTS::B:
 	case PORTS::O:
-	case PORTS::Cin:
-	case PORTS::Cout:
 		return full_adders[index]->GetWire(port);
+	case PORTS::Cin:
+		return full_adders.front()->GetWire(port);
+	case PORTS::Cout:
+		return full_adders.back()->GetWire(port);
 	default:
 		cout << "[Error] Trying to retrieve undefined port of RippleCarryAdder "
 			 << "\"" << name << "\".\n";
