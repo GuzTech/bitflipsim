@@ -178,6 +178,33 @@ const wire_t Multiplier_2C_Booth::GetWire(PORTS port, size_t index) const {
 }
 
 void Multiplier_2C_Booth::Generate2CBoothHardware() {
+	const auto create_enc = [&](const auto &name) {
+		const auto enc = make_shared<BoothEncoderRadix4>(name);
+		encoders.emplace_back(enc);
+
+		for (const auto &w : enc->GetInternalWires()) {
+			internal_wires.emplace_back(w);
+		}
+	};
+
+	const auto create_dec = [&](const auto &name, const size_t size) {
+		const auto dec = make_shared<Radix4BoothDecoder>(name, size);
+		decoders.emplace_back(dec);
+
+		for (const auto &w : dec->GetInternalWires()) {
+			internal_wires.emplace_back(w);
+		}
+	};
+
+	const auto create_csa = [&](const auto &name, const size_t size) {
+		const auto csa = make_shared<CarrySaveAdder>(name, size);
+		cs_adders.emplace_back(csa);
+
+		for (const auto &w : csa->GetInternalWires()) {
+			internal_wires.emplace_back(w);
+		}
+	};
+
 	// Generate the inverted sign-extension hardware.
 	se_not = make_shared<Not>(name + "_dec_0_se_n");
 	se_not_o = make_shared<Wire>(name + "_dec_0_se_n_O");
@@ -190,19 +217,20 @@ void Multiplier_2C_Booth::Generate2CBoothHardware() {
 
 	// Generate the final ripple carry adder.
 	final_adder = make_shared<RippleCarryAdder>(name + "_final_adder", final_adder_size);
+	for (const auto &w : final_adder->GetInternalWires()) {
+		internal_wires.emplace_back(w);
+	}
 
 	// Generate the encoders.
 	string name_prefix = name + "_enc_";
 	for (size_t i = 0; i < num_encoders; ++i) {
-		encoders.emplace_back(make_shared<BoothEncoderRadix4>(name_prefix + to_string(i)));
+		create_enc(name_prefix + to_string(i));
 	}
 
 	// Generate the decoders.
 	name_prefix = name + "_dec_";
 	for (size_t i = 0; i < num_encoders; ++i) {
-		decoders.emplace_back(
-			make_shared<Radix4BoothDecoder>(
-				name_prefix + to_string(i), num_decoders_per_row));
+		create_dec(name_prefix + to_string(i), num_decoders_per_row);
 	}
 
 	// Connect the encoders to the decoders.
@@ -233,9 +261,7 @@ void Multiplier_2C_Booth::Generate2CBoothHardware() {
 	name_prefix = name + "_csa_";
 
 	for (size_t i = 0; i < num_ppt_adders; ++i) {
-		cs_adders.emplace_back(
-			make_shared<CarrySaveAdder>(
-				name_prefix + to_string(i), adder_size_level_0 + i));
+		create_csa(name_prefix + to_string(i), adder_size_level_0 + i);
 	}
 
 	assert(encoders.size() == decoders.size());
