@@ -172,7 +172,7 @@ void ParseWireAndSize(string wire_string, string &wire_name, size_t &size, WireB
 						} else {
 							cout << "[Error] Unrecognized number representation for wire bundle \""
 								 << wire_name << "\".\nOnly \"2c\"/\"2C\" (default), \"1c\"/\"1C\""
-								 << ", and \"s_mag\" are supported.\n";
+								 << ", and \"smag\" are supported.\n";
 							exit(1);
 						}
 					} else {
@@ -1035,7 +1035,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 			}
 
 			wb->SetValue((int64_t)rnd_val, false);
-			in_values[wb->GetName()]->values.emplace_back((int64_t)rnd_val);
+			in_values[wb->GetName()]->values.emplace_back(wb->GetValue());
 		}
 	};
 
@@ -1044,7 +1044,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 			auto rnd_val = constraint->GenerateUniformInteger();
 
 			wb->SetValue((int64_t)rnd_val, false);
-			in_values[wb->GetName()]->values.emplace_back((int64_t)rnd_val);
+			in_values[wb->GetName()]->values.emplace_back(wb->GetValue());
 		}
 	};
 
