@@ -22,6 +22,7 @@ public:
 	const size_t GetLongestPath() const {return longest_path;}
 	const virtual vector<wire_t> GetWires() const;
 	const virtual vector<wire_t> GetInputWires() const {return input_wires;}
+	const vector<wire_t> &GetInternalWires() const {return internal_wires;}
 	const vector<wire_t> &GetOutputWires() const {return output_wires;}
 	const virtual wire_t GetWire(PORTS port, size_t index = 0) const =0;
 
