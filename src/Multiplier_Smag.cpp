@@ -302,7 +302,7 @@ void Multiplier_Smag::GenerateCarryPropagateArrayHardware() {
 		ands_row.clear();
 	}
 
-	// Create the connections between Cout and Cin of the adders.
+	// Create the Cout connections.
 	for (size_t b = 0; b < num_adder_levels; ++b) {
 		name_prefix = name + "_Cout_" + to_string(b) + "_";
 		const bool last_b = b == (num_adder_levels - 1);
@@ -552,8 +552,8 @@ const string Multiplier_Smag::GenerateVHDLInstance() const {
 
 	// Set up the I/O wires.
 	inst.SetValue("NAME", name);
-	inst.SetValue("NUM_BITS_A", to_string(num_bits_A));
-	inst.SetValue("NUM_BITS_B", to_string(num_bits_B));
+	inst.SetValue("NUM_BITS_A", to_string(num_bits_A + 1));
+	inst.SetValue("NUM_BITS_B", to_string(num_bits_B + 1));
 	string arch_str;
 	switch (type) {
 	case MUL_TYPE::CARRY_PROPAGATE:
