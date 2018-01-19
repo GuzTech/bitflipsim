@@ -529,6 +529,8 @@ const string Multiplier_2C_Booth::GenerateVHDLInstance() const {
 	inst.SetValue("NUM_BITS_A", to_string(num_bits_A));
 	inst.SetValue("NUM_BITS_B", to_string(num_bits_B));
 
+	inst.SetValue("ARCH", "arch");
+
 	// A
 	{
 		const auto &wire = GetWire(PORTS::A);
