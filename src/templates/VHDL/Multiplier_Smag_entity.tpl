@@ -89,9 +89,17 @@ ARCHITECTURE carry_save OF Multiplier_Smag IS
 
 	TYPE array_and IS ARRAY (0 TO NUM_AND_LVLS - 1) OF STD_LOGIC_VECTOR(NUM_ANDS_PER_LVL - 1 DOWNTO 0);
 	SIGNAL and_o : array_and;
+
+	TYPE array_cs IS ARRAY (0 TO NUM_ADD_LVLS - 1) OF STD_LOGIC_VECTOR(NUM_ADDS_PER_LVL - 1 DOWNTO 0);
+	SIGNAL cs_A    : array_cs;
+	SIGNAL cs_B    : array_cs;
+	SIGNAL cs_O    : array_cs;
+	SIGNAL cs_Cin  : array_cs;
+	SIGNAL cs_Cout : array_cs;
 BEGIN
 	O(0) <= and_o(0)(0);
 	O(O'HIGH) <= A(A'HIGH) XOR B(B'HIGH);
+--	O(O'HIGH - 1) <= rc_Cout(rc_Cout'HIGH);
 
 	gen_ands_i: FOR i IN 0 TO NUM_AND_LVLS - 1 GENERATE
 		gen_ands_j: FOR j IN 0 TO NUM_ANDS_PER_LVL - 1 GENERATE
@@ -99,17 +107,38 @@ BEGIN
 		END GENERATE gen_ands_j;
 	END GENERATE gen_ands_i;
 
---	gen_adders: FOR i IN 0 TO (NUM_ADD_LVLS - 1) GENERATE
---		csai : ENTITY work.CarrySaveAdder(arch)
---		GENERIC MAP (
---			NUM_BITS => NUM_ADDS_PER_LVL
---		)
---		PORT MAP (
---			A    =>
---			B    =>
---			Cin  =>
---			O    =>
---			Cout =>
---		);
---	END GENERATE gen_adders;
+	gen_adders: FOR i IN 0 TO (NUM_ADD_LVLS - 1) GENERATE
+		csa0: IF (i = 0) GENERATE
+			cs_A(i) <= '0' & and_o(0)(and_o(0)'HIGH DOWNTO 1);
+			cs_B(i) <= and_o(1);
+			O(i)    <= and_o(0)(0);
+		END GENERATE csa0;
+
+		csan: IF (i > 0) GENERATE
+			cs_A(i) <= cs_Cout(i - 1) & cs_O(i - 1)(cs_O(i - 1)'HIGH DOWNTO 1);
+			cs_B(i) <= and_o(i + 1);
+		END GENERATE csan;
+
+		csa : ENTITY work.CarrySaveAdder(arch)
+        GENERIC MAP (
+            NUM_BITS => NUM_ADDS_PER_LVL
+        )
+        PORT MAP (
+            A    => cs_A(i),
+            B    => cs_B(i),
+            Cin  => (OTHERS => '0'),
+            O    => cs_O(i),
+            Cout => cs_Cout(i)
+        );
+	END GENERATE gen_adders;
+
+	gen_outs: FOR i IN 1 TO (NUM_BITS_O - 1) GENERATE
+		out_low: IF (i > 0 AND i < (NUM_BITS_O - NUM_ADDS_PER_LVL - 1)) GENERATE
+			O(i) <= cs_O(i - 1)(0);
+		END GENERATE out_low;
+
+		out_high: IF (i > (NUM_BITS_O - NUM_ADDS_PER_LVL - 2) AND i < (NUM_BITS_O - 2)) GENERATE
+--			O(i) <= cs_O(rc_O'HIGH)(i - NUM_ADDS_PER_LVL + 1);
+		END GENERATE out_high;
+	END GENERATE gen_outs;
 END carry_save;
