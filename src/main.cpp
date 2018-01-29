@@ -980,37 +980,43 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		exit(1);
 	};
 
-	// Helper struct used for storing input stimuli.
-	struct in_bundle {
-		in_bundle(const wire_t &_wire)
+	// Helper struct used for storing input and output stimuli.
+	struct io_bundle {
+		io_bundle(const wire_t &_wire)
 			: wire(_wire),
 			  wb(nullptr)
 			{};
-		in_bundle(const wb_t &_wb)
+		io_bundle(const wb_t &_wb)
 			: wire(nullptr),
 			  wb(_wb)
 			{};
 
 	    vector<int64_t> values;
+		vector<int64_t> values_2C;
 	    wire_t wire;
 	    wb_t wb;
 	};
 
-	map<string, shared_ptr<in_bundle>> in_values;
-	map<string, vector<int64_t>> out_values;
+	map<string, shared_ptr<io_bundle>> in_values;
+	map<string, shared_ptr<io_bundle>> out_values;
 
 	// Create enough space for wire bundles.
 	for (const auto &[name, bundle] : system.GetWireBundles()) {
 	    if (bundle->IsInputBundle()) {
-			in_values[name] = make_shared<in_bundle>(bundle);
+			in_values[name] = make_shared<io_bundle>(bundle);
 		} else if (bundle->IsOutputBundle()) {
-			out_values[name] = vector<int64_t>();
+			out_values[name] = make_shared<io_bundle>(bundle);
 		}
 	}
 
 	// Do the same for input wires.
 	for (const auto &iw : system.GetInputWires()) {
-		in_values[iw->GetName()] = make_shared<in_bundle>(iw);
+		in_values[iw->GetName()] = make_shared<io_bundle>(iw);
+	}
+
+	// Do the same for output wires.
+	for (const auto &ow : system.GetOutputWires()) {
+		out_values[ow->GetName()] = make_shared<io_bundle>(ow);
 	}
 
 	vector<size_t> toggles = {};
@@ -1110,7 +1116,8 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 						system.Update();
 						for (const auto &o : system.GetOutputWireBundles()) {
-							out_values[o->GetName()].emplace_back(o->Get2CValue());
+							out_values[o->GetName()]->values.emplace_back(o->GetValue());
+							out_values[o->GetName()]->values_2C.emplace_back(o->Get2CValue());
 						}
 
 						const size_t curr_toggles = system.GetNumToggles();
@@ -1266,10 +1273,10 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 	}
 
 	// Write all output values.
-	for (const auto &[name, ob] : out_values) {
-		outfile << name << ' ' << system.GetWireBundle(name)->GetSize() << '\n';
+	for (const auto &[name, bundle] : out_values) {
+		outfile << name << ' ' << bundle->wb->GetSize() << '\n';
 
-		for (const auto &val : ob) {
+		for (const auto &val : bundle->values_2C) {
 			outfile << val << ',';
 		}
 		outfile << '\n';
@@ -1316,6 +1323,27 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		stim_file << '\n';
 	}
 	stim_file.close();
+
+	auto expected_output = ofstream(stimfile_path + "/expected_output.txt");
+	for (size_t i = 0; i < max_iterations; ++i) {
+		for (const auto &[name, ob] : out_values) {
+			const auto &vals = ob->values;
+			if (i < vals.size()) {
+				const auto &val = vals[i];
+				for (int j = ob->wb->GetSize() - 1; j >= 0; --j) {
+					expected_output << ((val >> j) & 1);
+				}
+				expected_output << ' ';
+			} else {
+				for (size_t j = 0; j < ob->wb->GetSize(); ++j) {
+					expected_output << '0';
+				}
+				stim_file << ' ';
+			}
+		}
+		expected_output << '\n';
+	}
+	expected_output.close();
 }
 
 YAML::Node LoadConfigurationFile(const string &config_file_name) {
@@ -1458,7 +1486,7 @@ int main(int argc, char **argv) {
 		cout << "\nOutputs:\n";
 		processed_wire_bundles.clear();
 
-		for (const auto &ow : system.GetOutputWires()) {
+		for (const auto &ow : system.GetAllOutputWires()) {
 			const auto &wb = ow->GetWireBundle();
 			if (wb) {
 				if (find(processed_wire_bundles.begin(),
