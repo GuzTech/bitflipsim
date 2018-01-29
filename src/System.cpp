@@ -223,8 +223,13 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 		// Output wire bundles.
 		if (output_bundles.size() > 0) {
 			for (const auto &ob : output_bundles) {
-				ports += ob->GetName() + " : OUT STD_LOGIC_VECTOR(" +
-					to_string(ob->GetSize() - 1) + " DOWNTO 0);\n\t";
+				const auto &name = ob->GetName();
+				const auto &size_str =
+					"STD_LOGIC_VECTOR(" + to_string(ob->GetSize() - 1) + " DOWNTO 0)";
+
+				ports += name + " : OUT " + size_str + ";\n\t";
+				variables += "VARIABLE " + name + "_val : " + size_str + ";\n\t\t";
+				variables += "VARIABLE " + name + "_val_prev : " + size_str + " := (OTHERS => 'U');\n\t\t";
 			}
 		}
 
@@ -360,6 +365,26 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 
         tb.SetValue("READ_STIMULI", read_stimuli);
         tb.SetValue("ASSIGN_STIMULI", assign_stimuli);
+	}
+
+	// Expected output
+	{
+		string exp_stimuli;
+		string assert_stimuli;
+		string update_prev_stimuli;
+
+		for (const auto &ob : output_bundles) {
+			const auto &name = ob->GetName();
+
+			exp_stimuli += "READ(exline, " + name + "_val);\n\t\t\t";
+			assert_stimuli += "ASSERT (int_" + name + " = " + name + "_val_prev) REPORT \"" +
+				"Output not as expected\" SEVERITY FAILURE;\n\t\t\t";
+			update_prev_stimuli += name + "_val_prev := " + name + "_val;\n\t\t\t";
+		}
+
+		tb.SetValue("EXP_STIMULI", exp_stimuli);
+		tb.SetValue("ASSERT_STIMULI", assert_stimuli);
+		tb.SetValue("UPDATE_PREV_STIMULI", update_prev_stimuli);
 	}
 
 	ExpandTemplate("src/templates/VHDL/top_level.tpl", DO_NOT_STRIP, &toplevel, &output);
