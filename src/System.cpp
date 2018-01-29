@@ -64,11 +64,12 @@ void System::AddComponent(comp_t component) {
 					all_input_wires.emplace_back(w);
 				}
 			} else if (w->IsOutputWire()) {
-				// Since outputs can only be driven by one
-				// component only, we do not have to check if
-				// we already have this wire is the list of
-				// output wires.
-				output_wires.emplace_back(w);
+				if (find(all_output_wires.begin(),
+						 all_output_wires.end(),
+						 w) == all_output_wires.end())
+				{
+					all_output_wires.emplace_back(w);
+				}
 			}
 		}
 	}
