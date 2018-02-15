@@ -33,11 +33,11 @@ ARCHITECTURE carry_propagate OF Multiplier_Smag IS
 	SIGNAL rc_Cout : STD_LOGIC_VECTOR(0 TO NUM_ADD_LVLS - 1);
 BEGIN
 	O(0) <= and_o(0)(0);
-	O(O'HIGH) <= A(A'HIGH) XOR B(B'HIGH);
+	O(O'HIGH)     <= A(A'HIGH) XOR B(B'HIGH);
 	O(O'HIGH - 1) <= rc_Cout(rc_Cout'HIGH);
 
-	gen_ands_i: FOR i IN 0 TO NUM_AND_LVLS - 1 GENERATE
-		gen_ands_j: FOR j IN 0 TO NUM_ANDS_PER_LVL - 1 GENERATE
+	gen_ands_i: FOR i IN 0 TO (NUM_AND_LVLS - 1) GENERATE
+		gen_ands_j: FOR j IN 0 TO (NUM_ANDS_PER_LVL - 1) GENERATE
 			and_o(i)(j) <= A(j) AND B(i);
 		END GENERATE gen_ands_j;
 	END GENERATE gen_ands_i;
@@ -46,7 +46,6 @@ BEGIN
 		rca0: IF (i = 0) GENERATE
 			rc_A(i) <= '0' & and_o(0)(and_o(0)'HIGH DOWNTO 1);
 			rc_B(i) <= and_o(1);
-			O(i)    <= and_o(0)(0);
 		END GENERATE rca0;
 
 		rcan: IF (i > 0) GENERATE
@@ -97,39 +96,65 @@ ARCHITECTURE carry_save OF Multiplier_Smag IS
 	SIGNAL cs_Cin  : array_cs;
 	SIGNAL cs_Cout : array_cs;
 BEGIN
-	O(0) <= and_o(0)(0);
+	O(0)      <= and_o(0)(0);
 	O(O'HIGH) <= A(A'HIGH) XOR B(B'HIGH);
---	O(O'HIGH - 1) <= rc_Cout(rc_Cout'HIGH);
 
-	gen_ands_i: FOR i IN 0 TO NUM_AND_LVLS - 1 GENERATE
-		gen_ands_j: FOR j IN 0 TO NUM_ANDS_PER_LVL - 1 GENERATE
+	gen_ands_i: FOR i IN 0 TO (NUM_AND_LVLS - 1) GENERATE
+		gen_ands_j: FOR j IN 0 TO (NUM_ANDS_PER_LVL - 1) GENERATE
 			and_o(i)(j) <= A(j) AND B(i);
 		END GENERATE gen_ands_j;
 	END GENERATE gen_ands_i;
 
 	gen_adders: FOR i IN 0 TO (NUM_ADD_LVLS - 1) GENERATE
 		csa0: IF (i = 0) GENERATE
-			cs_A(i) <= '0' & and_o(0)(and_o(0)'HIGH DOWNTO 1);
-			cs_B(i) <= and_o(1);
-			O(i)    <= and_o(0)(0);
+			cs_A(i)   <= '0' & and_o(0)(and_o(0)'HIGH DOWNTO 1);
+			cs_B(i)   <= and_o(1);
+			cs_Cin(i) <= and_o(2)(and_o(2)'HIGH - 1 DOWNTO 0) & '0';
+
+			csa : ENTITY work.CarrySaveAdder(arch)
+            GENERIC MAP (
+                NUM_BITS => NUM_ADDS_PER_LVL
+            )
+            PORT MAP (
+                A    => cs_A(i),
+                B    => cs_B(i),
+                Cin  => (OTHERS => '0'),
+                O    => cs_O(i),
+                Cout => cs_Cout(i)
+            );
 		END GENERATE csa0;
 
-		csan: IF (i > 0) GENERATE
-			cs_A(i) <= cs_Cout(i - 1) & cs_O(i - 1)(cs_O(i - 1)'HIGH DOWNTO 1);
-			cs_B(i) <= and_o(i + 1);
-		END GENERATE csan;
+    	csan: IF (i > 0 AND i < (NUM_ADD_LVLS - 1)) GENERATE
+			cs_A(i)   <= cs_Cout(i - 1) & cs_O(i - 1)(cs_O(i - 1)'HIGH DOWNTO 1);
+			cs_B(i)   <= cs_Cout(i - 1);
+			cs_Cin(i) <= cs_Cout(i - 1)(cs_Cout(i - 1)'HIGH - 1 DOWNTO 0) & '0';
 
-		csa : ENTITY work.CarrySaveAdder(arch)
-        GENERIC MAP (
-            NUM_BITS => NUM_ADDS_PER_LVL
-        )
-        PORT MAP (
-            A    => cs_A(i),
-            B    => cs_B(i),
-            Cin  => (OTHERS => '0'),
-            O    => cs_O(i),
-            Cout => cs_Cout(i)
-        );
+			csa : ENTITY work.CarrySaveAdder(arch)
+            GENERIC MAP (
+                NUM_BITS => NUM_ADDS_PER_LVL
+            )
+            PORT MAP (
+                A    => cs_A(i),
+                B    => cs_B(i),
+                Cin  => (OTHERS => '0'),
+                O    => cs_O(i),
+                Cout => cs_Cout(i)
+            );
+		END GENERATE csan;
+		
+		csal: IF (i = (NUM_ADD_LVLS - 1)) GENERATE
+		    rca : ENTITY work.RippleCarryAdder(arch)
+		    GENERIC MAP (
+		        NUM_BITS => NUM_ADDS_PER_LVL
+		    )
+		    PORT MAP (
+		        A    => (OTHERS => '0'),
+		        B    => (OTHERS => '0'),
+		        Cin  => (OTHERS => '0'),
+		        O    => (OTHERS => '0'),
+		        Cout => (OTHERS => '0')
+		    );
+		END GENERATE csal;		
 	END GENERATE gen_adders;
 
 	gen_outs: FOR i IN 1 TO (NUM_BITS_O - 1) GENERATE
@@ -138,7 +163,7 @@ BEGIN
 		END GENERATE out_low;
 
 		out_high: IF (i > (NUM_BITS_O - NUM_ADDS_PER_LVL - 2) AND i < (NUM_BITS_O - 2)) GENERATE
---			O(i) <= cs_O(rc_O'HIGH)(i - NUM_ADDS_PER_LVL + 1);
+			O(i) <= cs_O(cs_O'HIGH)(i - NUM_ADDS_PER_LVL + 1);
 		END GENERATE out_high;
 	END GENERATE gen_outs;
 END carry_save;
