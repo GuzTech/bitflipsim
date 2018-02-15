@@ -24,5 +24,11 @@ stimuli:
   - constraint:
 #    - {wire: A, type: rng, sigma: 0.00000001, seed: 3, times: 10000}
 #    - {wire: B, type: rng, sigma: 0.00000001, seed: 5, times: 10000}
-    - {wire: A, type: uniform, ub: 536870911, lb: -536870912, seed: 3, times: 10000}
-    - {wire: B, type: uniform, ub: 536870911, lb: -536870912, seed: 5, times: 10000}
+#    - {wire: A, type: uniform, ub: 127, lb: -128, seed: 3, times: 10000}
+#    - {wire: B, type: uniform, ub: 127, lb: -128, seed: 5, times: 10000}
+#    - {wire: A, type: uniform, ub: 32767, lb: -32768, seed: 3, times: 10000}
+#    - {wire: B, type: uniform, ub: 32767, lb: -32768, seed: 5, times: 10000}
+    - {wire: A, type: uniform, ub: 8355839, lb: -8355840, seed: 3, times: 10000}
+    - {wire: B, type: uniform, ub: 8355839, lb: -8355840, seed: 5, times: 10000}
+#    - {wire: A, type: uniform, ub: 536870911, lb: -536870912, seed: 3, times: 10000}
+#    - {wire: B, type: uniform, ub: 536870911, lb: -536870912, seed: 5, times: 10000}
