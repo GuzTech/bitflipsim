@@ -118,16 +118,16 @@ BEGIN
             PORT MAP (
                 A    => cs_A(i),
                 B    => cs_B(i),
-                Cin  => (OTHERS => '0'),
+                Cin  => cs_Cin(i),
                 O    => cs_O(i),
                 Cout => cs_Cout(i)
             );
 		END GENERATE csa0;
 
     	csan: IF (i > 0 AND i < (NUM_ADD_LVLS - 1)) GENERATE
-			cs_A(i)   <= cs_Cout(i - 1) & cs_O(i - 1)(cs_O(i - 1)'HIGH DOWNTO 1);
+			cs_A(i)   <= and_o(i + 1)(and_o(i + 1)'HIGH) & cs_O(i - 1)(cs_O(i - 1)'HIGH DOWNTO 1);
 			cs_B(i)   <= cs_Cout(i - 1);
-			cs_Cin(i) <= cs_Cout(i - 1)(cs_Cout(i - 1)'HIGH - 1 DOWNTO 0) & '0';
+			cs_Cin(i) <= and_o(i + 2)(and_o(i + 2)'HIGH - 1 DOWNTO 0) & '0';
 
 			csa : ENTITY work.CarrySaveAdder(arch)
             GENERIC MAP (
@@ -136,21 +136,24 @@ BEGIN
             PORT MAP (
                 A    => cs_A(i),
                 B    => cs_B(i),
-                Cin  => (OTHERS => '0'),
+                Cin  => cs_Cin(i),
                 O    => cs_O(i),
                 Cout => cs_Cout(i)
             );
 		END GENERATE csan;
 		
 		csal: IF (i = (NUM_ADD_LVLS - 1)) GENERATE
+		    cs_A(i) <= and_o(i + 1)(and_o(i + 1)'HIGH) & cs_O(i - 1)(cs_O(i - 1)'HIGH DOWNTO 1);
+            cs_B(i) <= cs_Cout(i - 1);
+
 		    rca : ENTITY work.RippleCarryAdder(arch)
 		    GENERIC MAP (
 		        NUM_BITS => NUM_ADDS_PER_LVL
 		    )
 		    PORT MAP (
-		        A    => (OTHERS => '0'),
-		        B    => (OTHERS => '0'),
-		        Cin  => (OTHERS => '0'),
+		        A    => cs_A(i),
+		        B    => cs_B(i),
+		        Cin  => '0',
 		        O    => (OTHERS => '0'),
 		        Cout => (OTHERS => '0')
 		    );
