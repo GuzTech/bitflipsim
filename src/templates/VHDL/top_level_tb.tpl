@@ -36,6 +36,7 @@ BEGIN
 	stim_process: PROCESS
 		VARIABLE rdline : LINE;
 		VARIABLE exline : LINE;
+		VARIABLE first : STD_LOGIC := '1';
 		{{VARIABLES}}
 	BEGIN
 		-- Hold reset for 2 clock cycles.
@@ -52,14 +53,20 @@ BEGIN
 			WAIT FOR clk_period;
 
 			IF (NOT ENDFILE(exp_file)) THEN
-			    READLINE(exp_file, exline);
-			    {{EXP_STIMULI}}
-			    {{ASSERT_STIMULI}}
-			    {{UPDATE_PREV_STIMULI}}
+				READLINE(exp_file, exline);
+				{{EXP_STIMULI}}
+
+				IF (first = '1') THEN
+					first := '0';
+				ELSE
+					{{ASSERT_STIMULI}}
+				END IF;
+
+				{{UPDATE_PREV_STIMULI}}
 			END IF;
 		END LOOP;
 
-        WAIT FOR clk_period;
+		WAIT FOR clk_period;
 		ASSERT FALSE REPORT "Simulation ended" SEVERITY FAILURE;
 	END PROCESS;
 END tvc;
