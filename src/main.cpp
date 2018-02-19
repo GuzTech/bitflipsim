@@ -1129,6 +1129,8 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 						const size_t curr_toggles = system.GetNumToggles();
 						toggles.emplace_back(curr_toggles - prev);
 						prev = curr_toggles;
+
+						continue;
 					}
 				} else if (value_node.IsMap()) {
 					// The constraint applies to one wire or wire bundle.
@@ -1254,6 +1256,10 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		}
 
 		system.Update();
+		for (const auto &o : system.GetOutputWireBundles()) {
+			out_values[o->GetName()]->values.emplace_back(o->GetValue());
+			out_values[o->GetName()]->values_2C.emplace_back(o->Get2CValue());
+		}
 
 		const size_t curr_toggles = system.GetNumToggles();
 		if (print_debug) {
