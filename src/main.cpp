@@ -1041,7 +1041,9 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 			}
 
 			wb->SetValue((int64_t)rnd_val, false);
-			in_values[wb->GetName()]->values.emplace_back(wb->GetValue());
+			const auto &map_val = in_values[wb->GetName()];
+			map_val->values.emplace_back(wb->GetValue());
+			map_val->values_2C.emplace_back(wb->Get2CValue());
 		}
 	};
 
@@ -1050,7 +1052,9 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 			auto rnd_val = constraint->GenerateUniformInteger();
 
 			wb->SetValue((int64_t)rnd_val, false);
-			in_values[wb->GetName()]->values.emplace_back(wb->GetValue());
+			const auto &map_val = in_values[wb->GetName()];
+			map_val->values.emplace_back(wb->GetValue());
+			map_val->values_2C.emplace_back(wb->Get2CValue());
 		}
 	};
 
@@ -1274,7 +1278,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 			outfile << '\n';
 		}
 
-		for (const auto &val : bundle->values) {
+		for (const auto &val : bundle->values_2C) {
 			outfile << val << ',';
 		}
 		outfile << '\n';
