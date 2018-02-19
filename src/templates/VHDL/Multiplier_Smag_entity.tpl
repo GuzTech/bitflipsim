@@ -96,8 +96,9 @@ ARCHITECTURE carry_save OF Multiplier_Smag IS
 	SIGNAL cs_Cin  : array_cs;
 	SIGNAL cs_Cout : array_cs;
 BEGIN
-	O(0)      <= and_o(0)(0);
-	O(O'HIGH) <= A(A'HIGH) XOR B(B'HIGH);
+	O(0)          <= and_o(0)(0);
+	O(O'HIGH)     <= A(A'HIGH) XOR B(B'HIGH);
+	O(O'HIGH - 1) <= cs_Cout(cs_Cout'HIGH)(cs_Cout(cs_Cout'HIGH)'HIGH);
 
 	gen_ands_i: FOR i IN 0 TO (NUM_AND_LVLS - 1) GENERATE
 		gen_ands_j: FOR j IN 0 TO (NUM_ANDS_PER_LVL - 1) GENERATE
@@ -154,8 +155,8 @@ BEGIN
 		        A    => cs_A(i),
 		        B    => cs_B(i),
 		        Cin  => '0',
-		        O    => (OTHERS => '0'),
-		        Cout => (OTHERS => '0')
+		        O    => cs_O(i),
+		        Cout => cs_Cout(i)(cs_Cout(i)'HIGH)
 		    );
 		END GENERATE csal;		
 	END GENERATE gen_adders;
