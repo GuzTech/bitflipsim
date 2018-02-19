@@ -538,9 +538,9 @@ void Multiplier_Smag::GenerateVHDLEntity(const string &path) const {
 		if (cs_adders.size() > 0) {
 			cs_adders.back()->GenerateVHDLEntity(path);
 		}
-		//if (rc_adders.size() > 0) {
-		rc_adders.back()->GenerateVHDLEntity(path);
-		//}
+		if (rc_adders.size() > 0) {
+			rc_adders.back()->GenerateVHDLEntity(path);
+		}
 
 		entityGenerated = true;
 	}
