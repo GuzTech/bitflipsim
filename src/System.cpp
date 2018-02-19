@@ -376,9 +376,9 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 		for (const auto &ob : output_bundles) {
 			const auto &name = ob->GetName();
 
-			exp_stimuli += "READ(exline, " + name + "_val);\n\t\t\t";
+			exp_stimuli += "READ(exline, " + name + "_val);\n\t\t\t\t";
 			assert_stimuli += "ASSERT (int_" + name + " = " + name + "_val_prev) REPORT \"" +
-				"Output not as expected\" SEVERITY FAILURE;\n\t\t\t";
+				"Output not as expected\" SEVERITY FAILURE;\n\t\t\t\t\t";
 			update_prev_stimuli += name + "_val_prev := " + name + "_val;\n\t\t\t";
 		}
 
