@@ -957,7 +957,7 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 	return make_shared<Constraint>(wire_name, beg_idx, end_idx, type, seed, sigma, ub, lb, times);
 }
 
-void ParseStimuli(System &system, YAML::Node config, const string &config_file_name) {
+void ParseStimuli(System &system, YAML::Node config, const string &config_file_name, bool print_debug) {
 	const auto &stimuli = config["stimuli"];
 
 	auto error_invalid_value = [](const auto &val) {
@@ -1059,7 +1059,9 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 	vector<constr_t> constraints;
 
 	for (size_t i = 0; i < stimuli.size(); ++i) {
-		cout << "\nStimulus " << i << '\n';
+		if (print_debug) {
+			cout << "\nStimulus " << i << '\n';
+		}
 		for (const auto &step : stimuli[i]) {
 			const auto &key_name = step.first.as<string>();
 			const auto &value_node = step.second;
@@ -1187,8 +1189,10 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 						io_val->wire = wire;
 					}
 
-					// Print the wire name and value.
-					cout << key_name << ": " << value << '\n';
+					if (print_debug) {
+						// Print the wire name and value.
+						cout << key_name << ": " << value << '\n';
+					}
 				} else if (wb) {
 					auto value_string = value_name;
 					auto base = 2;
@@ -1225,11 +1229,13 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 							io_val->wb = wb;
 						}
 
-						// Print the bundle name and value in hex and binary.
-						cout << wb->GetName() << ": "
-							 << wb->Get2CValue() << " "
-							 << ValueToHexString(wb->GetValue()) << " "
-							 << ValueToBinaryString(wb->GetValue(), wb->GetSize()) << '\n';
+						if (print_debug) {
+							// Print the bundle name and value in hex and binary.
+							cout << wb->GetName() << ": "
+								 << wb->Get2CValue() << " "
+								 << ValueToHexString(wb->GetValue()) << " "
+								 << ValueToBinaryString(wb->GetValue(), wb->GetSize()) << '\n';
+						}
 					} catch (invalid_argument e) {
 						error_invalid_value(value_string);
 					} catch (out_of_range e) {
@@ -1246,7 +1252,9 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		system.Update();
 
 		const size_t curr_toggles = system.GetNumToggles();
-		cout << "#toggles: " << (curr_toggles - prev_toggles) << "\n";
+		if (print_debug) {
+			cout << "#toggles: " << (curr_toggles - prev_toggles) << "\n";
+		}
 		prev_toggles = curr_toggles;
 	}
 
@@ -1445,7 +1453,7 @@ int main(int argc, char **argv) {
 		cout << "Number of components: " << system.GetNumComponents() <<
 			"\nNumber of wires: " << system.GetNumWires() << '\n';
 
-		ParseStimuli(system, config, config_file_name);
+		ParseStimuli(system, config, config_file_name, false);
 
 		cout << "\nSimulation done!\n";
 		cout << "Number of toggles: " << system.GetNumToggles() << '\n';
@@ -1460,6 +1468,7 @@ int main(int argc, char **argv) {
 				 << '\n';
 		}
 #endif
+#if 0
 		cout << "\nInputs:\n";
 		vector<wb_t> processed_wire_bundles;
 
@@ -1505,6 +1514,7 @@ int main(int argc, char **argv) {
 				cout << ow->GetName() << ": " << ow->GetValue() << '\n';
 			}
 		}
+#endif
 	}
 
 	if (generate_vhdl) {
