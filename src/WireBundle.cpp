@@ -90,9 +90,9 @@ void WireBundle::SetValue(int64_t value, bool propagating) {
 	}
 	}
 
-	for (int i = size - 1; i >= 0; --i) {
+	for (int64_t i = size - 1; i >= 0; --i) {
 		bool bit_val = false;
-		if (value & (1 << i)) {
+		if (value & (1ll << i)) {
 			bit_val = true;
 		}
 
