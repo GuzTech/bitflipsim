@@ -12,7 +12,7 @@ ARCHITECTURE tvc OF {{TOP_NAME}}_tb IS
 	SIGNAL i_rst : STD_LOGIC := '1';
 	{{SIGNALS}}
 
-	CONSTANT clk_period : TIME := 1us;
+	CONSTANT clk_period : TIME := 1 us;
 	FILE stim_file : text;
 	FILE exp_file : text;
 BEGIN
