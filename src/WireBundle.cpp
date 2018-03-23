@@ -84,7 +84,7 @@ void WireBundle::SetValue(int64_t value, bool propagating) {
 	}
 	case REPR::SIGNED_MAGNITUDE: {
 		if (value < 0) {
-			value = -value | (1l << (size - 1));
+			value = (-value) | (1ull << (size - 1));
 		}
 		break;
 	}
@@ -92,7 +92,7 @@ void WireBundle::SetValue(int64_t value, bool propagating) {
 
 	for (int64_t i = size - 1; i >= 0; --i) {
 		bool bit_val = false;
-		if (value & (1ll << i)) {
+		if (value & (1ull << i)) {
 			bit_val = true;
 		}
 

@@ -26,6 +26,7 @@ void Connect(const comp_t &component, const string &port_name, const wire_t &wir
 	const auto &m2C_comp  = dynamic_pointer_cast<Multiplier_2C>(component);
 	const auto &smag_comp = dynamic_pointer_cast<Multiplier_Smag>(component);
 	const auto &m2C_booth_comp = dynamic_pointer_cast<Multiplier_2C_Booth>(component);
+	const auto &smTo2C_comp    = dynamic_pointer_cast<SmagTo2C>(component);
 
 	auto error_non_existent_port = [&]() {
 		cout << "[Error] Wire \"" << wire->GetName() << "\" wants to connect to non-existent port \""
@@ -113,6 +114,11 @@ void Connect(const comp_t &component, const string &port_name, const wire_t &wir
 		if (port_name.compare("A") == 0)      m2C_booth_comp->Connect(PORTS::A, wire, index);
 		else if (port_name.compare("B") == 0) m2C_booth_comp->Connect(PORTS::B, wire, index);
 		else if (port_name.compare("O") == 0) m2C_booth_comp->Connect(PORTS::O, wire, index);
+		else error_non_existent_port();
+	} else if (smTo2C_comp != nullptr) {
+		if (port_name.compare("A") == 0)      smTo2C_comp->Connect(PORTS::A, wire, index);
+		else if (port_name.compare("B") == 0) smTo2C_comp->Connect(PORTS::B, wire, index);
+		else if (port_name.compare("O") == 0) smTo2C_comp->Connect(PORTS::O, wire, index);
 		else error_non_existent_port();
 	}
 }
@@ -351,7 +357,7 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 		else if (type_string.compare("none") == 0)				type = TYPE::NONE;
 		else {
 			cout << "[Error] Property \"type\" for multiplier \"" << name << "\" has an unsupported value. "
-				 << "Supported values are \"inversion\", and \"sign extension\".\n";
+				 << "Supported values are \"inversion\", \"sign extension\", and \"Baugh-Wooley\".\n";
 			exit(1);
 		}
 	}
@@ -464,6 +470,7 @@ void ParseComponents(map<string, comp_t> &comps, const YAML::Node &config) {
 		else if (comp_type.compare("Multiplier_2C") == 0)       comps[comp_name] = make_shared<Multiplier_2C>(comp_name, num_bits_A, num_bits_B);
 		else if (comp_type.compare("Multiplier_Smag") == 0)     comps[comp_name] = make_shared<Multiplier_Smag>(comp_name, num_bits_A, num_bits_B);
 		else if (comp_type.compare("Multiplier_2C_Booth") == 0) comps[comp_name] = make_shared<Multiplier_2C_Booth>(comp_name, num_bits_A, num_bits_B);
+		else if (comp_type.compare("SmagTo2C") == 0)            comps[comp_name] = make_shared<SmagTo2C>(comp_name, num_bits_A);
 		else {
 			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
 			exit(1);
@@ -537,7 +544,7 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 
 				const auto &from_name = from["from"].as<string>();
 				const bool from_is_input = from_name.compare("input") == 0;
-			
+
 				// Check if a component with this name exists.
 				if (!from_is_input && !IsComponentDeclared(comps, from_name)) {
 					cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" points to component \""
@@ -712,11 +719,11 @@ void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
 								if (comps.find(to_components[i]->GetName()) != comps.end()) {
 									const auto &to_comp = to_components[i];
 									const auto &to_port = to_port_names[i];
-								
+
 									string to_port_name;
 									size_t to_begin_idx = 0;
 									size_t to_end_idx = 0;
-								
+
 									ParsePortAndIndex(wire_name, to_port, to_port_name, to_begin_idx, to_end_idx);
 									Connect(to_comp, to_port_name, wire, b_idx + to_begin_idx);
 								} else {
@@ -777,7 +784,7 @@ const string ValueToHexString(int64_t value) {
 }
 
 struct Constraint {
-	enum class TYPE {NONE, RNG, UNIFORM};
+	enum class TYPE {NONE, RNG, UNIFORM, COUNT_UP, COUNT_DOWN, SHIFT_UP, SHIFT_DOWN};
 
 	Constraint(const string _wire_name,
 			   const size_t _begin_index,
@@ -877,6 +884,14 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 			type = Constraint::TYPE::RNG;
 		} else if (type_string.compare("uniform") == 0) {
 			type = Constraint::TYPE::UNIFORM;
+		} else if (type_string.compare("count up") == 0) {
+			type = Constraint::TYPE::COUNT_UP;
+		} else if (type_string.compare("count down") == 0) {
+			type = Constraint::TYPE::COUNT_DOWN;
+		} else if (type_string.compare("shift up") == 0) {
+			type = Constraint::TYPE::SHIFT_UP;
+		} else if (type_string.compare("shift down") == 0) {
+			type = Constraint::TYPE::SHIFT_DOWN;
 		} else {
 			type = Constraint::TYPE::NONE;
 		}
@@ -1050,8 +1065,20 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 	auto process_wire_bundle_uniform = [&](const auto &wb, const auto &constraint, auto &system, const size_t num_times) {
 		for (size_t i = 0; i < num_times; ++i) {
 			auto rnd_val = constraint->GenerateUniformInteger();
-
 			wb->SetValue((int64_t)rnd_val, false);
+
+			const auto &map_val = in_values[wb->GetName()];
+			map_val->values.emplace_back(wb->GetValue());
+			map_val->values_2C.emplace_back(wb->Get2CValue());
+		}
+	};
+
+	auto process_wire_bundle_shift_up = [&](const auto &wb, const auto &constraint, auto &system, const size_t num_times) {
+		for (size_t i = 0; i < num_times; ++i) {
+			const auto curr_val = wb->GetValue();
+			const auto new_val = curr_val << 1;
+			wb->SetValue(new_val, false);
+
 			const auto &map_val = in_values[wb->GetName()];
 			map_val->values.emplace_back(wb->GetValue());
 			map_val->values_2C.emplace_back(wb->Get2CValue());
@@ -1103,6 +1130,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 										break;
 									}
 									case Constraint::TYPE::NONE: break;
+									default: break;
 									}
 								} else if (wb) {
 									switch (c->type) {
@@ -1114,7 +1142,12 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 										process_wire_bundle_uniform(wb, c, system, 1);
 										break;
 									}
+									case Constraint::TYPE::SHIFT_UP: {
+										process_wire_bundle_shift_up(wb, c, system, 1);
+										break;
+									}
 									case Constraint::TYPE::NONE: break;
+									default: break;
 									}
 								}
 							}
@@ -1129,8 +1162,6 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 						const size_t curr_toggles = system.GetNumToggles();
 						toggles.emplace_back(curr_toggles - prev);
 						prev = curr_toggles;
-
-						continue;
 					}
 				} else if (value_node.IsMap()) {
 					// The constraint applies to one wire or wire bundle.
@@ -1147,6 +1178,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 							break;
 						}
 						case Constraint::TYPE::NONE: break;
+						default: break;
 						}
 					} else if (wb) {
 						switch (c->type) {
@@ -1159,7 +1191,12 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 							process_wire_bundle_uniform(wb, c, system, c->times);
 							break;
 						}
+						case Constraint::TYPE::SHIFT_UP: {
+							process_wire_bundle_shift_up(wb, c, system, c->times);
+							break;
+						}
 						case Constraint::TYPE::NONE: break;
+						default: break;
 						}
 					} else {
 						error_non_existent_wire(c->wire_name);
@@ -1168,7 +1205,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 					error_constraint_map();
 				}
 
-				continue;
+				//continue;
 			} else {
 				// The key is a wire or wire bundle.
 				const auto &value_name = value_node.as<string>();
@@ -1191,6 +1228,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 					const auto &io_val = in_values[wire->GetName()];
 					io_val->values.emplace_back((int64_t)value);
+					io_val->values_2C.emplace_back(wb->Get2CValue());
 					if (io_val->wire == nullptr) {
 						io_val->wire = wire;
 					}
@@ -1231,6 +1269,7 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 						const auto &io_val = in_values[wb->GetName()];
 						io_val->values.emplace_back((int64_t)value);
+						io_val->values_2C.emplace_back(wb->Get2CValue());
 						if (io_val->wb == nullptr) {
 							io_val->wb = wb;
 						}
