@@ -12,7 +12,7 @@ bool SmagTo2C::entityGenerated = false;
 
 SmagTo2C::SmagTo2C(string _name, size_t _num_bits)
 	: Component(_name)
-	, num_bits(_num_bits)
+	, num_bits(_num_bits - 1)
 {
 	// Reserve space.
 	xors.reserve(num_bits);
@@ -23,7 +23,7 @@ SmagTo2C::SmagTo2C(string _name, size_t _num_bits)
 	wb_xor->Init();
 
 	// Create the wires between adders.
-	auto wb_ha = make_shared<WireBundle>(_name + "_ha_C_to_ha_B", num_bits - 1);
+	auto wb_ha = make_shared<WireBundle>(_name + "_ha_C_to_ha_B", num_bits);
 	wb_ha->Init();
 
 	// Create the XORs.
@@ -72,7 +72,7 @@ void SmagTo2C::Update(bool propagating) {
 }
 
 void SmagTo2C::Connect(PORTS port, const wire_t &wire, size_t index) {
-	if (index >= num_bits) {
+	if (index >= (num_bits + 1)) {
 		cout << "[Error] Index " << index << " out of bounds for "
 			 << "SmagTo2C \"" << name << "\".\n";
 		exit(1);
@@ -80,23 +80,35 @@ void SmagTo2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 
 	switch (port) {
 	case PORTS::A:
-		if (index == (num_bits - 1)) {
-			for (size_t i = 0; i < num_bits; ++i) {
-				xors[i]->Connect(PORTS::B, wire);
+		if (index == num_bits) {
+			auto w = adders.front()->GetWire(PORTS::B);
+			if (w) {
+				*w = *wire;
+			} else {
+				for (size_t i = 0; i < num_bits; ++i) {
+					xors[i]->Connect(PORTS::B, wire);
+				}
+				adders.front()->Connect(PORTS::B, wire);
+				input_wires.emplace_back(wire);
 			}
-			adders.front()->Connect(PORTS::B, wire);
 		} else {
 			xors[index]->Connect(PORTS::A, wire);
 		}
 		input_wires.emplace_back(wire);
 		break;
 	case PORTS::O:
-		if (index == (num_bits - 1)) {
+		if (index == num_bits) {
+			auto w = adders.front()->GetWire(PORTS::B);
+			if (w) {
+				// Replace the output wire with the wire
+				// connected to the MSB of the input wires.
+				*w = *wire;
+			}
 			adders.back()->Connect(PORTS::Cout, wire);
 		} else {
 			adders[index]->Connect(PORTS::O, wire);
+			output_wires.emplace_back(wire);
 		}
-		output_wires.emplace_back(wire);
 		break;	
 	default:
 		cout << "[Error] Trying to connect to undefined port of SmagTo2C "
@@ -118,7 +130,7 @@ void SmagTo2C::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wi
 }
 
 const wire_t SmagTo2C::GetWire(PORTS port, size_t index) const {
-	if (index >= num_bits) {
+	if (index >= (num_bits + 1)) {
 		cout << "[Error] Index " << index << " out of bounds for "
 			 << "SmagTo2C \"" << name << "\".\n";
 		exit(1);
@@ -126,14 +138,14 @@ const wire_t SmagTo2C::GetWire(PORTS port, size_t index) const {
 	
 	switch (port) {
 	case PORTS::A:
-		if (index == (num_bits - 1)) {
+		if (index == num_bits) {
 			return xors.back()->GetWire(PORTS::B);
 		} else {
 			return xors[index]->GetWire(port);
 		}
 	case PORTS::O:
-		if (index == (num_bits - 1)) {
-			return adders.back()->GetWire(PORTS::Cout);
+		if (index == num_bits) {
+			return xors.back()->GetWire(PORTS::B);
 		} else {
 			return adders[index]->GetWire(port);
 		}

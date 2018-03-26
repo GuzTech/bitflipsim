@@ -30,7 +30,7 @@ void System::AddComponent(comp_t component) {
 					} else if (wb->IsOutputBundle()) {
 						// Since outputs can only be driven by one
 						// component only, we do not have to check if
-						// we already have this bundle is the list of
+						// we already have this bundle in the list of
 						// output bundles.
 						output_bundles.emplace_back(wb);
 					}
@@ -45,10 +45,11 @@ void System::AddComponent(comp_t component) {
 					{
 						input_wires.emplace_back(w);
 					}
-				} else if (w->IsOutputWire()) {
+				} //else
+				if (w->IsOutputWire()) {
 					// Since outputs can only be driven by one
 					// component only, we do not have to check if
-					// we already have this wire is the list of
+					// we already have this wire in the list of
 					// output wires.
 					output_wires.emplace_back(w);
 				}
@@ -63,7 +64,8 @@ void System::AddComponent(comp_t component) {
 				{
 					all_input_wires.emplace_back(w);
 				}
-			} else if (w->IsOutputWire()) {
+			} //else
+			if (w->IsOutputWire()) {
 				if (find(all_output_wires.begin(),
 						 all_output_wires.end(),
 						 w) == all_output_wires.end())
@@ -85,6 +87,7 @@ void System::FindLongestPathInSystem() {
 	do {
 		components_to_process.clear();
 
+		cout << "\nComponents:\n";
 		// Find all the components that the wires to be processed are connected to.
 		for (const auto &w : wires_to_process) {
 			for (const auto &c : w->GetOutputs()) {
@@ -94,6 +97,7 @@ void System::FindLongestPathInSystem() {
 						 components_to_process.end(),
 						 comp) == components_to_process.end()) {
 					components_to_process.push_back(comp);
+					cout << comp->GetName() << '\n';
 				}
 			}
 		}
@@ -106,12 +110,14 @@ void System::FindLongestPathInSystem() {
 		// the components to process.
 		wires_to_process.clear();
 
+		cout << "\nWires:\n";
 		for (const auto &c : components_to_process) {
 			for (const auto &w : c->GetOutputWires()) {
 				if (find(wires_to_process.begin(),
 						 wires_to_process.end(),
 						 w) == wires_to_process.end()) {
 					wires_to_process.push_back(w);
+					cout << w->GetName() << '\n';
 				}
 			}
 		}
