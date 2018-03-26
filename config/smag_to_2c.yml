@@ -1,0 +1,15 @@
+components:
+  SmagTo2C: [smTo2C, 3]
+wires:
+  A 3 smag:
+    - from: input
+    - to: smTo2C
+      port: A 0 2
+  O 3 2C:
+    - from: smTo2C
+      port: O 0 2
+    - to: output
+stimuli:
+#  - A: 0d1
+#  - A: 0d-1
+  - A: 0b101
