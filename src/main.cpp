@@ -1228,7 +1228,9 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 					const auto &io_val = in_values[wire->GetName()];
 					io_val->values.emplace_back((int64_t)value);
-					io_val->values_2C.emplace_back(wb->Get2CValue());
+					if (wb) {
+						io_val->values_2C.emplace_back(wb->Get2CValue());
+					}
 					if (io_val->wire == nullptr) {
 						io_val->wire = wire;
 					}
@@ -1315,7 +1317,9 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 	// Write all input values.
 	for (const auto &[name, bundle] : in_values) {
-		outfile << name << ' ' << bundle->wb->GetSize();
+		if (bundle->wb) {
+			outfile << name << ' ' << bundle->wb->GetSize();
+		}
 
 		if (sigmas.size()) {
 			outfile << ' ' << sigmas[i++] << '\n';
@@ -1331,7 +1335,9 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 
 	// Write all output values.
 	for (const auto &[name, bundle] : out_values) {
-		outfile << name << ' ' << bundle->wb->GetSize() << '\n';
+		if (bundle->wb) {
+			outfile << name << ' ' << bundle->wb->GetSize() << '\n';
+		}
 
 		for (const auto &val : bundle->values_2C) {
 			outfile << val << ',';
@@ -1363,18 +1369,20 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 	auto stim_file = ofstream(stimfile_path + "/stim_file.txt");
 	for (size_t i = 0; i < max_iterations; ++i) {
 		for (const auto &[name, bundle] : in_values) {
-			const auto &vals = bundle->values;
-			if (i < vals.size()) {
-				const auto &val = vals[i];
-				for (int j = bundle->wb->GetSize() - 1; j >= 0; --j) {
-					stim_file << ((val >> j) & 1);
+			if (bundle->wb) {
+				const auto &vals = bundle->values;
+				if (i < vals.size()) {
+					const auto &val = vals[i];
+					for (int j = bundle->wb->GetSize() - 1; j >= 0; --j) {
+						stim_file << ((val >> j) & 1);
+					}
+					stim_file << ' ';
+				} else {
+					for (size_t j = 0; j < bundle->wb->GetSize(); ++j) {
+						stim_file << '0';
+					}
+					stim_file << ' ';
 				}
-				stim_file << ' ';
-			} else {
-				for (size_t j = 0; j < bundle->wb->GetSize(); ++j) {
-					stim_file << '0';
-				}
-				stim_file << ' ';
 			}
 		}
 		stim_file << '\n';
@@ -1384,18 +1392,20 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 	auto expected_output = ofstream(stimfile_path + "/expected_output.txt");
 	for (size_t i = 0; i < max_iterations; ++i) {
 		for (const auto &[name, ob] : out_values) {
-			const auto &vals = ob->values;
-			if (i < vals.size()) {
-				const auto &val = vals[i];
-				for (int j = ob->wb->GetSize() - 1; j >= 0; --j) {
-					expected_output << ((val >> j) & 1);
+			if (ob->wb) {
+				const auto &vals = ob->values;
+				if (i < vals.size()) {
+					const auto &val = vals[i];
+					for (int j = ob->wb->GetSize() - 1; j >= 0; --j) {
+						expected_output << ((val >> j) & 1);
+					}
+					expected_output << ' ';
+				} else {
+					for (size_t j = 0; j < ob->wb->GetSize(); ++j) {
+						expected_output << '0';
+					}
+					expected_output << ' ';
 				}
-				expected_output << ' ';
-			} else {
-				for (size_t j = 0; j < ob->wb->GetSize(); ++j) {
-					expected_output << '0';
-				}
-				stim_file << ' ';
 			}
 		}
 		expected_output << '\n';
@@ -1580,6 +1590,20 @@ int main(int argc, char **argv) {
 
 		system.GenerateVHDL("top_" + top_level_name, output_file_path);
 	}
+
+// TEST
+/*	wire_t a, b, c, d, e;
+	a = make_shared<Wire>("A");
+	b = a;
+	c = a;
+	d = a;
+	e = a;
+
+	cout << a.use_count() << ' ' << a->GetName() << ' ' << e->GetName() << '\n';
+	wire_t f = make_shared<Wire>("F");
+	*a = *f;
+	f.reset();
+	cout << a.use_count() << ' ' << a->GetName() << ' ' << e->GetName() << '\n';*/
 
 	return 0;
 }
