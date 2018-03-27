@@ -1,6 +1,6 @@
 components:
   Multiplier: {
-    name: real_mul,
+    name: realmul,
     A width: 32,
     B width: 32,
     number format: 2C,
@@ -8,56 +8,70 @@ components:
     type: none
   }
 #  Multiplier: {
-#    name: imag_mul,
+#    name: imagmul,
 #    A width: 32,
 #    B width: 32,
 #    number format: 2C,
 #    layout: booth radix-4,
 #    type: none
 #  }
-  RippleCarryAdder: [rca_plus, 32]
-  RippleCarrySubtracter: [rca_minus, 32]
+  RippleCarryAdder: [rca, 32]
+  RippleCarrySubtracter: [rcs, 32]
 wires:
-  real_x0 32:
+  realx0 32:
     - from: input
-    - to: [rca_plus, rca_minus]
+    - to: [rca, rcs]
       port: [A 0 31, A 0 31]
-  real_x1 32:
+  realx1 32:
     - from: input
-    - to: real_mul
+    - to: realmul
       port: A 0 31
-  real_twiddle 32:
+  realtwiddle 32:
     - from: input
-    - to: real_mul
+    - to: realmul
       port: B 0 31
-  real_O 32:
-    - from: real_mul
+  realO 32:
+    - from: realmul
       port: O 0 31
-    - to: [rca_plus, rca_minus]
+    - to: [rca, rcs]
       port: [B 0 31, B 0 31]
-  real_F0 32:
-    - from: rca_plus
+  realF0 32:
+    - from: rca
       port: O 0 31
     - to: output
-  real_F1 32:
-    - from: rca_minus
+  realF1 32:
+    - from: rcs
       port: O 0 31
     - to: output
-#  imag_A 32:
+#  imagx0 32:
 #    - from: input
-#    - to: imag_mul
+#    - to: [rca, rcs]
+#      port: [A 0 31, A 0 31]
+#  imagx1 32:
+#    - from: input
+#    - to: imagmul
 #      port: A 0 31
-#  imag_B 32:
+#  imagtwiddle 32:
 #    - from: input
-#    - to: imag_mul
+#    - to: imagmul
 #      port: B 0 31
-#  imag_O 32:
-#    - from: imag_mul
+#  imagO 32:
+#    - from: imagmul
+#      port: O 0 31
+#    - to: [rca, rcs]
+#      port: [B 0 31, B 0 31]
+#  imagF0 32:
+#    - from: rca
+#      port: O 0 31
+#    - to: output
+#  imagF1 32:
+#    - from: rcs
 #      port: O 0 31
 #    - to: output
 stimuli:
-  - real_x0: 0d-8000
-    real_x1: 0d8000
-    real_twiddle: 0d1
-#    imag_A: 0d0
-#    imag_B: 0d0
+  - realx0: 0d-8000
+    realx1: 0d8000
+    realtwiddle: 0d1
+#    imagx0: 0d0
+#    imagx1: 0d0
+#    imagtwiddle: 0d1
