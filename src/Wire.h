@@ -13,6 +13,7 @@ public:
 	void SetValue(bool val, bool propagating = true);
 	void SetInput(comp_t component) {input = component;}
 	void AddOutput(comp_t component);
+	void AddOutput(wire_t wire);
 	void SetAsInputWire() {is_input_wire = true;}
 	void SetAsOutputWire() {is_output_wire = true;}
 
@@ -21,7 +22,7 @@ public:
 	const string &GetName() const {return name;}
 	const size_t GetNumToggles() const {return toggle_count;}
 	const comp_wt GetInput() const {return input;}
-	const vector<comp_wt> &GetOutputs() const {return outputs;}
+	const vector<comp_wt> &GetOutputs() const {return comp_outputs;}
 	const wb_t GetWireBundle() const {return part_of_bundle;}
 	const size_t GetNumOutputs() const {return num_outputs;};
 	const bool IsInputWire() const {return is_input_wire;}
@@ -43,8 +44,9 @@ private:
 	string name; // Name of this wire.
 
 	comp_wt input; // The component that drives this wire.
-	vector<comp_wt> outputs; // The components that are driven by this wire.
-	size_t num_outputs = 1; // The number of components that are driven by this wire.
+	vector<comp_wt> comp_outputs; // The components that are driven by this wire.
+	vector<wire_t> wire_outputs; // The wires that are driven by this wire.
+	size_t num_outputs = 1; // The number of components and wires that are driven by this wire.
 	wb_t part_of_bundle = nullptr; // Indicates whether this wire is part of a bundle.
 
 	static bool declarationGenerated; // Used for generating HDL.

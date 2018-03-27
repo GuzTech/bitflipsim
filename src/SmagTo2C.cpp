@@ -21,10 +21,16 @@ SmagTo2C::SmagTo2C(string _name, size_t _num_bits)
 	// Create the wries between the XORs and adders.
 	auto wb_xor = make_shared<WireBundle>(_name + "_xor_to_ha_A", num_bits);
 	wb_xor->Init();
+	for (auto &w : wb_xor->GetWires()) {
+		internal_wires.emplace_back(w);
+	}
 
 	// Create the wires between adders.
-	auto wb_ha = make_shared<WireBundle>(_name + "_ha_C_to_ha_B", num_bits);
+	auto wb_ha = make_shared<WireBundle>(_name + "_ha_C_to_ha_B", num_bits - 1);
 	wb_ha->Init();
+	for (auto &w : wb_ha->GetWires()) {
+		internal_wires.emplace_back(w);
+	}
 
 	// Create the XORs.
 	for (size_t i = 0; i < num_bits; ++i) {
@@ -93,8 +99,8 @@ void SmagTo2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 			}
 		} else {
 			xors[index]->Connect(PORTS::A, wire);
+			input_wires.emplace_back(wire);
 		}
-		input_wires.emplace_back(wire);
 		break;
 	case PORTS::O:
 		if (index == num_bits) {
@@ -102,9 +108,12 @@ void SmagTo2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 			if (w) {
 				// Replace the output wire with the wire
 				// connected to the MSB of the input wires.
-				*w = *wire;
+				//*w = *wire;
+
+				w->AddOutput(wire);
 			}
 			adders.back()->Connect(PORTS::Cout, wire);
+			output_wires.emplace_back(wire);
 		} else {
 			adders[index]->Connect(PORTS::O, wire);
 			output_wires.emplace_back(wire);

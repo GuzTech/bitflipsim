@@ -1517,7 +1517,7 @@ int main(int argc, char **argv) {
 		cout << "\nSimulation done!\n";
 		cout << "Number of toggles: " << system.GetNumToggles() << '\n';
 
-#if 0
+#if 1
 		cout << "\nValue of all wires:\n";
 		for (const auto &[ow_name, ow] : system.GetWires()) {
 			cout << "Wire \"" << ow_name
@@ -1527,7 +1527,7 @@ int main(int argc, char **argv) {
 				 << '\n';
 		}
 #endif
-#if 0
+#if 1
 		cout << "\nInputs:\n";
 		vector<wb_t> processed_wire_bundles;
 
