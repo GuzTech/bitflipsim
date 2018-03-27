@@ -1517,7 +1517,7 @@ int main(int argc, char **argv) {
 		cout << "\nSimulation done!\n";
 		cout << "Number of toggles: " << system.GetNumToggles() << '\n';
 
-#if 1
+#if 0
 		cout << "\nValue of all wires:\n";
 		for (const auto &[ow_name, ow] : system.GetWires()) {
 			cout << "Wire \"" << ow_name

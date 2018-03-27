@@ -24,17 +24,27 @@ void Wire::SetValue(bool val, bool propagating) {
 		}
 
 		for (const auto &w : wire_outputs) {
-			w->SetValue(val, true);
+			if (const auto &spt = w.lock()) {
+				spt->SetValue(val, true);
+			}
 		}
 	}
 }
 
-void Wire::AddOutput(comp_t component) {
+void Wire::AddOutput(const comp_t &component) {
+//	if (find(comp_outputs.begin(),
+//			 comp_outputs.end(),
+//			 component) == comp_outputs.end())
+//	{
+
+	// TODO: Check if the component was already added.
 	comp_outputs.emplace_back(component);
 	num_outputs = wire_outputs.size() + comp_outputs.size();
+//	}
 }
 
-void Wire::AddOutput(wire_t wire) {
+void Wire::AddOutput(const wire_t &wire) {
+	// TODO: Check if the wire was already added.
 	wire_outputs.emplace_back(wire);
 	num_outputs = wire_outputs.size() + comp_outputs.size();
 }

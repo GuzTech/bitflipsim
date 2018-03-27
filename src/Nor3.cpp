@@ -46,7 +46,7 @@ void Nor3::Connect(PORTS port, const wire_t &wire, size_t index) {
 		input_wires.emplace_back(wire);
 		break;
 	case PORTS::O:
-		O = wire; wire->SetInput(this->shared_from_base<Nor>());
+		O = wire;
 		output_wires.emplace_back(O);
 		break;
 	default:

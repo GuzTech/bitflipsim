@@ -47,6 +47,7 @@ enum class LAYOUT {NONE, CARRY_PROPAGATE, CARRY_SAVE, BOOTH_RADIX_2, BOOTH_RADIX
 enum class TYPE {NONE, INVERSION, SIGN_EXTEND, BAUGH_WOOLEY};
 
 using wire_t   = shared_ptr<Wire>;
+using wire_wt  = weak_ptr<Wire>;
 using wb_t     = shared_ptr<WireBundle>;
 using comp_t   = shared_ptr<Component>;
 using comp_wt  = weak_ptr<Component>;

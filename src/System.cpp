@@ -87,17 +87,15 @@ void System::FindLongestPathInSystem() {
 	do {
 		components_to_process.clear();
 
-		cout << "\nComponents:\n";
 		// Find all the components that the wires to be processed are connected to.
 		for (const auto &w : wires_to_process) {
-			for (const auto &c : w->GetOutputs()) {
+			for (const auto &c : w->GetComponentOutputs()) {
 				const auto comp = c.lock();
 
 				if (find(components_to_process.begin(),
 						 components_to_process.end(),
 						 comp) == components_to_process.end()) {
 					components_to_process.push_back(comp);
-					cout << comp->GetName() << '\n';
 				}
 			}
 		}
@@ -110,14 +108,12 @@ void System::FindLongestPathInSystem() {
 		// the components to process.
 		wires_to_process.clear();
 
-		cout << "\nWires:\n";
 		for (const auto &c : components_to_process) {
 			for (const auto &w : c->GetOutputWires()) {
 				if (find(wires_to_process.begin(),
 						 wires_to_process.end(),
 						 w) == wires_to_process.end()) {
 					wires_to_process.push_back(w);
-					cout << w->GetName() << '\n';
 				}
 			}
 		}
