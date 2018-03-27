@@ -23,6 +23,8 @@ void Connect(const comp_t &component, const string &port_name, const wire_t &wir
 	const auto &not_comp  = dynamic_pointer_cast<Not>(component);
 	const auto &mux_comp  = dynamic_pointer_cast<Mux>(component);
 	const auto &rca_comp  = dynamic_pointer_cast<RippleCarryAdder>(component);
+	const auto &rcas_comp = dynamic_pointer_cast<RippleCarryAdderSubtracter>(component);
+	const auto &rcs_comp  = dynamic_pointer_cast<RippleCarrySubtracter>(component);
 	const auto &m2C_comp  = dynamic_pointer_cast<Multiplier_2C>(component);
 	const auto &smag_comp = dynamic_pointer_cast<Multiplier_Smag>(component);
 	const auto &m2C_booth_comp = dynamic_pointer_cast<Multiplier_2C_Booth>(component);
@@ -99,6 +101,19 @@ void Connect(const comp_t &component, const string &port_name, const wire_t &wir
 		else if (port_name.compare("O") == 0)    rca_comp->Connect(PORTS::O, wire, index);
 		else if (port_name.compare("Cin") == 0)  rca_comp->Connect(PORTS::Cin, wire, index);
 		else if (port_name.compare("Cout") == 0) rca_comp->Connect(PORTS::Cout, wire, index);
+		else error_non_existent_port();
+	} else if (rcas_comp != nullptr) {
+		if (port_name.compare("A") == 0)         rcas_comp->Connect(PORTS::A, wire, index);
+		else if (port_name.compare("B") == 0)    rcas_comp->Connect(PORTS::B, wire, index);
+		else if (port_name.compare("O") == 0)    rcas_comp->Connect(PORTS::O, wire, index);
+		else if (port_name.compare("Cin") == 0)  rcas_comp->Connect(PORTS::Cin, wire, index);
+		else if (port_name.compare("Cout") == 0) rcas_comp->Connect(PORTS::Cout, wire, index);
+		else error_non_existent_port();
+	} else if (rcs_comp != nullptr) {
+		if (port_name.compare("A") == 0)         rcs_comp->Connect(PORTS::A, wire, index);
+		else if (port_name.compare("B") == 0)    rcs_comp->Connect(PORTS::B, wire, index);
+		else if (port_name.compare("O") == 0)    rcs_comp->Connect(PORTS::O, wire, index);
+		else if (port_name.compare("Cout") == 0) rcs_comp->Connect(PORTS::Cout, wire, index);
 		else error_non_existent_port();
 	} else if (m2C_comp != nullptr) {
 		if (port_name.compare("A") == 0)      m2C_comp->Connect(PORTS::A, wire, index);
@@ -455,22 +470,24 @@ void ParseComponents(map<string, comp_t> &comps, const YAML::Node &config) {
 			exit(1);
 		}
 
-		if (comp_type.compare("FullAdder") == 0)                comps[comp_name] = make_shared<FullAdder>(comp_name);
-		else if (comp_type.compare("HalfAdder") == 0)           comps[comp_name] = make_shared<HalfAdder>(comp_name);
-		else if (comp_type.compare("And") == 0)                 comps[comp_name] = make_shared<And>(comp_name);
-		else if (comp_type.compare("Or") == 0)                  comps[comp_name] = make_shared<Or>(comp_name);
-		else if (comp_type.compare("Xor") == 0)                 comps[comp_name] = make_shared<Xor>(comp_name);
-		else if (comp_type.compare("Nand") == 0)                comps[comp_name] = make_shared<Nand>(comp_name);
-		else if (comp_type.compare("Nor") == 0)                 comps[comp_name] = make_shared<Nor>(comp_name);
-		else if (comp_type.compare("Xnor") == 0)                comps[comp_name] = make_shared<Xnor>(comp_name);
-		else if (comp_type.compare("Not") == 0)                 comps[comp_name] = make_shared<Not>(comp_name);
-		else if (comp_type.compare("Mux") == 0)                 comps[comp_name] = make_shared<Mux>(comp_name);
-		else if (comp_type.compare("RippleCarryAdder") == 0)    comps[comp_name] = make_shared<RippleCarryAdder>(comp_name, num_bits_A);
-		else if (comp_type.compare("Multiplier") == 0) 		    ParseMultiplierComponent(comps, it->second);
-		else if (comp_type.compare("Multiplier_2C") == 0)       comps[comp_name] = make_shared<Multiplier_2C>(comp_name, num_bits_A, num_bits_B);
-		else if (comp_type.compare("Multiplier_Smag") == 0)     comps[comp_name] = make_shared<Multiplier_Smag>(comp_name, num_bits_A, num_bits_B);
-		else if (comp_type.compare("Multiplier_2C_Booth") == 0) comps[comp_name] = make_shared<Multiplier_2C_Booth>(comp_name, num_bits_A, num_bits_B);
-		else if (comp_type.compare("SmagTo2C") == 0)            comps[comp_name] = make_shared<SmagTo2C>(comp_name, num_bits_A);
+		if (comp_type.compare("FullAdder") == 0)                		comps[comp_name] = make_shared<FullAdder>(comp_name);
+		else if (comp_type.compare("HalfAdder") == 0)           		comps[comp_name] = make_shared<HalfAdder>(comp_name);
+		else if (comp_type.compare("And") == 0)                 		comps[comp_name] = make_shared<And>(comp_name);
+		else if (comp_type.compare("Or") == 0)                  		comps[comp_name] = make_shared<Or>(comp_name);
+		else if (comp_type.compare("Xor") == 0)                 		comps[comp_name] = make_shared<Xor>(comp_name);
+		else if (comp_type.compare("Nand") == 0)                		comps[comp_name] = make_shared<Nand>(comp_name);
+		else if (comp_type.compare("Nor") == 0)                 		comps[comp_name] = make_shared<Nor>(comp_name);
+		else if (comp_type.compare("Xnor") == 0)                		comps[comp_name] = make_shared<Xnor>(comp_name);
+		else if (comp_type.compare("Not") == 0)                 		comps[comp_name] = make_shared<Not>(comp_name);
+		else if (comp_type.compare("Mux") == 0)                 		comps[comp_name] = make_shared<Mux>(comp_name);
+		else if (comp_type.compare("RippleCarryAdder") == 0)    		comps[comp_name] = make_shared<RippleCarryAdder>(comp_name, num_bits_A);
+		else if (comp_type.compare("RippleCarryAdderSubtracter") == 0)  comps[comp_name] = make_shared<RippleCarryAdderSubtracter>(comp_name, num_bits_A);
+		else if (comp_type.compare("RippleCarrySubtracter") == 0)    	comps[comp_name] = make_shared<RippleCarrySubtracter>(comp_name, num_bits_A);
+		else if (comp_type.compare("Multiplier") == 0) 		    		ParseMultiplierComponent(comps, it->second);
+		else if (comp_type.compare("Multiplier_2C") == 0)       		comps[comp_name] = make_shared<Multiplier_2C>(comp_name, num_bits_A, num_bits_B);
+		else if (comp_type.compare("Multiplier_Smag") == 0)     		comps[comp_name] = make_shared<Multiplier_Smag>(comp_name, num_bits_A, num_bits_B);
+		else if (comp_type.compare("Multiplier_2C_Booth") == 0) 		comps[comp_name] = make_shared<Multiplier_2C_Booth>(comp_name, num_bits_A, num_bits_B);
+		else if (comp_type.compare("SmagTo2C") == 0)            		comps[comp_name] = make_shared<SmagTo2C>(comp_name, num_bits_A);
 		else {
 			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
 			exit(1);
@@ -1517,7 +1534,7 @@ int main(int argc, char **argv) {
 		cout << "\nSimulation done!\n";
 		cout << "Number of toggles: " << system.GetNumToggles() << '\n';
 
-#if 0
+#if 1
 		cout << "\nValue of all wires:\n";
 		for (const auto &[ow_name, ow] : system.GetWires()) {
 			cout << "Wire \"" << ow_name
@@ -1525,6 +1542,13 @@ int main(int argc, char **argv) {
 				 << "\t#outputs: " << ow->GetNumOutputs()
 				 << "\t#toggles: " << ow->GetNumToggles()
 				 << '\n';
+//			cout << "Outputs:\n";
+//			for (const auto &c : ow->GetComponentOutputs()) {
+//				cout << '\t' << c.lock()->GetName() << '\n';
+//			}
+//			for (const auto &w : ow->GetWireOutputs()) {
+//				cout << '\t' << w.lock()->GetName() << '\n';
+//			}
 		}
 #endif
 #if 1

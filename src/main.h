@@ -19,6 +19,8 @@ class Component;
 class HalfAdder;
 class FullAdder;
 class RippleCarryAdder;
+class RippleCarryAdderSubtracter;
+class RippleCarrySubtracter;
 class CarrySaveAdder;
 class Multiplier_2C;
 class Multiplier_Smag;
@@ -65,6 +67,8 @@ using xnor_t   = shared_ptr<Xnor>;
 using not_t    = shared_ptr<Not>;
 using mux_t    = shared_ptr<Mux>;
 using rca_t    = shared_ptr<RippleCarryAdder>;
+using rcas_t   = shared_ptr<RippleCarryAdderSubtracter>;
+using rcs_t    = shared_ptr<RippleCarrySubtracter>;
 using csa_t    = shared_ptr<CarrySaveAdder>;
 using m2c_t    = shared_ptr<Multiplier_2C>;
 using msmag_t  = shared_ptr<Multiplier_Smag>;
@@ -77,6 +81,8 @@ using smTo2c_t = shared_ptr<SmagTo2C>;
 #include "HalfAdder.h"
 #include "FullAdder.h"
 #include "RippleCarryAdder.h"
+#include "RippleCarryAdderSubtracter.h"
+#include "RippleCarrySubtracter.h"
 #include "CarrySaveAdder.h"
 #include "Multiplier_2C.h"
 #include "Multiplier_Smag.h"
