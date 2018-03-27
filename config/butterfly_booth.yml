@@ -1,0 +1,41 @@
+components:
+  Multiplier: {
+    name: mul,
+    A width: 32,
+    B width: 32,
+    number format: 2C,
+    layout: booth radix-4,
+    type: none
+  }
+  RippleCarryAdder: [rca_plus, 32]
+  RippleCarrySubtracter: [rca_minus, 32]
+wires:
+  x0 32:
+    - from: input
+    - to: [rca_plus, rca_minus]
+      port: [A 0 31, A 0 31]
+  x1 32:
+    - from: input
+    - to: mul
+      port: A 0 31
+  twiddle 32:
+    - from: input
+    - to: mul
+      port: B 0 31
+  O 32:
+    - from: mul
+      port: O 0 31
+    - to: [rca_plus, rca_minus]
+      port: [B 0 31, B 0 31]
+  F0 32:
+    - from: rca_plus
+      port: O 0 31
+    - to: output
+  F1 32:
+    - from: rca_minus
+      port: O 0 31
+    - to: output
+stimuli:
+  - x0: 0d-8000
+    x1: 0d8000
+    twiddle: 0d1

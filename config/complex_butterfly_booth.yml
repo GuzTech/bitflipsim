@@ -1,0 +1,63 @@
+components:
+  Multiplier: {
+    name: real_mul,
+    A width: 32,
+    B width: 32,
+    number format: 2C,
+    layout: booth radix-4,
+    type: none
+  }
+#  Multiplier: {
+#    name: imag_mul,
+#    A width: 32,
+#    B width: 32,
+#    number format: 2C,
+#    layout: booth radix-4,
+#    type: none
+#  }
+  RippleCarryAdder: [rca_plus, 32]
+  RippleCarrySubtracter: [rca_minus, 32]
+wires:
+  real_x0 32:
+    - from: input
+    - to: [rca_plus, rca_minus]
+      port: [A 0 31, A 0 31]
+  real_x1 32:
+    - from: input
+    - to: real_mul
+      port: A 0 31
+  real_twiddle 32:
+    - from: input
+    - to: real_mul
+      port: B 0 31
+  real_O 32:
+    - from: real_mul
+      port: O 0 31
+    - to: [rca_plus, rca_minus]
+      port: [B 0 31, B 0 31]
+  real_F0 32:
+    - from: rca_plus
+      port: O 0 31
+    - to: output
+  real_F1 32:
+    - from: rca_minus
+      port: O 0 31
+    - to: output
+#  imag_A 32:
+#    - from: input
+#    - to: imag_mul
+#      port: A 0 31
+#  imag_B 32:
+#    - from: input
+#    - to: imag_mul
+#      port: B 0 31
+#  imag_O 32:
+#    - from: imag_mul
+#      port: O 0 31
+#    - to: output
+stimuli:
+  - real_x0: 0d-8000
+    real_x1: 0d8000
+    real_twiddle: 0d1
+#    imag_A: 0d0
+#    imag_B: 0d0
