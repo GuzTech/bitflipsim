@@ -64,11 +64,11 @@ SmagTo2C::SmagTo2C(string _name, size_t _num_bits)
 void SmagTo2C::Update(bool propagating) {
 	if (needs_update || !propagating) {
 		for (size_t i = 0; i < longest_path; ++i) {
-			for (auto &xor_c : xors) {
+			for (const auto &xor_c : xors) {
 				xor_c->Update(propagating);
 			}
 
-			for (auto &ha : adders) {
+			for (const auto &ha : adders) {
 				ha->Update(propagating);
 			}
 		}
@@ -88,36 +88,33 @@ void SmagTo2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 	case PORTS::A:
 		if (index == num_bits) {
 			auto w = adders.front()->GetWire(PORTS::B);
+
+			for (const auto &x : xors) {
+				x->Connect(PORTS::B, wire);
+			}
+
+			adders.front()->Connect(PORTS::B, wire);
+
 			if (w) {
-				*w = *wire;
-			} else {
-				for (size_t i = 0; i < num_bits; ++i) {
-					xors[i]->Connect(PORTS::B, wire);
-				}
-				adders.front()->Connect(PORTS::B, wire);
-				input_wires.emplace_back(wire);
+				wire->AddOutput(w);
 			}
 		} else {
 			xors[index]->Connect(PORTS::A, wire);
-			input_wires.emplace_back(wire);
 		}
+		input_wires.emplace_back(wire);
 		break;
 	case PORTS::O:
 		if (index == num_bits) {
 			auto w = adders.front()->GetWire(PORTS::B);
 			if (w) {
-				// Replace the output wire with the wire
-				// connected to the MSB of the input wires.
-				//*w = *wire;
-
+				// If there is already a wire, then just
+				// connect the output wire to it.
 				w->AddOutput(wire);
 			}
-			adders.back()->Connect(PORTS::Cout, wire);
-			output_wires.emplace_back(wire);
 		} else {
 			adders[index]->Connect(PORTS::O, wire);
-			output_wires.emplace_back(wire);
 		}
+		output_wires.emplace_back(wire);
 		break;	
 	default:
 		cout << "[Error] Trying to connect to undefined port of SmagTo2C "
