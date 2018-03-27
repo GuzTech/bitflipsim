@@ -12,28 +12,28 @@ bool SmagTo2C::entityGenerated = false;
 
 SmagTo2C::SmagTo2C(string _name, size_t _num_bits)
 	: Component(_name)
-	, num_bits(_num_bits - 1)
+	, num_bits(_num_bits)
 {
 	// Reserve space.
 	xors.reserve(num_bits);
 	adders.reserve(num_bits);
 
 	// Create the wries between the XORs and adders.
-	auto wb_xor = make_shared<WireBundle>(_name + "_xor_to_ha_A", num_bits);
+	auto wb_xor = make_shared<WireBundle>(_name + "_xor_to_ha_A", num_bits - 1);
 	wb_xor->Init();
 	for (auto &w : wb_xor->GetWires()) {
 		internal_wires.emplace_back(w);
 	}
 
 	// Create the wires between adders.
-	auto wb_ha = make_shared<WireBundle>(_name + "_ha_C_to_ha_B", num_bits - 1);
+	auto wb_ha = make_shared<WireBundle>(_name + "_ha_C_to_ha_B", num_bits);
 	wb_ha->Init();
 	for (auto &w : wb_ha->GetWires()) {
 		internal_wires.emplace_back(w);
 	}
 
 	// Create the XORs.
-	for (size_t i = 0; i < num_bits; ++i) {
+	for (size_t i = 0; i < (num_bits - 1); ++i) {
 		string xor_name(_name);
 		xor_name += "_xor_";
 		xor_name += to_string(i);
@@ -50,7 +50,9 @@ SmagTo2C::SmagTo2C(string _name, size_t _num_bits)
 		ha_name += to_string(i);
 
 		const auto ha = make_shared<HalfAdder>(ha_name);
-		ha->Connect(PORTS::A, (*wb_xor)[i]);
+		if (i < (num_bits - 1)) {
+			ha->Connect(PORTS::A, (*wb_xor)[i]);
+		}
 		adders.emplace_back(ha);
 	}
 
@@ -78,7 +80,7 @@ void SmagTo2C::Update(bool propagating) {
 }
 
 void SmagTo2C::Connect(PORTS port, const wire_t &wire, size_t index) {
-	if (index >= (num_bits + 1)) {
+	if (index >= num_bits) {
 		cout << "[Error] Index " << index << " out of bounds for "
 			 << "SmagTo2C \"" << name << "\".\n";
 		exit(1);
@@ -86,34 +88,20 @@ void SmagTo2C::Connect(PORTS port, const wire_t &wire, size_t index) {
 
 	switch (port) {
 	case PORTS::A:
-		if (index == num_bits) {
-			auto w = adders.front()->GetWire(PORTS::B);
-
+		if (index == (num_bits - 1)) {
 			for (const auto &x : xors) {
 				x->Connect(PORTS::B, wire);
 			}
 
 			adders.front()->Connect(PORTS::B, wire);
-
-			if (w) {
-				wire->AddOutput(w);
-			}
+			adders.back()->Connect(PORTS::A, wire);
 		} else {
 			xors[index]->Connect(PORTS::A, wire);
 		}
 		input_wires.emplace_back(wire);
 		break;
 	case PORTS::O:
-		if (index == num_bits) {
-			auto w = adders.front()->GetWire(PORTS::B);
-			if (w) {
-				// If there is already a wire, then just
-				// connect the output wire to it.
-				w->AddOutput(wire);
-			}
-		} else {
-			adders[index]->Connect(PORTS::O, wire);
-		}
+		adders[index]->Connect(PORTS::O, wire);
 		output_wires.emplace_back(wire);
 		break;	
 	default:
@@ -136,7 +124,7 @@ void SmagTo2C::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wi
 }
 
 const wire_t SmagTo2C::GetWire(PORTS port, size_t index) const {
-	if (index >= (num_bits + 1)) {
+	if (index >= num_bits) {
 		cout << "[Error] Index " << index << " out of bounds for "
 			 << "SmagTo2C \"" << name << "\".\n";
 		exit(1);
@@ -144,17 +132,13 @@ const wire_t SmagTo2C::GetWire(PORTS port, size_t index) const {
 	
 	switch (port) {
 	case PORTS::A:
-		if (index == num_bits) {
+		if (index == (num_bits - 1)) {
 			return xors.back()->GetWire(PORTS::B);
 		} else {
 			return xors[index]->GetWire(port);
 		}
 	case PORTS::O:
-		if (index == num_bits) {
-			return xors.back()->GetWire(PORTS::B);
-		} else {
-			return adders[index]->GetWire(port);
-		}
+		return adders[index]->GetWire(port);
 	default:
 		cout << "[Error] Trying to retrieve undefined port of SmagTo2C "
 			 << "\"" << name << "\".\n";
