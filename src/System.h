@@ -17,13 +17,13 @@ public:
 	const vector<comp_t> GetComponents() const;
 	const size_t GetNumWires() const {return wires.size();}
 	const wire_t GetWire(const string &wire_name) const;
-	const map<string, wire_t> &GetWires() const {return wires;}
+	const wire_map_t &GetWires() const {return wires;}
 	const vector<wire_t> &GetInputWires() const {return input_wires;}
 	const vector<wire_t> &GetAllInputWires() const {return all_input_wires;}
 	const vector<wire_t> &GetOutputWires() const {return output_wires;}
 	const vector<wire_t> &GetAllOutputWires() const {return all_output_wires;}
 	const wb_t GetWireBundle(const string &bundle_name) const;
-	const map<string, wb_t> &GetWireBundles() const {return wire_bundles;}
+	const wb_map_t &GetWireBundles() const {return wire_bundles;}
 	const vector<wb_t> &GetInputWireBundles() const {return input_bundles;}
 	const vector<wb_t> &GetOutputWireBundles() const {return output_bundles;}
 	const size_t GetLongestPath() const {return longest_path;}
@@ -32,9 +32,9 @@ public:
 protected:
 
 private:
-	map<string, comp_t> components;
-	map<string, wire_t> wires;
-	map<string, wb_t> wire_bundles;
+	comp_map_t components;
+	wire_map_t wires;
+	wb_map_t   wire_bundles;
 
 	// Only wires that have been defined as input wires (not part of wire bundles).
 	vector<wire_t> input_wires;

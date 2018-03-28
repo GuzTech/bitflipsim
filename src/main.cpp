@@ -6,7 +6,7 @@
 using namespace std;
 
 inline
-bool IsComponentDeclared(const map<string, comp_t> &comps, const string &name) {
+bool IsComponentDeclared(const comp_map_t &comps, const string &name) {
 	return comps.find(name) != comps.end();
 }
 
@@ -285,7 +285,7 @@ void ParsePortAndIndex(const string &wire_name,
 	}
 }
 
-void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &multiplier) {
+void ParseMultiplierComponent(comp_map_t &comps, const YAML::Node &multiplier) {
 	string name;
 	size_t num_bits_A = 0;
 	size_t num_bits_B = 0;
@@ -428,7 +428,7 @@ void ParseMultiplierComponent(map<string, comp_t> &comps, const YAML::Node &mult
 	}
 }
 
-void ParseComponents(map<string, comp_t> &comps, const YAML::Node &config) {
+void ParseComponents(comp_map_t &comps, const YAML::Node &config) {
 	const auto &components = config["components"];
 
 	if (components.size() == 0) {
@@ -495,7 +495,7 @@ void ParseComponents(map<string, comp_t> &comps, const YAML::Node &config) {
 	}
 }
 
-void ParseWires(map<string, comp_t> &comps, YAML::Node config) {
+void ParseWires(comp_map_t &comps, YAML::Node config) {
 	const auto &wires = config["wires"];
 
 	if (wires.size() == 0) {
@@ -1449,14 +1449,14 @@ YAML::Node LoadConfigurationFile(const string &config_file_name) {
 }
 
 int main(int argc, char **argv) {
-	map<std::string, comp_t> comps;
+	comp_map_t comps;
 	YAML::Node config;
 	System system;
 	string config_file_name;
 	bool generate_vhdl = false;
 
 	auto error_usage = []() {
-		cout << "Usage: ./bitflipsim <configuration file>\n";
+		cout << "Usage: ./bitflipsim [--vhdl] <configuration file>\n";
 		exit(0);
 	};
 
@@ -1529,7 +1529,7 @@ int main(int argc, char **argv) {
 		cout << "Number of components: " << system.GetNumComponents() <<
 			"\nNumber of wires: " << system.GetNumWires() << '\n';
 
-		ParseStimuli(system, config, config_file_name, false);
+		ParseStimuli(system, config, config_file_name, true);
 
 		cout << "\nSimulation done!\n";
 		cout << "Number of toggles: " << system.GetNumToggles() << '\n';
@@ -1542,13 +1542,13 @@ int main(int argc, char **argv) {
 				 << "\t#outputs: " << ow->GetNumOutputs()
 				 << "\t#toggles: " << ow->GetNumToggles()
 				 << '\n';
-//			cout << "Outputs:\n";
-//			for (const auto &c : ow->GetComponentOutputs()) {
-//				cout << '\t' << c.lock()->GetName() << '\n';
-//			}
-//			for (const auto &w : ow->GetWireOutputs()) {
-//				cout << '\t' << w.lock()->GetName() << '\n';
-//			}
+			cout << "Outputs:\n";
+			for (const auto &c : ow->GetComponentOutputs()) {
+				cout << '\t' << c.lock()->GetName() << '\n';
+			}
+			for (const auto &w : ow->GetWireOutputs()) {
+				cout << '\t' << w.lock()->GetName() << '\n';
+			}
 		}
 #endif
 #if 1

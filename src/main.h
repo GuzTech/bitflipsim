@@ -11,9 +11,11 @@
 #include <fstream>
 #include <bitset>
 #include <ctemplate/template.h>
+#include <tsl/ordered_map.h>
 
 using namespace std;
 using namespace ctemplate;
+using namespace tsl;
 
 class Component;
 class HalfAdder;
@@ -76,6 +78,10 @@ using b_enc_t  = shared_ptr<BoothEncoderRadix4>;
 using b_r4d_t  = shared_ptr<Radix4BoothDecoder>;
 using m2cb_t   = shared_ptr<Multiplier_2C_Booth>;
 using smTo2c_t = shared_ptr<SmagTo2C>;
+
+using comp_map_t = ordered_map<string, comp_t>;
+using wire_map_t = ordered_map<string, wire_t>;
+using wb_map_t   = ordered_map<string, wb_t>;
 
 #include "Component.h"
 #include "HalfAdder.h"
