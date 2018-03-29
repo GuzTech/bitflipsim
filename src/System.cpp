@@ -33,6 +33,12 @@ void System::AddComponent(comp_t component) {
 						// we already have this bundle in the list of
 						// output bundles.
 						output_bundles.emplace_back(wb);
+					} else {
+						if (find(internal_bundles.begin(),
+								 internal_bundles.end(),
+								 wb) == internal_bundles.end()) {
+							internal_bundles.emplace_back(wb);
+						}
 					}
 				}
 			} else {
@@ -45,8 +51,7 @@ void System::AddComponent(comp_t component) {
 					{
 						input_wires.emplace_back(w);
 					}
-				} //else
-				if (w->IsOutputWire()) {
+				} else if (w->IsOutputWire()) {
 					// Since outputs can only be driven by one
 					// component only, we do not have to check if
 					// we already have this wire in the list of
@@ -64,8 +69,7 @@ void System::AddComponent(comp_t component) {
 				{
 					all_input_wires.emplace_back(w);
 				}
-			} //else
-			if (w->IsOutputWire()) {
+			} else if (w->IsOutputWire()) {
 				if (find(all_output_wires.begin(),
 						 all_output_wires.end(),
 						 w) == all_output_wires.end())
@@ -284,31 +288,45 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 
 	// Signals and output signal assignments
 	{
-		string signals;
+		string input_signals;
+		string output_signals;
+		string internal_signals;
 		string input_assignments;
 		string output_assignments;
 
 		for (const auto &ib : input_bundles) {
-			signals += "SIGNAL int_" + ib->GetName() + " : STD_LOGIC_VECTOR(" +
+			const auto &name = ib->GetName();
+			input_signals += "SIGNAL int_" + name + " : STD_LOGIC_VECTOR(" +
 				to_string(ib->GetSize() - 1) + " DOWNTO 0);\n\t";
-			input_assignments += "int_" + ib->GetName() + " <= " + ib->GetName() + ";\n\t\t\t";
+			input_assignments += "int_" + name + " <= " + name + ";\n\t\t\t";
 		}
 
 		for (const auto &ob : output_bundles) {
-			signals += "SIGNAL int_" + ob->GetName() + " : STD_LOGIC_VECTOR(" +
+			const auto &name = ob->GetName();
+			output_signals += "SIGNAL int_" + name + " : STD_LOGIC_VECTOR(" +
 				to_string(ob->GetSize() - 1) + " DOWNTO 0);\n\t";
-			output_assignments += ob->GetName() + " <= int_" + ob->GetName() + ";\n\t\t\t";
+			output_assignments += name + " <= int_" + name + ";\n\t\t\t";
 		}
 
-		size_t found = signals.find_last_of("\n");
-		signals = signals.substr(0, found);
-		found = output_assignments.find_last_of("\n");
+		for (const auto &intb : internal_bundles) {
+			const auto &name = intb->GetName();
+			internal_signals += "SIGNAL int_" + name + " : STD_LOGIC_VECTOR(" +
+				to_string(intb->GetSize() - 1) + " DOWNTO 0);\n\t";
+		}
+
+		//size_t found = signals.find_last_of("\n");
+		//signals = signals.substr(0, found);
+		//found = output_assignments.find_last_of("\n");
+		//output_assignments = output_assignments.substr(0, found);
+		//
+		//if (found == string::npos) {
+		//	found = input_assignments.find_last_of("\n");
+		//	input_assignments = input_assignments.substr(0, found);
+		//}
+		size_t found = output_assignments.find_last_of('\n');
 		output_assignments = output_assignments.substr(0, found);
 
-		if (found == string::npos) {
-			found = input_assignments.find_last_of("\n");
-			input_assignments = input_assignments.substr(0, found);
-		}
+		string signals = input_signals + output_signals + internal_signals;
 
 		toplevel.SetValue("SIGNALS", signals);
 		tb.SetValue("SIGNALS", signals);
