@@ -314,22 +314,11 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 				to_string(intb->GetSize() - 1) + " DOWNTO 0);\n\t";
 		}
 
-		//size_t found = signals.find_last_of("\n");
-		//signals = signals.substr(0, found);
-		//found = output_assignments.find_last_of("\n");
-		//output_assignments = output_assignments.substr(0, found);
-		//
-		//if (found == string::npos) {
-		//	found = input_assignments.find_last_of("\n");
-		//	input_assignments = input_assignments.substr(0, found);
-		//}
 		size_t found = output_assignments.find_last_of('\n');
 		output_assignments = output_assignments.substr(0, found);
 
-		string signals = input_signals + output_signals + internal_signals;
-
-		toplevel.SetValue("SIGNALS", signals);
-		tb.SetValue("SIGNALS", signals);
+		toplevel.SetValue("SIGNALS", input_signals + output_signals + internal_signals);
+		tb.SetValue("SIGNALS", input_signals + output_signals);
 		toplevel.SetValue("REG_ASSIGNMENTS", input_assignments + output_assignments);
 	}
 
