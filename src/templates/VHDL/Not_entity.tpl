@@ -2,14 +2,14 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-ENTITY Not IS
+ENTITY NotC IS
 PORT (
     I : in  STD_LOGIC;
     O : out STD_LOGIC
 );
-END Not;
+END NotC;
 
-ARCHITECTURE arch OF Not IS
+ARCHITECTURE arch OF NotC IS
 BEGIN
     O <= not I;
 END arch;

@@ -1,4 +1,4 @@
-{{NAME}} : ENTITY work.And
+{{NAME}} : ENTITY work.AndC
 PORT MAP (
     A => i_{{NAME}}_A,
     B => i_{{NAME}}_B,
