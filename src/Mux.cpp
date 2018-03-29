@@ -82,6 +82,21 @@ const wire_t Mux::GetWire(PORTS port, size_t index) const {
 	}
 }
 
+const PORT_DIR Mux::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::A:
+	case PORTS::B:
+	case PORTS::S:
+		return PORT_DIR::INPUT;
+	case PORTS::O:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in Mux "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void Mux::GenerateVHDLEntity(const string &path) const {
 
 }

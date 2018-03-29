@@ -156,35 +156,58 @@ const wire_t RippleCarrySubtracter::GetWire(PORTS port, size_t index) const {
 	}
 }
 
+const PORT_DIR RippleCarrySubtracter::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::A:
+	case PORTS::B:
+		return PORT_DIR::INPUT;
+	case PORTS::Cout:
+	case PORTS::O:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in RippleCarrySubtracter "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void RippleCarrySubtracter::PrintDebug() const {
 	cout << "\n========================================\n";
 	cout << name << ':';
 
 	adder->PrintDebug();
+	// TODO: Print the values of the NOT gate outputs.
 
 	cout << "========================================\n";
 }
 
-//void RippleCarrySubtracter::GenerateVHDLEntity(const string &path) const {
-//	// We only need to do it once, since all instances of the RippleCarrySubtracter are identical.
-//	if (!entityGenerated) {
-//		string output;
-//		TemplateDictionary entity("RippleCarrySubtracter");
-//		ExpandTemplate("src/templates/VHDL/RippleCarrySubtracter_entity.tpl", DO_NOT_STRIP, &entity, &output);
-//
-//		auto outfile = ofstream(path + "/RippleCarrySubtracter.vhd");
-//		outfile << output;
-//		outfile.close();
-//
-//		full_adders.front()->GenerateVHDLEntity(path);
-//
-//		entityGenerated = true;
-//	}
-//}
+void RippleCarrySubtracter::GenerateVHDLEntity(const string &path) const {
+	// We only need to do it once, since all instances of the RippleCarrySubtracter are identical.
+	if (!entityGenerated) {
+		string output;
+		TemplateDictionary entity("RippleCarrySubtracter");
+		ExpandTemplate("src/templates/VHDL/RippleCarrySubtracter_entity.tpl", DO_NOT_STRIP, &entity, &output);
+
+		auto outfile = ofstream(path + "/RippleCarrySubtracter.vhd");
+		outfile << output;
+		outfile.close();
+
+		nots.front()->GenerateVHDLEntity(path);
+		adder->GenerateVHDLEntity(path);
+
+		entityGenerated = true;
+	}
+}
 
 const string RippleCarrySubtracter::GenerateVHDLInstance() const {
 	string output;
 	TemplateDictionary inst("RippleCarrySubtracter");
+
+	GenerateAssignments(PORTS::A, num_bits, "A", inst);
+	GenerateAssignments(PORTS::B, num_bits, "B", inst);
+	GenerateAssignments(PORTS::O, num_bits, "O", inst);
+	GenerateAssignments(PORTS::Cout, 1, "Cout", inst, true);
+
 	inst.SetValue("NAME", name);
 	inst.SetValue("SIZE", to_string(num_bits));
 	ExpandTemplate("src/templates/VHDL/RippleCarrySubtracter_inst.tpl", DO_NOT_STRIP, &inst, &output);

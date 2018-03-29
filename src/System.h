@@ -45,6 +45,7 @@ private:
 
 	vector<wb_t> input_bundles;
 	vector<wb_t> output_bundles;
+	vector<wb_t> internal_bundles;
 
 	size_t longest_path = 0;
 };

@@ -227,6 +227,20 @@ const wire_t Multiplier_Smag::GetWire(PORTS port, size_t index) const {
 	return nullptr;
 }
 
+const PORT_DIR Multiplier_Smag::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::A:
+	case PORTS::B:
+		return PORT_DIR::INPUT;
+	case PORTS::O:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in Multiplier_Smag "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void Multiplier_Smag::GenerateCarryPropagateArrayHardware() {
 	const auto create_rca = [&](const auto &name, const size_t size) {
 		const auto rca = make_shared<RippleCarryAdder>(name, size);

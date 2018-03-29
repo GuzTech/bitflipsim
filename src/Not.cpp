@@ -69,6 +69,19 @@ const wire_t Not::GetWire(PORTS port, size_t index) const {
 	}
 }
 
+const PORT_DIR Not::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::I:
+		return PORT_DIR::INPUT;
+	case PORTS::O:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in Not "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void Not::GenerateVHDLEntity(const string &path) const {
 	// We only need to generate it one, since all instances of
 	// the Not gate are identical.

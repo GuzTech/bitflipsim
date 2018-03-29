@@ -291,6 +291,20 @@ const wire_t Multiplier_2C::GetWire(PORTS port, size_t index) const {
 	return nullptr;
 }
 
+const PORT_DIR Multiplier_2C::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::A:
+	case PORTS::B:
+		return PORT_DIR::INPUT;
+	case PORTS::O:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in Multiplier_2C "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 // Generates the standard sign-extension multiplier with carry propagation.
 void Multiplier_2C::GenerateCarryPropagateSignExtendHardware() {
 	// Names for the adders.

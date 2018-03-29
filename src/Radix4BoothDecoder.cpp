@@ -124,6 +124,23 @@ const wire_t Radix4BoothDecoder::GetWire(PORTS port, size_t index) const {
 	}
 }
 
+const PORT_DIR Radix4BoothDecoder::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::Yj:
+	case PORTS::NEG:
+	case PORTS::X1_b:
+	case PORTS::X2_b:
+	case PORTS::Z:
+		return PORT_DIR::INPUT;
+	case PORTS::PPTj:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in Radix4BoothDecoder "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void Radix4BoothDecoder::GenerateDecoderHardware() {
 	// Generate input XNOR gates.
 	string name_prefix = name + "_yj_neg_";

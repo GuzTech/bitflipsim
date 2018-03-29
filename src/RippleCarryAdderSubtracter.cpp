@@ -147,6 +147,22 @@ const wire_t RippleCarryAdderSubtracter::GetWire(PORTS port, size_t index) const
 	}
 }
 
+const PORT_DIR RippleCarryAdderSubtracter::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::A:
+	case PORTS::B:
+	case PORTS::Cin:
+		return PORT_DIR::INPUT;
+	case PORTS::Cout:
+	case PORTS::O:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in RippleCarryAdderSubtracter "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void RippleCarryAdderSubtracter::PrintDebug() const {
 	cout << "\n========================================\n";
 	cout << name << ':';

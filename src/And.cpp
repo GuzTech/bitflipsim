@@ -76,6 +76,20 @@ const wire_t And::GetWire(PORTS port, size_t index) const {
 	}
 }
 
+const PORT_DIR And::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::A:
+	case PORTS::B:
+		return PORT_DIR::INPUT;
+	case PORTS::O:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in And "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void And::GenerateVHDLEntity(const string &path) const {
 	// We only need to do it once, since all instances of the And gate are identical.
 	if (!entityGenerated) {

@@ -146,6 +146,22 @@ const wire_t CarrySaveAdder::GetWire(PORTS port, size_t index) const {
 	}
 }
 
+const PORT_DIR CarrySaveAdder::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::A:
+	case PORTS::B:
+	case PORTS::Cin:
+		return PORT_DIR::INPUT;
+	case PORTS::Cout:
+	case PORTS::O:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in CarrySaveAdder "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void CarrySaveAdder::CheckIfIndexIsInRange(PORTS port, size_t index) const {
 	if (port == PORTS::A && index >= num_bits) {
 		cout << "[Error] Index " << index << " of port A is out of "

@@ -177,6 +177,20 @@ const wire_t Multiplier_2C_Booth::GetWire(PORTS port, size_t index) const {
 	return nullptr;
 }
 
+const PORT_DIR Multiplier_2C_Booth::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::A:
+	case PORTS::B:
+		return PORT_DIR::INPUT;
+	case PORTS::O:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in Multiplier_2C_Booth "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void Multiplier_2C_Booth::Generate2CBoothHardware() {
 	const auto create_enc = [&](const auto &name) {
 		const auto enc = make_shared<BoothEncoderRadix4>(name);
@@ -531,53 +545,9 @@ const string Multiplier_2C_Booth::GenerateVHDLInstance() const {
 
 	inst.SetValue("ARCH", "arch");
 
-	// A
-	{
-		const auto &wire = GetWire(PORTS::A);
-		if (wire) {
-			const auto &wb = wire->GetWireBundle();
-			if (wb) {
-				inst.SetValue("A_WIRE", "int_" + wb->GetName());
-			} else {
-				inst.SetValue("A_WIRE", "int_" + wire->GetName());
-			}
-		} else {
-			// No wire, so assign a '0';
-			inst.SetValue("A_WIRE", "(OTHERS => '0')");
-		}
-	}
-
-	// B
-	{
-		const auto &wire = GetWire(PORTS::B);
-		if (wire) {
-			const auto &wb = wire->GetWireBundle();
-			if (wb) {
-				inst.SetValue("B_WIRE", "int_" + wb->GetName());
-			} else {
-				inst.SetValue("B_WIRE", "int_" + wire->GetName());
-			}
-		} else {
-			// No wire, so assign a '0';
-			inst.SetValue("B_WIRE", "(OTHERS => '0')");
-		}
-	}
-
-	// O
-	{
-		const auto &wire = GetWire(PORTS::O);
-		if (wire) {
-			const auto &wb = wire->GetWireBundle();
-			if (wb) {
-				inst.SetValue("O_WIRE", "int_" + wb->GetName());
-			} else {
-				inst.SetValue("O_WIRE", "int_" + wire->GetName());
-			}
-		} else {
-			// No wire, so assign a '0';
-			inst.SetValue("O_WIRE", "(OTHERS => '0')");
-		}
-	}
+	GenerateAssignments(PORTS::A, num_bits_A, "A", inst);
+	GenerateAssignments(PORTS::B, num_bits_B, "B", inst);
+	GenerateAssignments(PORTS::O, num_bits_O, "O", inst, true);
 
 	ExpandTemplate("src/templates/VHDL/Multiplier_2C_Booth_inst.tpl", DO_NOT_STRIP, &inst, &output);
 

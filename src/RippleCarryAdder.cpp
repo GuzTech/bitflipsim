@@ -165,6 +165,22 @@ const wire_t RippleCarryAdder::GetWire(PORTS port, size_t index) const {
 	}
 }
 
+const PORT_DIR RippleCarryAdder::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::A:
+	case PORTS::B:
+	case PORTS::Cin:
+		return PORT_DIR::INPUT;
+	case PORTS::Cout:
+	case PORTS::O:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in RippleCarryAdder "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void RippleCarryAdder::PrintDebug() const {
 	cout << "\n========================================\n";
 	cout << name << ':';
@@ -207,6 +223,13 @@ void RippleCarryAdder::GenerateVHDLEntity(const string &path) const {
 const string RippleCarryAdder::GenerateVHDLInstance() const {
 	string output;
 	TemplateDictionary inst("RippleCarryAdder");
+
+	GenerateAssignments(PORTS::A, num_bits, "A", inst);
+	GenerateAssignments(PORTS::B, num_bits, "B", inst);
+	GenerateAssignments(PORTS::Cin, 1, "Cin", inst);
+	GenerateAssignments(PORTS::O, num_bits, "O", inst);
+	GenerateAssignments(PORTS::Cout, 1, "Cout", inst, true);
+
 	inst.SetValue("NAME", name);
 	inst.SetValue("SIZE", to_string(num_bits));
 	ExpandTemplate("src/templates/VHDL/RippleCarryAdder_inst.tpl", DO_NOT_STRIP, &inst, &output);

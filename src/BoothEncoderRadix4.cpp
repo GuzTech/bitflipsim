@@ -297,6 +297,29 @@ const wire_t BoothEncoderRadix4::GetWire(PORTS port, size_t index) const {
 	}
 }
 
+const PORT_DIR BoothEncoderRadix4::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::X_2I:
+	case PORTS::X_2I_MINUS_ONE:
+	case PORTS::X_2I_PLUS_ONE:
+	case PORTS::Y_LSB:
+	case PORTS::Y_MSB:
+		return PORT_DIR::INPUT;
+	case PORTS::NEG:
+	case PORTS::ROW_LSB:
+	case PORTS::X1_b:
+	case PORTS::X2_b:
+	case PORTS::SE:
+	case PORTS::Z:
+	case PORTS::NEG_CIN:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in BoothEncoderRadix4 "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void BoothEncoderRadix4::PrintDebug() const {
 	cout << "\n========================================\n";
 	cout << name << ":\n";

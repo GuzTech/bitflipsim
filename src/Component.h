@@ -25,6 +25,7 @@ public:
 	const vector<wire_t> &GetInternalWires() const {return internal_wires;}
 	const vector<wire_t> &GetOutputWires() const {return output_wires;}
 	const virtual wire_t GetWire(PORTS port, size_t index = 0) const =0;
+	const virtual PORT_DIR GetPortDirection(PORTS port) const =0;
 
 	void PrintDebugAfterUpdate(bool value) {print_debug = value;}
 	virtual void PrintDebug() const {};
@@ -37,6 +38,11 @@ protected:
 	}
 
 	virtual void CheckIfIndexIsInRange(PORTS port, size_t index) const {return;}
+	void GenerateAssignments(const PORTS port,
+							 const size_t port_width,
+							 const string &signal_name,
+							 TemplateDictionary &inst,
+							 const bool last_port = false) const;
 
 	string name;
 	bool needs_update = false;

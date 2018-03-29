@@ -81,6 +81,21 @@ const wire_t Nor3::GetWire(PORTS port, size_t index) const {
 	}
 }
 
+const PORT_DIR Nor3::GetPortDirection(PORTS port) const {
+	switch (port) {
+	case PORTS::A:
+	case PORTS::B:
+	case PORTS::C:
+		return PORT_DIR::INPUT;
+	case PORTS::O:
+		return PORT_DIR::OUTPUT;
+	default:
+		cout << "[Error] Trying to get port direction of undefined port in Nor3 "
+			 << "\"" << name << "\".\n";
+		exit(1);
+	}
+}
+
 void Nor3::GenerateVHDLEntity(const string &path) const {
 	// We only need to do it once, since all instances of the Nor3 gate are identical.
 	if (!entityGenerated) {

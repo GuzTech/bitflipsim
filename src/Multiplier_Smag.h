@@ -18,6 +18,7 @@ public:
 	void Connect(PORTS port, const wb_t &wires, size_t port_idx = 0, size_t wire_idx = 0) override;
 
 	const wire_t GetWire(PORTS port, size_t index = 0) const override;
+	const PORT_DIR GetPortDirection(PORTS port) const override;
 
 	void GenerateVHDLEntity(const string &path) const override;
 	const string GenerateVHDLInstance() const override;
