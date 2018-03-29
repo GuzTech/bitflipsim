@@ -1,7 +1,7 @@
 {{NAME}} : ENTITY work.Radix4BoothDecoder
 GENERIC MAP (
 	SIZE => {{SIZE}}
-);
+)
 PORT MAP (
 	Yj   => {{Yj_WIRE}},
 	NEG  => {{NEG_WIRE}},
