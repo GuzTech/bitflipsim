@@ -5,12 +5,60 @@
 
 using namespace std;
 
+map<string, PORTS> PortNameToPortMap = {{"A",              PORTS::A},
+										{"B",              PORTS::B},
+										{"C",              PORTS::C},
+										{"Cin",            PORTS::Cin},
+										{"Cout",           PORTS::Cout},
+										{"I",              PORTS::I},
+										{"O",              PORTS::O},
+										{"S",              PORTS::S},
+										{"X_2I",           PORTS::X_2I},
+										{"X_2I_MINUS_ONE", PORTS::X_2I_MINUS_ONE},
+										{"X_2I_PLUS_ONE",  PORTS::X_2I_PLUS_ONE},
+										{"Y_LSB",          PORTS::Y_LSB},
+										{"Y_MSB",          PORTS::Y_MSB},
+										{"NEG",            PORTS::NEG},
+										{"SE",             PORTS::SE},
+										{"ROW_LSB",        PORTS::ROW_LSB},
+										{"X1_b",           PORTS::X1_b},
+										{"X2_b",           PORTS::X2_b},
+										{"Z",              PORTS::Z},
+										{"Yj",             PORTS::Yj},
+										{"Yj_m1",          PORTS::Yj_m1},
+										{"PPTj",           PORTS::PPTj},
+										{"NEG_CIN",        PORTS::NEG_CIN}};
+
+map<PORTS, string> PortToPortNameMap = {{PORTS::A,              "A"},
+										{PORTS::B,              "B"},
+										{PORTS::C,              "C"},
+										{PORTS::Cin,            "Cin"},
+										{PORTS::Cout,           "Cout"},
+										{PORTS::I,              "I"},
+										{PORTS::O,              "O"},
+										{PORTS::S,              "S"},
+										{PORTS::X_2I,           "X_2I"},
+										{PORTS::X_2I_MINUS_ONE, "X_2I_MINUS_ONE"},
+										{PORTS::X_2I_PLUS_ONE,  "X_2I_PLUS_ONE"},
+										{PORTS::Y_LSB,          "Y_LSB"},
+										{PORTS::Y_MSB,          "Y_MSB"},
+										{PORTS::NEG,            "NEG"},
+										{PORTS::SE,             "SE"},
+										{PORTS::ROW_LSB,        "ROW_LSB"},
+										{PORTS::X1_b,           "X1_b"},
+										{PORTS::X2_b,           "X2_b"},
+										{PORTS::Z,              "Z"},
+										{PORTS::Yj,             "Yj"},
+										{PORTS::Yj_m1,          "Yj_m1"},
+										{PORTS::PPTj,           "PPTj"},
+										{PORTS::NEG_CIN,        "NEG_CIN"}};
+
 inline
 bool IsComponentDeclared(const comp_map_t &comps, const string &name) {
 	return comps.find(name) != comps.end();
 }
 
-void Connect(const comp_t &component, const string &port_name, const wire_t &wire, size_t index = 0) {
+void Connect(const comp_t &component, const PORTS port, const wire_t &wire, size_t index = 0) {
 	const auto &fa_comp   = dynamic_pointer_cast<FullAdder>(component);
 	const auto &ha_comp   = dynamic_pointer_cast<HalfAdder>(component);
 	const auto &and_comp  = dynamic_pointer_cast<And>(component);
@@ -32,109 +80,199 @@ void Connect(const comp_t &component, const string &port_name, const wire_t &wir
 
 	auto error_non_existent_port = [&]() {
 		cout << "[Error] Wire \"" << wire->GetName() << "\" wants to connect to non-existent port \""
-		 << port_name << "\" of component \"" << component->GetName() << "\".\n";
+		 << PortToPortNameMap[port] << "\" of component \"" << component->GetName() << "\".\n";
 		exit(1);
 	};
 
 	if (fa_comp != nullptr) {
-		if (port_name.compare("A") == 0)         fa_comp->Connect(PORTS::A, wire);
-		else if (port_name.compare("B") == 0)    fa_comp->Connect(PORTS::B, wire);
-		else if (port_name.compare("Cin") == 0)  fa_comp->Connect(PORTS::Cin, wire);
-		else if (port_name.compare("O") == 0)    fa_comp->Connect(PORTS::O, wire);
-		else if (port_name.compare("Cout") == 0) fa_comp->Connect(PORTS::Cout, wire);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::Cin:
+		case PORTS::O:
+		case PORTS::Cout:
+			fa_comp->Connect(port, wire);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (ha_comp != nullptr) {
-		if (port_name.compare("A") == 0)         ha_comp->Connect(PORTS::A, wire);
-		else if (port_name.compare("B") == 0)    ha_comp->Connect(PORTS::B, wire);
-		else if (port_name.compare("O") == 0)    ha_comp->Connect(PORTS::O, wire);
-		else if (port_name.compare("Cout") == 0) ha_comp->Connect(PORTS::Cout, wire);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+		case PORTS::Cout:
+			ha_comp->Connect(port, wire);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (and_comp != nullptr) {
-		if (port_name.compare("A") == 0)      and_comp->Connect(PORTS::A, wire);
-		else if (port_name.compare("B") == 0) and_comp->Connect(PORTS::B, wire);
-		else if (port_name.compare("O") == 0) and_comp->Connect(PORTS::O, wire);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+			 and_comp->Connect(port, wire);
+			 break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (or_comp != nullptr) {
-		if (port_name.compare("A") == 0)      or_comp->Connect(PORTS::A, wire);
-		else if (port_name.compare("B") == 0) or_comp->Connect(PORTS::B, wire);
-		else if (port_name.compare("O") == 0) or_comp->Connect(PORTS::O, wire);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+			or_comp->Connect(port, wire);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (or3_comp != nullptr) {
-		if (port_name.compare("A") == 0)      or3_comp->Connect(PORTS::A, wire);
-		else if (port_name.compare("B") == 0) or3_comp->Connect(PORTS::B, wire);
-		else if (port_name.compare("C") == 0) or3_comp->Connect(PORTS::C, wire);
-		else if (port_name.compare("O") == 0) or3_comp->Connect(PORTS::O, wire);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::C:
+		case PORTS::O:
+			or3_comp->Connect(port, wire);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (xor_comp != nullptr) {
-		if (port_name.compare("A") == 0)      xor_comp->Connect(PORTS::A, wire);
-		else if (port_name.compare("B") == 0) xor_comp->Connect(PORTS::B, wire);
-		else if (port_name.compare("O") == 0) xor_comp->Connect(PORTS::O, wire);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+			xor_comp->Connect(port, wire);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (nand_comp != nullptr) {
-		if (port_name.compare("A") == 0)      nand_comp->Connect(PORTS::A, wire);
-		else if (port_name.compare("B") == 0) nand_comp->Connect(PORTS::B, wire);
-		else if (port_name.compare("O") == 0) nand_comp->Connect(PORTS::O, wire);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+			nand_comp->Connect(port, wire);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (nor_comp != nullptr) {
-		if (port_name.compare("A") == 0)      nor_comp->Connect(PORTS::A, wire);
-		else if (port_name.compare("B") == 0) nor_comp->Connect(PORTS::B, wire);
-		else if (port_name.compare("O") == 0) nor_comp->Connect(PORTS::O, wire);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+			nor_comp->Connect(port, wire);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (xnor_comp != nullptr) {
-		if (port_name.compare("A") == 0)      xnor_comp->Connect(PORTS::A, wire);
-		else if (port_name.compare("B") == 0) xnor_comp->Connect(PORTS::B, wire);
-		else if (port_name.compare("O") == 0) xnor_comp->Connect(PORTS::O, wire);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+			xnor_comp->Connect(port, wire);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (not_comp != nullptr) {
-		if (port_name.compare("I") == 0)      not_comp->Connect(PORTS::I, wire);
-		else if (port_name.compare("O") == 0) not_comp->Connect(PORTS::O, wire);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::I:
+		case PORTS::O:
+			not_comp->Connect(port, wire);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (mux_comp != nullptr) {
-		if (port_name.compare("A") == 0)      mux_comp->Connect(PORTS::A, wire);
-		else if (port_name.compare("B") == 0) mux_comp->Connect(PORTS::B, wire);
-		else if (port_name.compare("S") == 0) mux_comp->Connect(PORTS::S, wire);
-		else if (port_name.compare("O") == 0) mux_comp->Connect(PORTS::O, wire);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::S:
+		case PORTS::O:
+			mux_comp->Connect(port, wire);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (rca_comp != nullptr) {
-		if (port_name.compare("A") == 0)         rca_comp->Connect(PORTS::A, wire, index);
-		else if (port_name.compare("B") == 0)    rca_comp->Connect(PORTS::B, wire, index);
-		else if (port_name.compare("O") == 0)    rca_comp->Connect(PORTS::O, wire, index);
-		else if (port_name.compare("Cin") == 0)  rca_comp->Connect(PORTS::Cin, wire, index);
-		else if (port_name.compare("Cout") == 0) rca_comp->Connect(PORTS::Cout, wire, index);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::Cin:
+		case PORTS::O:
+		case PORTS::Cout:
+			rca_comp->Connect(port, wire, index);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (rcas_comp != nullptr) {
-		if (port_name.compare("A") == 0)         rcas_comp->Connect(PORTS::A, wire, index);
-		else if (port_name.compare("B") == 0)    rcas_comp->Connect(PORTS::B, wire, index);
-		else if (port_name.compare("O") == 0)    rcas_comp->Connect(PORTS::O, wire, index);
-		else if (port_name.compare("Cin") == 0)  rcas_comp->Connect(PORTS::Cin, wire, index);
-		else if (port_name.compare("Cout") == 0) rcas_comp->Connect(PORTS::Cout, wire, index);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::Cin:
+		case PORTS::O:
+		case PORTS::Cout:
+			rcas_comp->Connect(port, wire, index);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (rcs_comp != nullptr) {
-		if (port_name.compare("A") == 0)         rcs_comp->Connect(PORTS::A, wire, index);
-		else if (port_name.compare("B") == 0)    rcs_comp->Connect(PORTS::B, wire, index);
-		else if (port_name.compare("O") == 0)    rcs_comp->Connect(PORTS::O, wire, index);
-		else if (port_name.compare("Cout") == 0) rcs_comp->Connect(PORTS::Cout, wire, index);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+		case PORTS::Cout:
+			rcs_comp->Connect(port, wire, index);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (m2C_comp != nullptr) {
-		if (port_name.compare("A") == 0)      m2C_comp->Connect(PORTS::A, wire, index);
-		else if (port_name.compare("B") == 0) m2C_comp->Connect(PORTS::B, wire, index);
-		else if (port_name.compare("O") == 0) m2C_comp->Connect(PORTS::O, wire, index);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+			m2C_comp->Connect(port, wire, index);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (smag_comp != nullptr) {
-		if (port_name.compare("A") == 0)      smag_comp->Connect(PORTS::A, wire, index);
-		else if (port_name.compare("B") == 0) smag_comp->Connect(PORTS::B, wire, index);
-		else if (port_name.compare("O") == 0) smag_comp->Connect(PORTS::O, wire, index);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+			smag_comp->Connect(port, wire, index);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (m2C_booth_comp != nullptr) {
-		if (port_name.compare("A") == 0)      m2C_booth_comp->Connect(PORTS::A, wire, index);
-		else if (port_name.compare("B") == 0) m2C_booth_comp->Connect(PORTS::B, wire, index);
-		else if (port_name.compare("O") == 0) m2C_booth_comp->Connect(PORTS::O, wire, index);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+			m2C_booth_comp->Connect(port, wire, index);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	} else if (smTo2C_comp != nullptr) {
-		if (port_name.compare("A") == 0)      smTo2C_comp->Connect(PORTS::A, wire, index);
-		else if (port_name.compare("B") == 0) smTo2C_comp->Connect(PORTS::B, wire, index);
-		else if (port_name.compare("O") == 0) smTo2C_comp->Connect(PORTS::O, wire, index);
-		else error_non_existent_port();
+		switch (port) {
+		case PORTS::A:
+		case PORTS::B:
+		case PORTS::O:
+			smTo2C_comp->Connect(port, wire, index);
+			break;
+		default:
+			error_non_existent_port();
+		}
 	}
 }
 
@@ -495,8 +633,62 @@ void ParseComponents(comp_map_t &comps, const YAML::Node &config) {
 	}
 }
 
+struct WireInformation {
+
+	// About the Wire(Bundle) itself.
+	string name;
+	bool is_bundle = false;
+	size_t bundle_size = 1;
+
+	void AddFrom(const string &comp_name, const PORTS port, const size_t begin_idx, const size_t end_idx) {
+		size_t idx = 0;
+		for (; idx < from.size(); ++idx) {
+			if (get<1>(from[idx]) == port) {
+				break;
+			}
+		}
+
+		if (idx < from.size()) {
+			// We had already stored this one, so just update the begin and end indices.
+			get<2>(from[idx]) = begin_idx;
+			get<3>(from[idx]) = end_idx;
+
+		} else {
+			// We had not stored this one yet, so add it.
+			from.emplace_back(tuple<string, PORTS, size_t, size_t>(comp_name, port, begin_idx, end_idx));
+		}
+	}
+
+	void AddTo(const string &comp_name, const PORTS port, const size_t begin_idx, const size_t end_idx) {
+		size_t idx = 0;
+		for (; idx < to.size(); ++idx) {
+			if (get<1>(to[idx]) == port) {
+				break;
+			}
+		}
+
+		if (idx < to.size()) {
+			// We had already stored this one, so just update the begin and end indices.
+			get<2>(to[idx]) = begin_idx;
+			get<3>(to[idx]) = end_idx;
+
+		} else {
+			// We had not stored this one yet, so add it.
+			to.emplace_back(tuple<string, PORTS, size_t, size_t>(comp_name, port, begin_idx, end_idx));
+		}
+	}
+
+	// <from/to port, begin index, end index>
+	vector<tuple<string, PORTS, size_t, size_t>> from;
+	vector<tuple<string, PORTS, size_t, size_t>> to;
+};
+
+using wi_t = shared_ptr<WireInformation>;
+
 void ParseWires(comp_map_t &comps, YAML::Node config) {
 	const auto &wires = config["wires"];
+
+	vector<wi_t> wire_information;
 
 	if (wires.size() == 0) {
 		cout << "[Error] \"wires\" section is empty.\n";
@@ -506,10 +698,14 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 	for (YAML::const_iterator it = wires.begin(); it != wires.end(); ++it) {
 		const auto &wire_string = it->first.as<string>();
 
+		wi_t wire_info = make_shared<WireInformation>();
+
 		string wire_name;
 		size_t bundle_size = 0;
 		WireBundle::REPR repr = WireBundle::REPR::TWOS_COMPLEMENT;
 		ParseWireAndSize(wire_string, wire_name, bundle_size, repr);
+
+		wire_info->name = wire_name;
 
 		if (it->second.size() == 2) {
 			wire_t wire;
@@ -520,6 +716,9 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 				wire_bundle = make_shared<WireBundle>(wire_name, bundle_size, repr);
 				wire_bundle->Init();
 				size = bundle_size;
+
+				wire_info->bundle_size = bundle_size;
+				wire_info->is_bundle = true;
 			}
 
 			for (size_t b_idx = 0; b_idx < size; ++b_idx) {
@@ -706,15 +905,20 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 					}
 				}
 
+				// If a Wire or WireBundle is driven by the global input...
 				if (from_name.compare("input") == 0) {
 					if (to.size() == 2) {
 						for (std::size_t i = 0; i < to_components.size(); ++i) {
 							string port_name;
 							size_t begin_idx = 0;
 							size_t end_idx = 0;
-							ParsePortAndIndex(wire_name, to_port_names[i], port_name, begin_idx, end_idx);
 
-							Connect(to_components[i], port_name, wire, b_idx + begin_idx);
+							ParsePortAndIndex(wire_name, to_port_names[i], port_name, begin_idx, end_idx);
+							wire_info->AddTo(to_components[i]->GetName(), PortNameToPortMap[port_name], begin_idx, end_idx);
+
+							if (b_idx + begin_idx <= end_idx) {
+								Connect(to_components[i], PortNameToPortMap[port_name], wire, b_idx + begin_idx);
+							}
 						}
 					} else {
 						cout << "[Error] Input wire \"" << wire_name << "\" has incomplete declared output.\n";
@@ -728,8 +932,13 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 						string from_port_name;
 						size_t from_begin_idx = 0;
 						size_t from_end_idx = 0;
+
 						ParsePortAndIndex(wire_name, from_port, from_port_name, from_begin_idx, from_end_idx);
-						Connect(from_comp, from_port_name, wire, b_idx + from_begin_idx);
+						wire_info->AddFrom(from_name, PortNameToPortMap[from_port_name], from_begin_idx, from_end_idx);
+
+						if (b_idx + from_begin_idx <= from_end_idx) {
+							Connect(from_comp, PortNameToPortMap[from_port_name], wire, b_idx + from_begin_idx);
+						}
 
 						if (IsComponentDeclared(comps, from_name)) {
 							for (std::size_t i = 0; i < to_components.size(); ++i) {
@@ -742,7 +951,11 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 									size_t to_end_idx = 0;
 
 									ParsePortAndIndex(wire_name, to_port, to_port_name, to_begin_idx, to_end_idx);
-									Connect(to_comp, to_port_name, wire, b_idx + to_begin_idx);
+									wire_info->AddTo(to_comp->GetName(), PortNameToPortMap[to_port_name], to_begin_idx, to_end_idx);
+
+									if (b_idx + to_begin_idx <= to_end_idx) {
+										Connect(to_comp, PortNameToPortMap[to_port_name], wire, b_idx + to_begin_idx);
+									}
 								} else {
 									cout << "[Error] Wire \"" << wire_name << "\" input component does not exist.\n";
 									exit(1);
@@ -770,10 +983,32 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 						wire_bundle->SetAsOutputBundle();
 					}
 				}
+
 			}
 		} else {
 			cout << "[Error] Wire \"" << wire_name << "\" declaration needs exactly 1 \"from\" section and 1 \"to\" section.\n";
 			exit(1);
+		}
+
+		wire_information.emplace_back(wire_info);
+	}
+
+	cout << "Wire information:\n";
+	for (const auto &wi : wire_information) {
+		if (wi->is_bundle) {
+			cout << "\nWireBundle: " << wi->name;
+		} else {
+			cout << "Wire: " << wi->name;
+		}
+
+		cout << "\nfrom:\n";
+		for (const auto &from : wi->from) {
+			cout << "comp: " << get<0>(from) << " port: " << PortToPortNameMap[get<1>(from)] << " bIdx: " << get<2>(from) << " eIdx: " << get<3>(from) << '\n';
+		}
+
+		cout << "\nto:\n";
+		for (const auto &to : wi->to) {
+			cout << "comp: " << get<0>(to) << " port: " << PortToPortNameMap[get<1>(to)] << " bIdx: " << get<2>(to) << " eIdx: " << get<3>(to) << '\n';
 		}
 	}
 }
