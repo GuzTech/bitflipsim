@@ -26,7 +26,7 @@ void Component::GenerateAssignments(const PORTS port,
 									const string &signal_name,
 									TemplateDictionary &inst,
 									const bool last_port) const {
-	map<string, pair<size_t, size_t>> wire_indices;
+	map<string, tuple<size_t, size_t, size_t>> wire_indices;
 
 	for (size_t i = 0; i < port_width; ++i) {
 		const auto &w = GetWire(port, i);
@@ -35,14 +35,14 @@ void Component::GenerateAssignments(const PORTS port,
 
 			if (wb) {
 				const auto &p = wire_indices[wb->GetName()];
-				size_t min_idx = min(p.first, i);
-				size_t max_idx = max(p.second, i);
-				wire_indices[wb->GetName()] = pair<size_t, size_t>(min_idx, max_idx);
+				size_t min_idx = min(get<0>(p), i);
+				size_t max_idx = max(get<1>(p), i);
+				wire_indices[wb->GetName()] = tuple<size_t, size_t, size_t>(min_idx, max_idx, wb->GetSize());
 			} else {
 				const auto &p = wire_indices[w->GetName()];
-				size_t min_idx = min(p.first, i);
-				size_t max_idx = max(p.second, i);
-				wire_indices[w->GetName()] = pair<size_t, size_t>(min_idx, max_idx);
+				size_t min_idx = min(get<0>(p), i);
+				size_t max_idx = max(get<1>(p), i);
+				wire_indices[w->GetName()] = tuple<size_t, size_t, size_t>(min_idx, max_idx, 1);
 			}
 		}
 	}
@@ -51,8 +51,8 @@ void Component::GenerateAssignments(const PORTS port,
 
 	if (wire_indices.size()) {
 		for (const auto &[name, indices] : wire_indices) {
-			auto min_str = to_string(indices.first);
-			auto max_str = to_string(indices.second);
+			auto min_str = to_string(get<0>(indices));
+			auto max_str = to_string(get<1>(indices));
 			signal += signal_name + " => int_" + name + '(' + max_str + " DOWNTO " + min_str + "),\n";
 		}
 	} else {
