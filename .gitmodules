@@ -6,7 +6,9 @@
 [submodule "lib/ctemplate"]
 	path = lib/ctemplate
 	url = https://github.com/OlafvdSpek/ctemplate.git
-    branch = master
+	branch = master
+	ignore = untracked
+
 [submodule "lib/ordered-map"]
 	path = lib/ordered-map
 	url = https://github.com/Tessil/ordered-map.git
