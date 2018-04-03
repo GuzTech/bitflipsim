@@ -15,6 +15,7 @@ public:
 	virtual void Update(bool propagating = true) =0;
 	virtual void Connect(PORTS port, const wire_t &wire, size_t index = 0) =0;
 	virtual void Connect(PORTS port, const wb_t &wires, size_t port_idx = 0, size_t wire_idx = 0) =0;
+	virtual void Connect(PORTS port, const wb_t &wires, size_t port_begin_idx, size_t port_end_idx, size_t wire_begin_idx) {};
 	void MarkUpdate() {needs_update = true;}
 	void Reset() {needs_update = false;}
 

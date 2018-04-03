@@ -127,6 +127,25 @@ void RippleCarryAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, s
 	Connect(port, wire, port_idx);
 }
 
+//void RippleCarryAdder::Connect(PORTS port, const wb_t &wires, size_t port_begin_idx, size_t port_end_idx, size_t wire_begin_idx) {
+//	const size_t port_idx_size = port_end_idx - port_begin_idx;
+//
+//	if ((wire_begin_idx + port_idx_size) >= wires->GetSize()) {
+//		Error("Wire bundle \"" + wires->GetName() + " is too small to connect to port \"" +
+//			  PortToPortNameMap[port] + "\" of RippleCarryAdder \"" + name + "\".\n");
+//	} else if (wire_begin_idx >= wires->GetSize()) {
+//		Error("Wire bundle begin index larger than the size of \"" + wires->GetName() + "\".\n");
+//	} else if (port_begin_idx >= num_bits ||
+//			   port_end_idx >= num_bits) {
+//		Error("");
+//	}
+//
+//	for (size_t i = 0; i < port_idx_size; ++i) {
+//		const wire_t &wire = (*wires)[i + wire_begin_idx];
+//		Connect(port, wire, i + port_begin_idx);
+//	}
+//}
+
 const wire_t RippleCarryAdder::GetWire(PORTS port, size_t index) const {
 	if (index >= num_bits) {
 		Error("Index " + to_string(index) + " out of bound for RippleCarryAdder \"" + name + "\".\n");
