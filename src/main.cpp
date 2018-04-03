@@ -2,56 +2,9 @@
 #include <yaml-cpp/yaml.h>
 #include <random>
 #include <experimental/filesystem>
+#include <stdnoreturn.h>
 
 using namespace std;
-
-map<string, PORTS> PortNameToPortMap = {{"A",              PORTS::A},
-										{"B",              PORTS::B},
-										{"C",              PORTS::C},
-										{"Cin",            PORTS::Cin},
-										{"Cout",           PORTS::Cout},
-										{"I",              PORTS::I},
-										{"O",              PORTS::O},
-										{"S",              PORTS::S},
-										{"X_2I",           PORTS::X_2I},
-										{"X_2I_MINUS_ONE", PORTS::X_2I_MINUS_ONE},
-										{"X_2I_PLUS_ONE",  PORTS::X_2I_PLUS_ONE},
-										{"Y_LSB",          PORTS::Y_LSB},
-										{"Y_MSB",          PORTS::Y_MSB},
-										{"NEG",            PORTS::NEG},
-										{"SE",             PORTS::SE},
-										{"ROW_LSB",        PORTS::ROW_LSB},
-										{"X1_b",           PORTS::X1_b},
-										{"X2_b",           PORTS::X2_b},
-										{"Z",              PORTS::Z},
-										{"Yj",             PORTS::Yj},
-										{"Yj_m1",          PORTS::Yj_m1},
-										{"PPTj",           PORTS::PPTj},
-										{"NEG_CIN",        PORTS::NEG_CIN}};
-
-map<PORTS, string> PortToPortNameMap = {{PORTS::A,              "A"},
-										{PORTS::B,              "B"},
-										{PORTS::C,              "C"},
-										{PORTS::Cin,            "Cin"},
-										{PORTS::Cout,           "Cout"},
-										{PORTS::I,              "I"},
-										{PORTS::O,              "O"},
-										{PORTS::S,              "S"},
-										{PORTS::X_2I,           "X_2I"},
-										{PORTS::X_2I_MINUS_ONE, "X_2I_MINUS_ONE"},
-										{PORTS::X_2I_PLUS_ONE,  "X_2I_PLUS_ONE"},
-										{PORTS::Y_LSB,          "Y_LSB"},
-										{PORTS::Y_MSB,          "Y_MSB"},
-										{PORTS::NEG,            "NEG"},
-										{PORTS::SE,             "SE"},
-										{PORTS::ROW_LSB,        "ROW_LSB"},
-										{PORTS::X1_b,           "X1_b"},
-										{PORTS::X2_b,           "X2_b"},
-										{PORTS::Z,              "Z"},
-										{PORTS::Yj,             "Yj"},
-										{PORTS::Yj_m1,          "Yj_m1"},
-										{PORTS::PPTj,           "PPTj"},
-										{PORTS::NEG_CIN,        "NEG_CIN"}};
 
 inline
 bool IsComponentDeclared(const comp_map_t &comps, const string &name) {
@@ -79,9 +32,8 @@ void Connect(const comp_t &component, const PORTS port, const wire_t &wire, size
 	const auto &smTo2C_comp    = dynamic_pointer_cast<SmagTo2C>(component);
 
 	auto error_non_existent_port = [&]() {
-		cout << "[Error] Wire \"" << wire->GetName() << "\" wants to connect to non-existent port \""
-		 << PortToPortNameMap[port] << "\" of component \"" << component->GetName() << "\".\n";
-		exit(1);
+		Error(string("Wire \"") + wire->GetName() + string("\" wants to connect to non-existent port \"")
+			  + PortToPortNameMap[port] + string("\" of component \"") + component->GetName() + ("\".\n"));
 	};
 
 	if (fa_comp != nullptr) {
@@ -278,12 +230,8 @@ void Connect(const comp_t &component, const PORTS port, const wire_t &wire, size
 
 void ParseWireAndSize(string wire_string, string &wire_name, size_t &size, WireBundle::REPR &repr) {
 	auto error_inconsistent = [](const auto &wire) {
-		cout << "[Error] Inconsistent wire declaration for wire \"" << wire << "\".\n"
-			 << "Format for wires:\n"
-			 << "<wire name>\n\n"
-			 << "Format for wire bundles:\n"
-			 << "<wire name> <size> [1c|1C|2c|2C|smag]\n";
-		exit(1);
+		Error("Inconsistent wire declaration for wire \"" + wire + "\".\nFormat for wires:\n"
+			  + "<wire name>\n\nFormat for wire bundles:\n<wire name> <size> [1c|1C|2c|2C|smag]\n");
 	};
 
 	// Check if the wire name contains a space to indicate that it
@@ -304,11 +252,9 @@ void ParseWireAndSize(string wire_string, string &wire_name, size_t &size, WireB
 				try {
 					size = stoul(wire_string.substr(0, pos));
 				} catch (invalid_argument e) {
-					cout << "[Error] Size for wire \"" << wire_name << "\" is not a number.\n";
-					exit(1);
+					Error("Size for wire \"" + wire_name + "\" is not a number.\n");
 				} catch (out_of_range e ) {
-					cout << "[Error] Size for wire \"" << wire_name << "\" is too large.\n";
-					exit(1);
+					Error("Size for wire \"" + wire_name + "\" is too large.\n");
 				}
 			} else {
 				// A size and number representation is given.
@@ -329,20 +275,17 @@ void ParseWireAndSize(string wire_string, string &wire_name, size_t &size, WireB
 						} else if (wire_string.compare("smag") == 0) {
 							repr = WireBundle::REPR::SIGNED_MAGNITUDE;
 						} else {
-							cout << "[Error] Unrecognized number representation for wire bundle \""
-								 << wire_name << "\".\nOnly \"2c\"/\"2C\" (default), \"1c\"/\"1C\""
-								 << ", and \"smag\" are supported.\n";
-							exit(1);
+						    Error("Unrecognized number representation for wire bundle \""
+								  + wire_name + "\".\nOnly \"2c\"/\"2C\" (default), \"1c\"/\"1C\""
+								  + ", and \"smag\" are supported.\n");
 						}
 					} else {
 						error_inconsistent(wire_name);
 					}
 				} catch (invalid_argument e) {
-					cout << "[Error] Size for wire \"" << wire_name << "\" is not a number.\n";
-					exit(1);
+					Error("Size for wire \"" + wire_name + "\" is not a number.\n");
 				} catch (out_of_range e ) {
-					cout << "[Error] Size for wire \"" << wire_name << "\" is too large.\n";
-					exit(1);
+				    Error("Size for wire \"" + wire_name + "\" is too large.\n");
 				}
 			}
 		} else {
@@ -380,13 +323,11 @@ void ParsePortAndIndex(const string &wire_name,
 					port_string.erase(0, pos + 1);
 					pos = port_string.find(" ");
 				} catch (invalid_argument e) {
-					cout << "[Error] Index for port \"" << port_name << "\" of wire \""
-						 << wire_name << "\" is not a number.\n";
-					exit(1);
+					Error("Index for port \"" + port_name + "\" of wire \""
+						  + wire_name + "\" is not a number.\n");
 				} catch (out_of_range e) {
-					cout << "[Error] Index number for port \"" << port_name << "\" of wire \""
-						 << wire_name << "\" is too large.\n";
-					exit(1);
+					Error("Index number for port \"" + port_name + "\" of wire \""
+						  + wire_name + "\" is too large.\n");
 				}
 			} else {
 				// There are at least two arguments after the name.
@@ -399,21 +340,18 @@ void ParsePortAndIndex(const string &wire_name,
 						// There is a second argument, which is the end index.
 						end_idx = stoul(port_string.substr(0, pos));
 					} else {
-						cout << "[Error] At most two indices can be given after port name \""
-							 << port_name << "\" for wire \"" << wire_name << "\".\n";
-						exit(1);
+						Error("At most two indices can be given after port name \""
+							  + port_name + "\" for wire \"" + wire_name + "\".\n");
 
 						// This only happens if the user enters a port name with at least one space after it
 						// in double quotation marks like so "A ". Else the YAML parser removes whitespace.
 					}
 				} catch (invalid_argument e) {
-					cout << "[Error] Index for port \"" << port_name << "\" of wire \""
-						 << wire_name << "\" is not a number.\n";
-					exit(1);
+					Error("Index for port \"" + port_name + "\" of wire \""
+						  + wire_name + "\" is not a number.\n");
 				} catch (out_of_range e) {
-					cout << "[Error] Index number for port \"" << port_name << "\" of wire \""
-						 << wire_name << "\" is too large.\n";
-					exit(1);
+					Error("Index number for port \"" + port_name + "\" of wire \""
+						  + wire_name + "\" is too large.\n");
 				}
 			}
 		}
@@ -432,39 +370,33 @@ void ParseMultiplierComponent(comp_map_t &comps, const YAML::Node &multiplier) {
 	TYPE type = TYPE::NONE;
 
 	auto error_unsupported_configuration = [&]() {
-		cout << "[Error] Multiplier configuration not supported.\n";
-		exit(1);
+		Error("Multiplier configuration not supported.\n");
 	};
 
 	if (multiplier["name"]) {
 		name = multiplier["name"].as<string>();
 	} else {
-		cout << "[Error] Multiplier has no name.\n";
-		exit(1);
+		Error("Multiplier has no name.\n");
 	}
 
 	if (multiplier["A width"]) {
 		try {
 			num_bits_A = multiplier["A width"].as<size_t>();
 		} catch (YAML::TypedBadConversion<size_t> e) {
-			cout << "[Error] Multiplier \"" << name << "\" port A width is not a number: " << e.msg << '\n';
-			exit(1);
+			Error("Multiplier \"" + name + "\" port A width is not a number: " + e.msg + '\n');
 		}
 	} else {
-		cout << "[Error] Property \"A width\" for multiplier \"" << name << "\" is required, but was not found.\n";
-		exit(1);
+		Error("Property \"A width\" for multiplier \"" + name + "\" is required, but was not found.\n");
 	}
 
 	if (multiplier["B width"]) {
 		try {
 			num_bits_B = multiplier["B width"].as<size_t>();
 		} catch (YAML::TypedBadConversion<size_t> e) {
-			cout << "[Error] Multiplier \"" << name << "\" port B width is not a number: " << e.msg << '\n';
-			exit(1);
+			Error("Multiplier \"" + name + "\" port B width is not a number: " + e.msg + '\n');
 		}
 	} else {
-		cout << "[Error] Property \"B width\" for multiplier \"" << name << "\" is required, but was not found.\n";
-		exit(1);
+		Error("Property \"B width\" for multiplier \"" + name + "\" is required, but was not found.\n");
 	}
 
 	if (multiplier["number format"]) {
@@ -475,13 +407,11 @@ void ParseMultiplierComponent(comp_map_t &comps, const YAML::Node &multiplier) {
 		else if (fmt_string.compare("SMAG") == 0) 	format = NUMFMT::SIGNED_MAGNITUDE;
 		else if (fmt_string.compare("UINT") == 0)	format = NUMFMT::UNSIGNED;
 		else {
-			cout << "[Error] Property \"number format\" for multiplier \"" << name << "\" has an unsupported value. "
-				 << "Supported values are \"2C\", \"1C\", \"SMAG\", and \"UINT\".\n";
-			exit(1);
+			Error("Property \"number format\" for multiplier \"" + name + "\" has an unsupported value. "
+				  + "Supported values are \"2C\", \"1C\", \"SMAG\", and \"UINT\".\n");
 		}
 	} else {
-		cout << "[Error] Property \"number format\" for multiplier \"" << name << "\" is required, but was not found.\n";
-		exit(1);
+		Error("Property \"number format\" for multiplier \"" + name + "\" is required, but was not found.\n");
 	}
 
 	if (multiplier["layout"]) {
@@ -492,13 +422,11 @@ void ParseMultiplierComponent(comp_map_t &comps, const YAML::Node &multiplier) {
 		else if (layout_string.compare("booth radix-2") == 0) 	layout = LAYOUT::BOOTH_RADIX_2;
 		else if (layout_string.compare("booth radix-4") == 0)	layout = LAYOUT::BOOTH_RADIX_4;
 		else {
-			cout << "[Error] Property \"layout\" for multiplier \"" << name << "\" has an unsupported value. "
-				 << "Supported values are \"carry propagate\", \"carry save\", \"booth radix-2\", and \"booth radix-4\".\n";
-			exit(1);
+			Error("Property \"layout\" for multiplier \"" + name + "\" has an unsupported value. "
+				  + "Supported values are \"carry propagate\", \"carry save\", \"booth radix-2\", and \"booth radix-4\".\n");
 		}
 	} else {
-		cout << "[Error] Property \"layout\" for multiplier \"" << name << "\" is required, but was not found.\n";
-		exit(1);
+		Error("Property \"layout\" for multiplier \"" + name + "\" is required, but was not found.\n");
 	}
 
 	if (multiplier["type"]) {
@@ -509,9 +437,8 @@ void ParseMultiplierComponent(comp_map_t &comps, const YAML::Node &multiplier) {
 		else if (type_string.compare("Baugh-Wooley") == 0)		type = TYPE::BAUGH_WOOLEY;
 		else if (type_string.compare("none") == 0)				type = TYPE::NONE;
 		else {
-			cout << "[Error] Property \"type\" for multiplier \"" << name << "\" has an unsupported value. "
-				 << "Supported values are \"inversion\", \"sign extension\", and \"Baugh-Wooley\".\n";
-			exit(1);
+			Error("Property \"type\" for multiplier \"" + name + "\" has an unsupported value. "
+				 + "Supported values are \"inversion\", \"sign extension\", and \"Baugh-Wooley\".\n");
 		}
 	}
 
@@ -524,8 +451,7 @@ void ParseMultiplierComponent(comp_map_t &comps, const YAML::Node &multiplier) {
 			case TYPE::SIGN_EXTEND:	 comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_SIGN_EXTEND); break;
 			case TYPE::BAUGH_WOOLEY: comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_PROPAGATE_BAUGH_WOOLEY); break;
 			case TYPE::NONE:
-				cout << "[Error] Twos-complement multiplier \"" << name << "\" cannot have \"none\" as a type.\n";
-				exit(1);
+				Error("Twos-complement multiplier \"" + name + "\" cannot have \"none\" as a type.\n");
 			default:
 				error_unsupported_configuration();
 				break;
@@ -537,8 +463,7 @@ void ParseMultiplierComponent(comp_map_t &comps, const YAML::Node &multiplier) {
 			case TYPE::SIGN_EXTEND:   comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_SIGN_EXTEND); break;
 			case TYPE::BAUGH_WOOLEY:  comps[name] = make_shared<Multiplier_2C>(name, num_bits_A, num_bits_B, Multiplier_2C::MUL_TYPE::CARRY_SAVE_BAUGH_WOOLEY); break;
 			case TYPE::NONE:
-				cout << "[Error] Twos-complement multiplier \"" << name << "\" cannot have \"none\" as a type.\n";
-				exit(1);
+				Error("Twos-complement multiplier \"" + name + "\" cannot have \"none\" as a type.\n");
 			default:
 				error_unsupported_configuration();
 				break;
@@ -570,8 +495,7 @@ void ParseComponents(comp_map_t &comps, const YAML::Node &config) {
 	const auto &components = config["components"];
 
 	if (components.size() == 0) {
-		cout << "[Error] No components found.\n";
-		exit(1);
+		Error("No components found.\n");
 	}
 
 	for (YAML::const_iterator it = components.begin(); it != components.end(); ++it) {
@@ -596,16 +520,13 @@ void ParseComponents(comp_map_t &comps, const YAML::Node &config) {
 						num_bits_B = value[2].as<size_t>();
 					}
 				} else {
-					cout << "[Error] Component \"" << comp_name << "\" can have at most two arguments.\n";
-					exit(1);
+					Error("Component \"" + comp_name + "\" can have at most two arguments.\n");
 				}
 			} else {
-				cout << "[Error] Component name must be a scalar or sequence.\n";
-				exit(1);
+				Error("Component name must be a scalar or sequence.\n");
 			}
 		} else {
-			cout << "[Error] Component must have a name.\n";
-			exit(1);
+			Error("Component must have a name.\n");
 		}
 
 		if (comp_type.compare("FullAdder") == 0)                		comps[comp_name] = make_shared<FullAdder>(comp_name);
@@ -627,8 +548,7 @@ void ParseComponents(comp_map_t &comps, const YAML::Node &config) {
 		else if (comp_type.compare("Multiplier_2C_Booth") == 0) 		comps[comp_name] = make_shared<Multiplier_2C_Booth>(comp_name, num_bits_A, num_bits_B);
 		else if (comp_type.compare("SmagTo2C") == 0)            		comps[comp_name] = make_shared<SmagTo2C>(comp_name, num_bits_A);
 		else {
-			cout << "[Error] Component type \"" << comp_type << "\" not recognized.\n";
-			exit(1);
+			Error("Component type \"" + comp_type + "\" not recognized.\n");
 		}
 	}
 }
@@ -691,8 +611,7 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 	vector<wi_t> wire_information;
 
 	if (wires.size() == 0) {
-		cout << "[Error] \"wires\" section is empty.\n";
-		exit(1);
+		Error("\"wires\" section is empty.\n");
 	}
 
 	for (YAML::const_iterator it = wires.begin(); it != wires.end(); ++it) {
@@ -733,28 +652,22 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 
 				// Check for consistency of the "from:" section.
 				if (from.IsNull()) {
-					cout << "[Error] No \"from:\" section found for wire \"" << wire_name << "\".\n";
-					exit(1);
+					Error("No \"from:\" section found for wire \"" + wire_name + "\".\n");
 				}
 				if (from.IsScalar()) {
-					cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" is a scalar, but it must be a map.\n";
-					exit(1);
+					Error("\"from:\" section of wire \"" + wire_name + "\" is a scalar, but it must be a map.\n");
 				}
 				if (from.IsSequence()) {
-					cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" is a sequence, but it must be a map.\n";
-					exit(1);
+					Error("\"from:\" section of wire \"" + wire_name + "\" is a sequence, but it must be a map.\n");
 				}
 				if (from.IsMap()) {
 					auto from_node = from["from"];
 					if (!from_node.IsDefined()) {
-						cout << "[Error] No \"from:\" section found for wire \"" << wire_name << "\".\n";
-						exit(1);
+						Error("No \"from:\" section found for wire \"" + wire_name + "\".\n");
 					} else if (from_node.IsNull()) {
-						cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" is empty.\n";
-						exit(1);
+						Error("\"from:\" section of wire \"" + wire_name + "\" is empty.\n");
 					} else if (!from_node.IsScalar()) {
-						cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" must be a scalar.\n";
-						exit(1);
+						Error("\"from:\" section of wire \"" + wire_name + "\" must be a scalar.\n");
 					}
 				}
 
@@ -763,9 +676,8 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 
 				// Check if a component with this name exists.
 				if (!from_is_input && !IsComponentDeclared(comps, from_name)) {
-					cout << "[Error] \"from:\" section of wire \"" << wire_name << "\" points to component \""
-						 << from_name << "\" which does not exist.\n";
-					exit(1);
+					Error("\"from:\" section of wire \"" + wire_name + "\" points to component \""
+						  + from_name + "\" which does not exist.\n");
 				}
 
 				const auto &from_port_node = from["port"];
@@ -773,16 +685,13 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 				// Check for consistency of the "port:" section if the wire input is not "input".
 				if (!from_is_input) {
 					if (!from_port_node.IsDefined()) {
-						cout << "[Error] No \"port:\" section found for wire \"" << wire_name << "\".\n";
-						exit(1);
+						Error("No \"port:\" section found for wire \"" + wire_name + "\".\n");
 					}
 					if (from_port_node.IsNull()) {
-						cout << "[Error] \"port:\" section of wire \"" << wire_name << "\" is empty.\n";
-						exit(1);
+						Error("\"port:\" section of wire \"" + wire_name + "\" is empty.\n");
 					}
 					if (!from_port_node.IsScalar()) {
-						cout << "[Error] \"port:\" section of wire \"" << wire_name << "\" must be a scalar.\n";
-						exit(1);
+						Error("\"port:\" section of wire \"" + wire_name + "\" must be a scalar.\n");
 					}
 				}
 
@@ -791,31 +700,24 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 
 				// Check for consistency of the "to:" section.
 				if (to.IsNull()) {
-					cout << "[Error] No \"to:\" section found for wire \"" << wire_name << "\".\n";
-					exit(1);
+					Error("No \"to:\" section found for wire \"" + wire_name + "\".\n");
 				}
 				if (to.IsScalar()) {
-					cout << "[Error] \"to:\" section for wire \"" << wire_name << "\" is a scalar, but it must be a map.\n";
-					exit(1);
+					Error("\"to:\" section for wire \"" + wire_name + "\" is a scalar, but it must be a map.\n");
 				}
 				if (to.IsSequence()) {
-					cout << "[Error] \"to:\" section for wire \"" << wire_name << "\" is a sequence, but it must be a map.\n";
-					exit(1);
+					Error("\"to:\" section for wire \"" + wire_name + "\" is a sequence, but it must be a map.\n");
 				}
 				if (to.IsMap()) {
 					const auto &to_node = to["to"];
 					if (!to_node.IsDefined()) {
-						cout << "[Error] No \"to:\" section found for wire \"" << wire_name << "\".\n";
-						exit(1);
+						Error("No \"to:\" section found for wire \"" + wire_name + "\".\n");
 					} else if (to_node.IsNull()) {
-						cout << "[Error] \"to:\" section is empty for wire \"" << wire_name << "\".\n";
-						exit(1);
+						Error("\"to:\" section is empty for wire \"" + wire_name + "\".\n");
 					} else if (to_node.IsSequence() && to_node.begin() == to_node.end()) {
-						cout << "[Error] \"to:\" section contains empty sequence for wire \"" << wire_name << "\".\n";
-						exit(1);
+						Error("\"to:\" section contains empty sequence for wire \"" + wire_name + "\".\n");
 					} else if (to_node.IsMap() && to_node.begin() == to_node.end()) {
-						cout << "[Error] \"to:\" section contains empty map for wire \"" << wire_name << "\".\n";
-						exit(1);
+						Error("\"to:\" section contains empty map for wire \"" + wire_name + "\".\n");
 					}
 				}
 
@@ -835,18 +737,16 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 					const auto &comp_name = to_comp_node.as<string>();
 
 					if (comp_name.compare("output") == 0) {
-						cout << "[Error] Wire \"" << wire_name << "\" is an \"output\" wire, but has a port declared.\n";
-						cout << "Either remove the \"port:\" key, or connect the port to an existing component.\n";
-						exit(1);
+						Error("Wire \"" + wire_name + "\" is an \"output\" wire, but has a port declared.\n"
+							  + "Either remove the \"port:\" key, or connect the port to an existing component.\n");
 					}
 
 					if (IsComponentDeclared(comps, comp_name)) {
 						to_components.push_back(comps[comp_name]);
 						to_port_names.push_back(to_port_node.as<string>());
 					} else {
-						cout << "[Error] Wire \"" << wire_name << "\" refers to component \""
-							 << comp_name << "\" which does not exist.\n";
-						exit(1);
+						Error("Wire \"" + wire_name + "\" refers to component \""
+							  + comp_name + "\" which does not exist.\n");
 					}
 				}
 				// If both "to:" and "port:" keys exist and have sequence values.
@@ -861,14 +761,12 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 							if (!output) {
 								output = true;
 							} else {
-								cout << "[Error] \"to:\" section of wire \"" << wire_name
-									 << "\" has multiple \"output\" items configured.\n";
-								exit(1);
+								Error("\"to:\" section of wire \"" + wire_name
+									  + "\" has multiple \"output\" items configured.\n");
 							}
 						} else {
-							cout << "[Error] Wire \"" << wire_name << "\" refers to component \""
-								 << comp_name << "\" which does not exist.\n";
-							exit(1);
+							Error("Wire \"" + wire_name + "\" refers to component \""
+								  + comp_name + "\" which does not exist.\n");
 						}
 					}
 
@@ -877,8 +775,7 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 					}
 
 					if (to_components.size() != to_port_names.size()) {
-						cout << "[Error] Wire \"" << wire_name << "\" output component and port sequences must be same length.\n";
-						exit(1);
+						Error("Wire \"" + wire_name + "\" output component and port sequences must be same length.\n");
 					}
 				}
 				// If only the "to:" key exists.
@@ -889,19 +786,16 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 					if (comp_name.compare("output") == 0) {
 						output = true;
 					} else {
-						cout << "[Error] Wire \"" << wire_name << "\" has only a \"to:\" section without \"port:\".\n"
-							 << "In that case, the only valid value for \"to:\" is \"output\", but is now \""
-							 << comp_name << "\".\n";
-						exit(1);
+						Error("Wire \"" + wire_name + "\" has only a \"to:\" section without \"port:\".\n"
+							  + "In that case, the only valid value for \"to:\" is \"output\", but is now \""
+							  + comp_name + "\".\n");
 					}
 				}
 				// Something is configured incorrectly if we are here.
 				else {
 					if ((comp_node_def && port_node_def) &&
 						(to_comp_node.Type() != to_port_node.Type())) {
-						cout << "[Error] Wire \"" << wire_name
-							 << "\" output \"to:\" and \"port:\" must both be scalars or sequences.\n";
-						exit(1);
+						Error("Wire \"" + wire_name + "\" output \"to:\" and \"port:\" must both be scalars or sequences.\n");
 					}
 				}
 
@@ -921,8 +815,7 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 							}
 						}
 					} else {
-						cout << "[Error] Input wire \"" << wire_name << "\" has incomplete declared output.\n";
-						exit(1);
+						Error("Input wire \"" + wire_name + "\" has incomplete declared output.\n");
 					}
 				} else {
 					if (from.size() == 2) {
@@ -957,18 +850,15 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 										Connect(to_comp, PortNameToPortMap[to_port_name], wire, b_idx + to_begin_idx);
 									}
 								} else {
-									cout << "[Error] Wire \"" << wire_name << "\" input component does not exist.\n";
-									exit(1);
+									Error("Wire \"" + wire_name + "\" input component does not exist.\n");
 								}
 							}
 						} else {
-							cout << "[Error] Output component of wire \"" << wire_name << "\" does not exist.\n";
-							exit(1);
+							Error("Output component of wire \"" + wire_name + "\" does not exist.\n");
 						}
 					} else {
-						cout << "[Error] Output wire \"" << wire_name << "\" input declaration needs one \"from:\" and "
-							 << "one \"to:\" section.\n";
-						exit(1);
+						Error("Output wire \"" + wire_name + "\" input declaration needs one \"from:\" and "
+							  + "one \"to:\" section.\n");
 					}
 				}
 
@@ -986,8 +876,7 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 
 			}
 		} else {
-			cout << "[Error] Wire \"" << wire_name << "\" declaration needs exactly 1 \"from\" section and 1 \"to\" section.\n";
-			exit(1);
+			Error("Wire \"" + wire_name + "\" declaration needs exactly 1 \"from\" section and 1 \"to\" section.\n");
 		}
 
 		wire_information.emplace_back(wire_info);
@@ -1107,16 +996,14 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 	if (node["wire"]) {
 		wire_name = node["wire"].as<string>();
 	} else {
-	    cout << "[Error] A constraint needs at least a \"wire\", but none was given.\n";
-		exit(1);
+	    Error("A constraint needs at least a \"wire\", but none was given.\n");
 	}
 
 	if (node["begin_index"]) {
 		try {
 			beg_idx = node["begin_index"].as<size_t>();
 		} catch (YAML::TypedBadConversion<size_t> e) {
-			cout << "[Error] \"begin_index\" is not a number: " << e.msg << '\n';
-			exit(1);
+			Error("\"begin_index\" is not a number: " + e.msg + '\n');
 		}
 	}
 
@@ -1124,8 +1011,7 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 		try {
 			end_idx = node["end_index"].as<size_t>();
 		} catch (YAML::TypedBadConversion<size_t> e) {
-			cout << "[Error] \"end_index\" is not a number: " << e.msg << '\n';
-			exit(1);
+			Error("\"end_index\" is not a number: " + e.msg + '\n');
 		}
 	}
 
@@ -1148,8 +1034,7 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 			type = Constraint::TYPE::NONE;
 		}
 	} else {
-		cout << "[Error] A constraint needs at least a \"type\", but none was given.\n";
-		exit(1);
+		Error("A constraint needs at least a \"type\", but none was given.\n");
 	}
 
 	if (node["seed"]) {
@@ -1159,8 +1044,7 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 			try {
 				seed = node["seed"].as<size_t>();
 			} catch (YAML::TypedBadConversion<size_t> e) {
-				cout << "[Error] \"seed\" is not a number: " << e.msg << '\n';
-				exit(1);
+				Error("\"seed\" is not a number: " + e.msg + '\n');
 			}
 		}
 	}
@@ -1172,12 +1056,10 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 			try {
 				sigma = node["sigma"].as<float>();
 				if (sigma <= 0.0f) {
-					cout << "[Error] \"sigma\" must be larger than 0.0.\n";
-					exit(1);
+					Error("\"sigma\" must be larger than 0.0.\n");
 				}
 			} catch (YAML::TypedBadConversion<float> e) {
-				cout << "[Error] \"sigma\" is not a number: " << e.msg << '\n';
-				exit(1);
+				Error("\"sigma\" is not a number: " + e.msg + '\n');
 			}
 		}
 	}
@@ -1189,8 +1071,7 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 			try {
 				ub = node["ub"].as<int32_t>();
 			} catch (YAML::TypedBadConversion<size_t> e) {
-				cout << "[Error] \"ub\" is not a number: " << e.msg << '\n';
-				exit(1);
+				Error("\"ub\" is not a number: " + e.msg + '\n');
 			}
 		}
 	}
@@ -1202,12 +1083,10 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 			try {
 				lb = node["lb"].as<int32_t>();
 				if (lb > ub) {
-					cout << "[Error] \"lb\" is larger than \"ub\".\n";
-					exit(1);
+					Error("\"lb\" is larger than \"ub\".\n");
 				}
 			} catch (YAML::TypedBadConversion<size_t> e) {
-				cout << "[Error] \"lb\" is not a number: " << e.msg << '\n';
-				exit(1);
+				Error("\"lb\" is not a number: " + e.msg + '\n');
 			}
 		}
 	}
@@ -1216,8 +1095,7 @@ const constr_t ParseConstraint(const YAML::Node &node) {
 		try {
 			times = node["times"].as<size_t>();
 		} catch (YAML::TypedBadConversion<size_t> e) {
-			cout << "[Error] \"times\" is not a number: " << e.msg << '\n';
-			exit(1);
+			Error("\"times\" is not a number: " + e.msg + '\n');
 		}
 	}
 
@@ -1228,23 +1106,20 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 	const auto &stimuli = config["stimuli"];
 
 	auto error_invalid_value = [](const auto &val) {
-		cout << "[Error] Value \"" << val << "\" in stimuli section "
-			 << "is invalid. It should begin with either '0b'/'0B', '0x'/'0X', "
-			 << "or '0d'/'0D' for binary, hexadecimal, and decimal "
-			 << "representations respectively, then followed by a value.\n";
-		exit(1);
+		Error("Value \"" + val + "\" in stimuli section "
+			  + "is invalid. It should begin with either '0b'/'0B', '0x'/'0X', "
+			  + "or '0d'/'0D' for binary, hexadecimal, and decimal "
+			  + "representations respectively, then followed by a value.\n");
 	};
 
 	auto error_constraint_map = []() {
-		cout << "[Error] A \"constraint\" needs to be either a map, or a sequence "
-			 << " of maps. In either case it needs to have at least the "
-			 << "\"wire\", \"begin_index\", and \"type\" keys.\n";
-		exit(1);
+		Error(string("A \"constraint\" needs to be either a map, or a sequence ")
+			  + " of maps. In either case it needs to have at least the "
+			  + "\"wire\", \"begin_index\", and \"type\" keys.\n");
 	};
 
 	auto error_non_existent_wire = [](const auto &name) {
-		cout << "[Error] No wire or wire bundle \"" << name << "\" found.\n";
-		exit(1);
+		Error("No wire or wire bundle \"" + name + "\" found.\n");
 	};
 
 	// Helper struct used for storing input and output stimuli.
@@ -1472,9 +1347,8 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 					} else if (value_name.compare("0") == 0 || value_name.compare("false") == 0) {
 						value = false;
 					} else {
-						cout << "[Error] stimulus value of wire \"" << key_name
-							 <<	"\" has to be one of the following: 0, 1, true, false.\n";
-						exit(1);
+						Error("Stimulus value of wire \"" + key_name
+							 +	"\" has to be one of the following: 0, 1, true, false.\n");
 					}
 					wire->SetValue(value, false);
 
@@ -1538,12 +1412,10 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 					} catch (invalid_argument e) {
 						error_invalid_value(value_string);
 					} catch (out_of_range e) {
-						cout << "[Error] Value \"" << value_string << "\" is too large.\n";
-						exit(1);
+						Error("Value \"" + value_string + "\" is too large.\n");
 					}
 				} else {
-					cout << "[Error] Non-existent wire or wire bundle \"" << key_name << "\" found in stimuli section.\n";
-					exit(1);
+					Error(string("Non-existent wire or wire bundle \"") + key_name + "\" found in stimuli section.\n");
 				}
 			}
 		}
@@ -1671,13 +1543,9 @@ YAML::Node LoadConfigurationFile(const string &config_file_name) {
 	try {
 		config = YAML::LoadFile(config_file_name.c_str());
 	} catch (YAML::BadFile e) {
-		cout << "[Error] Could not load file \"" <<
-			config_file_name.c_str() << "\": " << e.msg << '\n';
-		exit(1);
+		Error(string("Could not load file \"") + config_file_name.c_str() + "\": " + e.msg + '\n');
 	} catch (YAML::ParserException e) {
-		cout << "[Error] Could not parse file \"" <<
-			config_file_name.c_str() << "\": " << e.msg << '\n';
-		exit(1);
+		Error(string("Could not parse file \"") + config_file_name.c_str() + "\": " + e.msg + '\n');
 	}
 
 	return config;
@@ -1721,28 +1589,22 @@ int main(int argc, char **argv) {
 		const auto &stimuli = config["stimuli"];
 
 		if (!components) {
-			cout << "[Error] No \"components\" section found in \"" << config_file_name << "\"\n";
-			exit(1);
+			Error("No \"components\" section found in \"" + config_file_name + "\"\n");
 		}
 		if (components.size() == 0) {
-			cout << "[Error] \"components\" section in \"" << config_file_name << "\" is empty.\n";
-			exit(1);
+			Error("\"components\" section in \"" + config_file_name + "\" is empty.\n");
 		}
 		if (!wires) {
-			cout << "[Error] No \"wires\" section found in \"" << config_file_name << "\"\n";
-			exit(1);
+			Error("No \"wires\" section found in \"" + config_file_name + "\"\n");
 		}
 		if (wires.size() == 0) {
-			cout << "[Error] \"wires\" section in \"" << config_file_name << "\" is empty.\n";
-			exit(1);
+			Error("\"wires\" section in \"" + config_file_name + "\" is empty.\n");
 		}
 		if (!stimuli) {
-			cout << "[Error] No \"stimuli\" section found in \"" << config_file_name << "\"\n";
-			exit(1);
+			Error("No \"stimuli\" section found in \"" + config_file_name + "\"\n");
 		}
 		if (stimuli.size() == 0) {
-			cout << "[Error] \"stimuli\" section in \"" << config_file_name << "\" is empty.\n";
-			exit(1);
+			Error("\"stimuli\" section in \"" + config_file_name + "\" is empty.\n");
 		}
 
 		ParseComponents(comps, config);

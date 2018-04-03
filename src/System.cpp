@@ -249,9 +249,8 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 					// Something went wrong, because it's not possible for
 					// an input wire to be part of a bundle that is not an
 					// input bundle.
-					cout << "[Error] Input wire that is part of a non-input wire bundle "
-						 << "detected. This should not be possible.\n";
-					exit(1);
+					Error(string("Input wire that is part of a non-input wire bundle ")
+						  + "detected. This should not be possible.\n");
 				}
 			} else {
 				// This wire was declared as not part of a bundle.
@@ -269,9 +268,8 @@ const void System::GenerateVHDL(const string &template_name, const string &path)
 					// Something went wrong, because it's not possible for
 					// an output wire to be part of a bundle that is not an
 					// output bundle.
-					cout << "[Error] Output wire that is part of a non-output wire bundle "
-						 << "detected. This should not be possible.\n";
-					exit(1);
+					Error(string("Output wire that is part of a non-output wire bundle ")
+						  + "detected. This should not be possible.\n");
 				}
 			} else {
 				// This wire was declared as not part of a bundle.

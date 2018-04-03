@@ -23,13 +23,9 @@ Multiplier_2C_Booth::Multiplier_2C_Booth(string _name,
 	, sign_extend_B_input_size(_num_bits_B % 2)
 {
 	if (num_bits_A == 0) {
-		cout << "[Error] Size of port A of Multiplier_2C_Booth \"" << _name
-			 << "\" must be larger than zero.\n";
-		exit(1);
+		Error("Size of port A of Multiplier_2C_Booth \"" + _name + "\" must be larger than zero.\n");
 	} else if (num_bits_B == 0) {
-		cout << "[Error] Size of port B of Multiplier_2C_Booth \"" << _name
-			 << "\" must be larger than zero.\n";
-		exit(1);
+		Error("Size of port B of Multiplier_2C_Booth \"" + _name + "\" must be larger than zero.\n");
 	}
 
 	Generate2CBoothHardware();
@@ -57,13 +53,6 @@ void Multiplier_2C_Booth::Update(bool propagating) {
 
 void Multiplier_2C_Booth::Connect(PORTS port, const wire_t &wire, size_t index) {
 	CheckIfIndexIsInRange(port, index);
-
-	auto error_undefined_port = [&](const auto &wire) {
-		cout << "[Error] Trying to connect wire \"" << wire->GetName()
-			 << "\" to undefined port of Multiplier_2C_Booth "
-			 << "\"" << name << "\"\n";
-		exit(1);
-	};
 
 	switch (port) {
 	case PORTS::A:
@@ -124,16 +113,14 @@ void Multiplier_2C_Booth::Connect(PORTS port, const wire_t &wire, size_t index) 
 		output_wires.emplace_back(wire);
 		break;
 	default:
-		error_undefined_port(wire);
+		Error("Trying to connect wire \"" + wire->GetName() + "\" to undefined port of Multiplier_2C_Booth \"" + name + "\"\n");
 	}
 }
 
 void Multiplier_2C_Booth::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_idx) {
 	if (wire_idx >= wires->GetSize()) {
-		cout << "[Error] Wire bundle \"" << wires->GetName()
-			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << ".\n";
-		exit(1);
+		Error("Wire bundle \"" + wires->GetName() + " accessed with index " + to_string(wire_idx)
+			  + " but has size " + to_string(wires->GetSize()) + ".\n");
 	}
 
 	const auto &wire = (*wires)[wire_idx];
@@ -169,9 +156,7 @@ const wire_t Multiplier_2C_Booth::GetWire(PORTS port, size_t index) const {
 			return final_adder->GetWire(PORTS::O, index - (num_bits_O - final_adder_size));
 		}
 	default:
-		cout << "[Error] Trying to get wire of undefined port of Multiplier_2C_Booth "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to get wire of undefined port of Multiplier_2C_Booth \"" + name + "\".\n");
 	}
 
 	return nullptr;
@@ -185,9 +170,7 @@ const PORT_DIR Multiplier_2C_Booth::GetPortDirection(PORTS port) const {
 	case PORTS::O:
 		return PORT_DIR::OUTPUT;
 	default:
-		cout << "[Error] Trying to get port direction of undefined port in Multiplier_2C_Booth "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to get port direction of undefined port in Multiplier_2C_Booth \"" + name + "\".\n");
 	}
 }
 
@@ -500,17 +483,11 @@ void Multiplier_2C_Booth::Generate2CBoothHardware() {
 
 void Multiplier_2C_Booth::CheckIfIndexIsInRange(PORTS port, size_t index) const {
 	if (port == PORTS::A && index >= num_bits_A) {
-		cout << "[Error] Index " << index << " of port A is out of "
-			 << "bounds for Multiplier_2C_Booth \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " of port A is out of bounds for Multiplier_2C_Booth \"" + name + "\".\n");
 	} else if (port == PORTS::B && index >= num_bits_B) {
-		cout << "[Error] Index " << index << " of port B is out of "
-			 << "bounds for Multiplier_2C_Booth \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " of port B is out of bounds for Multiplier_2C_Booth \"" + name + "\".\n");
 	} else if (port == PORTS::O && index >= num_bits_O) {
-		cout << "[Error] Index " << index << " of port O is out of "
-			 << "bounds for Multiplier_2C_Booth \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " of port O is out of bounds for Multiplier_2C_Booth \"" + name + "\".\n");
 	}
 }
 

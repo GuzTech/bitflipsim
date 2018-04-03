@@ -9,9 +9,7 @@ Radix4BoothDecoder::Radix4BoothDecoder(string _name,
 	, num_bits_O(_num_bits - 1)
 {
 	if (num_bits < 2) {
-		cout << "[Error] Number of bits in Radix4BoothDecoder \"" << _name
-			 << "\" must be at least 2.\n";
-		exit(1);
+		Error("Number of bits in Radix4BoothDecoder \"" + _name + "\" must be at least 2.\n");
 	}
 
 	GenerateDecoderHardware();
@@ -44,13 +42,6 @@ void Radix4BoothDecoder::Update(bool propagating) {
 
 void Radix4BoothDecoder::Connect(PORTS port, const wire_t &wire, size_t index) {
 	CheckIfIndexIsInRange(port, index);
-
-	auto error_undefined_port = [&](const auto &wire) {
-		cout << "[Error] Trying to connect wire \"" << wire->GetName()
-			 << "\" to undefined port of Radix4BoothDecoder "
-			 << "\"" << name << "\".\n";
-		exit(1);
-	};
 
 	switch (port) {
 	case PORTS::Yj:
@@ -86,16 +77,14 @@ void Radix4BoothDecoder::Connect(PORTS port, const wire_t &wire, size_t index) {
 		output_wires.emplace_back(wire);
 		break;
 	default:
-		error_undefined_port(wire);
+		Error("Trying to connect wire \"" + wire->GetName() + "\" to undefined port of Radix4BoothDecoder \"" + name + "\".\n");
 	}
 }
 
 void Radix4BoothDecoder::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_idx) {
 	if (wire_idx >= wires->GetSize()) {
-		cout << "[Error] Wire bundle \"" << wires->GetName()
-			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << ".\n";
-		exit(1);
+		Error("Wire bundle \"" + wires->GetName() + " accessed with index " + to_string(wire_idx)
+			  + " but has size " + to_string(wires->GetSize()) + ".\n");
 	}
 
 	const auto &wire = (*wires)[wire_idx];
@@ -105,12 +94,6 @@ void Radix4BoothDecoder::Connect(PORTS port, const wb_t &wires, size_t port_idx,
 const wire_t Radix4BoothDecoder::GetWire(PORTS port, size_t index) const {
 	CheckIfIndexIsInRange(port, index);
 
-	auto error_undefined_port = [&]() {
-		cout << "[Error] Trying to get wire of undefined port of Radix4BoothDecoder "
-			 << "\"" << name << "\".\n";
-		exit(1);
-	};
-
 	switch (port) {
 	case PORTS::Yj:   return yj_neg[index]->GetWire(PORTS::A);
 	case PORTS::NEG:  return yj_neg[index]->GetWire(PORTS::B);
@@ -119,8 +102,7 @@ const wire_t Radix4BoothDecoder::GetWire(PORTS port, size_t index) const {
 	case PORTS::Z:    return yj_m1_z_x2b[index]->GetWire(PORTS::B);
 	case PORTS::PPTj: return ppt_j[index]->GetWire(PORTS::O);
 	default:
-		error_undefined_port();
-		return nullptr;
+		Error("Trying to get wire of undefined port of Radix4BoothDecoder \"" + name + "\".\n");
 	}
 }
 
@@ -135,9 +117,7 @@ const PORT_DIR Radix4BoothDecoder::GetPortDirection(PORTS port) const {
 	case PORTS::PPTj:
 		return PORT_DIR::OUTPUT;
 	default:
-		cout << "[Error] Trying to get port direction of undefined port in Radix4BoothDecoder "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to get port direction of undefined port in Radix4BoothDecoder \"" + name + "\".\n");
 	}
 }
 
@@ -204,13 +184,9 @@ void Radix4BoothDecoder::GenerateDecoderHardware() {
 
 void Radix4BoothDecoder::CheckIfIndexIsInRange(PORTS port, size_t index) const {
 	if (port == PORTS::Yj && index >= num_bits) {
-		cout << "[Error] Index " << index << " of port Yj is out of "
-			 << "bounds for Radix4BoothDecoder \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " of port Yj is out of bounds for Radix4BoothDecoder \"" + name + "\".\n");
 	} else if (port == PORTS::O && index >= num_bits_O) {
-		cout << "[Error] Index " << index << " of port O is out of "
-			 << "bounds for Radix4BoothDecoder \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " of port O is out of bounds for Radix4BoothDecoder \"" + name + "\".\n");
 	}
 }
 

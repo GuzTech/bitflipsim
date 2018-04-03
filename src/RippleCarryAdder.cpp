@@ -97,45 +97,30 @@ void RippleCarryAdder::Update(bool propagating) {
 
 void RippleCarryAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
 	if (index >= num_bits) {
-		cout << "[Error] Index " << index << " out of bounds for "
-			 << "RippleCarryAdder \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " out of bounds for RippleCarryAdder \"" + name + "\".\n");
 	}
 
 	switch (port) {
 	case PORTS::A:
-		full_adders[index]->Connect(PORTS::A, wire);
-		input_wires.emplace_back(wire);
-		break;
 	case PORTS::B:
-		full_adders[index]->Connect(PORTS::B, wire);
-		input_wires.emplace_back(wire);
-		break;
 	case PORTS::Cin:
-		full_adders.front()->Connect(PORTS::Cin, wire);
+		full_adders[index]->Connect(port, wire);
 		input_wires.emplace_back(wire);
 		break;
 	case PORTS::O:
-		full_adders[index]->Connect(PORTS::O, wire);
-		output_wires.emplace_back(wire);
-		break;
 	case PORTS::Cout:
-		full_adders.back()->Connect(PORTS::Cout, wire);
+		full_adders[index]->Connect(port, wire);
 		output_wires.emplace_back(wire);
 		break;
 	default:
-		cout << "[Error] Trying to connect to undefined port of RippleCarryAdder "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to connect to undefined port of RippleCarryAdder \"" + name + "\".\n");
 	}
 }
 
 void RippleCarryAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_idx) {
 	if (wire_idx >= wires->GetSize()) {
-		cout << "[Error] Wire bundle \"" << wires->GetName()
-			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << ".\n";
-		exit(1);
+		Error("Wire bundle \"" + wires->GetName() + " accessed with index " + to_string(wire_idx)
+			  + " but has size " + to_string(wires->GetSize()) + ".\n");
 	}
 
 	const wire_t &wire = (*wires)[wire_idx];
@@ -144,9 +129,7 @@ void RippleCarryAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, s
 
 const wire_t RippleCarryAdder::GetWire(PORTS port, size_t index) const {
 	if (index >= num_bits) {
-		cout << "[Error] Index " << index << " out of bound for "
-			 << "RippleCarryAdder \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " out of bound for RippleCarryAdder \"" + name + "\".\n");
 	}
 
 	switch (port) {
@@ -159,9 +142,7 @@ const wire_t RippleCarryAdder::GetWire(PORTS port, size_t index) const {
 	case PORTS::Cout:
 		return full_adders.back()->GetWire(port);
 	default:
-		cout << "[Error] Trying to retrieve undefined port of RippleCarryAdder "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to retrieve undefined port of RippleCarryAdder \"" + name + "\".\n");
 	}
 }
 
@@ -175,9 +156,7 @@ const PORT_DIR RippleCarryAdder::GetPortDirection(PORTS port) const {
 	case PORTS::O:
 		return PORT_DIR::OUTPUT;
 	default:
-		cout << "[Error] Trying to get port direction of undefined port in RippleCarryAdder "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to get port direction of undefined port in RippleCarryAdder \"" + name + "\".\n");
 	}
 }
 

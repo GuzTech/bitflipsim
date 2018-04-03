@@ -53,18 +53,14 @@ void HalfAdder::Connect(PORTS port, const wire_t &wire, size_t index) {
 		output_wires.emplace_back(wire);
 		break;
 	default:
-		cout << "[Error] Trying to connect to undefined port of HalfAdder "
-			 << "\"" << name << "\"\n";
-		exit(1);
+		Error("Trying to connect to undefined port of HalfAdder \"" + name + "\"\n");
 	}
 }
 
 void HalfAdder::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_idx) {
 	if (wire_idx >= wires->GetSize()) {
-		cout << "[Error] Wire bundle \"" << wires->GetName()
-			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << ".\n";
-		exit(1);
+		Error("Wire bundle \"" + wires->GetName() + " accessed with index " + to_string(wire_idx)
+			  + " but has size " + to_string(wires->GetSize()) + ".\n");
 	}
 
 	const wire_t &wire = (*wires)[wire_idx];
@@ -80,9 +76,7 @@ const wire_t HalfAdder::GetWire(PORTS port, size_t index) const {
 	case PORTS::Cout:
 		return and_ha->GetWire(PORTS::O);
 	default:
-		cout << "[Error] Trying to retrieve undefined port of HalfAdder "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to retrieve undefined port of HalfAdder \"" + name + "\".\n");
 	}
 }
 
@@ -95,9 +89,7 @@ const PORT_DIR HalfAdder::GetPortDirection(PORTS port) const {
 	case PORTS::O:
 		return PORT_DIR::OUTPUT;
 	default:
-		cout << "[Error] Trying to get port direction of undefined port in HalfAdder "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to get port direction of undefined port in HalfAdder \"" + name + "\".\n");
 	}
 }
 

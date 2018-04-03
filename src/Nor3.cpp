@@ -50,18 +50,14 @@ void Nor3::Connect(PORTS port, const wire_t &wire, size_t index) {
 		output_wires.emplace_back(O);
 		break;
 	default:
-		cout << "[Error] Trying to connect to undefined port of Nor3 "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to connect to undefined port of Nor3 \"" + name + "\".\n");
 	}
 }
 
 void Nor3::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_idx) {
 	if (wire_idx >= wires->GetSize()) {
-		cout << "[Error] Wire bundle \"" << wires->GetName()
-			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << ".\n";
-		exit(1);
+		Error("Wire bundle \"" + wires->GetName() + " accessed with index " + to_string(wire_idx)
+			  + " but has size " + to_string(wires->GetSize()) + ".\n");
 	}
 
 	const wire_t &wire = (*wires)[wire_idx];
@@ -75,9 +71,7 @@ const wire_t Nor3::GetWire(PORTS port, size_t index) const {
 	case PORTS::C: return C;
 	case PORTS::O: return O;
 	default:
-		cout << "[Error] Trying to retrieve undefined port of Nor3 "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to retrieve undefined port of Nor3 \"" + name + "\".\n");
 	}
 }
 
@@ -90,9 +84,7 @@ const PORT_DIR Nor3::GetPortDirection(PORTS port) const {
 	case PORTS::O:
 		return PORT_DIR::OUTPUT;
 	default:
-		cout << "[Error] Trying to get port direction of undefined port in Nor3 "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to get port direction of undefined port in Nor3 \"" + name + "\".\n");
 	}
 }
 

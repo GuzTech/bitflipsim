@@ -21,13 +21,9 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 	, type(_type)
 {
 	if (num_bits_A < 2) {
-		cout << "[Error] Size of port A of Multiplier_Smag \"" << _name
-			 << "\" must be larger or equal to 2.\n";
-		exit(1);
+		Error("Size of port A of Multiplier_Smag \"" + _name + "\" must be larger or equal to 2.\n");
 	} else if (num_bits_B < 2) {
-		cout << "[Error] Size of port B of Multiplier_Smag \"" << _name
-			 << "\" must be larger or equal to 2.\n";
-		exit(1);
+		Error("Size of port B of Multiplier_Smag \"" + _name + "\" must be larger or equal to 2.\n");
 	}
 
 	// Generate the requested hardware.
@@ -35,9 +31,7 @@ Multiplier_Smag::Multiplier_Smag(string _name,
 	case MUL_TYPE::CARRY_PROPAGATE: GenerateCarryPropagateArrayHardware(); break;
 	case MUL_TYPE::CARRY_SAVE: 		GenerateCarrySaveArrayHardware(); break;
 	default:
-		cout << "[Error] Unknown type supplied for generating Multiplier_Smag \""
-			 << name << "\".\n";
-		exit(1);
+		Error("Unknown type supplied for generating Multiplier_Smag \"" + name + "\".\n");
 	}
 }
 
@@ -82,10 +76,7 @@ void Multiplier_Smag::Connect(PORTS port, const wire_t &wire, size_t index) {
 	CheckIfIndexIsInRange(port, index);
 
 	auto error_undefined_port = [&](const auto &wire) {
-		cout << "[Error] Trying to connect wire \"" << wire->GetName()
-			 << "\" to undefined port of Multiplier_2C "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to connect wire \"" + wire->GetName() + "\" to undefined port of Multiplier_2C " + "\"" + name + "\".\n");
 	};
 
 	switch (port) {
@@ -160,10 +151,8 @@ void Multiplier_Smag::Connect(PORTS port, const wire_t &wire, size_t index) {
 
 void Multiplier_Smag::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_idx) {
 	if (wire_idx >= wires->GetSize()) {
-		cout << "[Error] Wire bundle \"" << wires->GetName()
-			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << ".\n";
-		exit(1);
+		Error("Wire bundle \"" + wires->GetName() + " accessed with index " + to_string(wire_idx)
+			  + " but has size " + to_string(wires->GetSize()) + ".\n");
 	}
 
 	const wire_t &wire = (*wires)[wire_idx];
@@ -219,9 +208,7 @@ const wire_t Multiplier_Smag::GetWire(PORTS port, size_t index) const {
 			break;
 		}
 	default:
-		cout << "[Error] Trying to get wire of undefined port of Multiplier_Smag "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to get wire of undefined port of Multiplier_Smag \"" + name + "\".\n");
 	}
 
 	return nullptr;
@@ -235,9 +222,7 @@ const PORT_DIR Multiplier_Smag::GetPortDirection(PORTS port) const {
 	case PORTS::O:
 		return PORT_DIR::OUTPUT;
 	default:
-		cout << "[Error] Trying to get port direction of undefined port in Multiplier_Smag "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to get port direction of undefined port in Multiplier_Smag \"" + name + "\".\n");
 	}
 }
 
@@ -523,17 +508,11 @@ void Multiplier_Smag::GenerateCarrySaveArrayHardware() {
 
 void Multiplier_Smag::CheckIfIndexIsInRange(PORTS port, size_t index) const {
 	if (port == PORTS::A && index > num_bits_A) {
-		cout << "[Error] Index " << index << " of port A is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " of port A is out of bounds for Multiplier_Smag \"" + name + "\".\n");
 	} else if (port == PORTS::B && index > num_bits_B) {
-		cout << "[Error] Index " << index << " of port B is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " of port B is out of bounds for Multiplier_Smag \"" + name + "\".\n");
 	} else if (port == PORTS::O && index >= num_bits_O) {
-		cout << "[Error] Index " << index << " of port O is out of "
-			 << "bounds for Multiplier_Smag \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " of port O is out of bounds for Multiplier_Smag \"" + name + "\".\n");
 	}
 }
 

@@ -171,10 +171,7 @@ void BoothEncoderRadix4::Update(bool propagating) {
 
 void BoothEncoderRadix4::Connect(PORTS port, const wire_t &wire, size_t index) {
 	auto error_undefined_port = [&](const auto &wire) {
-		cout << "[Error] Trying to connect wire \"" << wire->GetName()
-			 << "\" to undefined port of BoothEncoderRadix4 "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to connect wire \"" + wire->GetName() + "\" to undefined port of BoothEncoderRadix4 \"" + name + "\".\n");
 	};
 
 	switch (port) {
@@ -258,10 +255,8 @@ void BoothEncoderRadix4::Connect(PORTS port, const wire_t &wire, size_t index) {
 
 void BoothEncoderRadix4::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_idx) {
 	if (wire_idx >= wires->GetSize()) {
-		cout << "[Error] Wire bundle \"" << wires->GetName()
-			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << ".\n";
-		exit(1);
+		Error("Wire bundle \"" + wires->GetName() + " accessed with index " + to_string(wire_idx)
+			  + " but has size " + to_string(wires->GetSize()) + ".\n");
 	}
 
 	const wire_t &wire = (*wires)[wire_idx];
@@ -290,10 +285,7 @@ const wire_t BoothEncoderRadix4::GetWire(PORTS port, size_t index) const {
 	case PORTS::Z: return Z->GetWire(PORTS::O);
 	case PORTS::NEG_CIN: return Neg_cin_and->GetWire(PORTS::O);
 	default:
-		cout << "[Error] Trying to get wire of undefined port of BoothEncoderRadix4 "
-			 << "\"" << name << "\".\n";
-		exit(1);
-//		return nullptr;
+		Error("Trying to get wire of undefined port of BoothEncoderRadix4 \"" + name + "\".\n");
 	}
 }
 
@@ -314,9 +306,7 @@ const PORT_DIR BoothEncoderRadix4::GetPortDirection(PORTS port) const {
 	case PORTS::NEG_CIN:
 		return PORT_DIR::OUTPUT;
 	default:
-		cout << "[Error] Trying to get port direction of undefined port in BoothEncoderRadix4 "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to get port direction of undefined port in BoothEncoderRadix4 \"" + name + "\".\n");
 	}
 }
 
@@ -395,9 +385,7 @@ void BoothEncoderRadix4::GenerateVHDLEntity(const string &path) const {
 
 const string BoothEncoderRadix4::GenerateVHDLInstance() const {
 	const auto errorInconsistentWireBundle = [](const auto &wire, const auto &wb) {
-		cout << "[Error] Wire \"" << wire->GetName() << "\" is part of bundle \""
-			 << wb->GetName() << "\" but has no index.\n";
-		exit(1);
+		Error("Wire \"" + wire->GetName() + "\" is part of bundle \"" + wb->GetName() + "\" but has no index.\n");
 	};
 
 	string output;

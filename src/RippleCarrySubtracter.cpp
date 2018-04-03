@@ -94,9 +94,7 @@ void RippleCarrySubtracter::Update(bool propagating) {
 
 void RippleCarrySubtracter::Connect(PORTS port, const wire_t &wire, size_t index) {
 	if (index >= num_bits) {
-		cout << "[Error] Index " << index << " out of bounds for "
-			 << "RippleCarrySubtracter \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " out of bounds for RippleCarrySubtracter \"" + name + "\".\n");
 	}
 
 	switch (port) {
@@ -117,18 +115,14 @@ void RippleCarrySubtracter::Connect(PORTS port, const wire_t &wire, size_t index
 		output_wires.emplace_back(wire);
 		break;
 	default:
-		cout << "[Error] Trying to connect to undefined port of RippleCarrySubtracter "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to connect to undefined port of RippleCarrySubtracter \"" + name + "\".\n");
 	}
 }
 
 void RippleCarrySubtracter::Connect(PORTS port, const wb_t &wires, size_t port_idx, size_t wire_idx) {
 	if (wire_idx >= wires->GetSize()) {
-		cout << "[Error] Wire bundle \"" << wires->GetName()
-			 << " accessed with index " << wire_idx
-			 << " but has size " << wires->GetSize() << ".\n";
-		exit(1);
+		Error("Wire bundle \"" + wires->GetName() + " accessed with index " + to_string(wire_idx)
+			  + " but has size " + to_string(wires->GetSize()) + ".\n");
 	}
 
 	const wire_t &wire = (*wires)[wire_idx];
@@ -137,9 +131,7 @@ void RippleCarrySubtracter::Connect(PORTS port, const wb_t &wires, size_t port_i
 
 const wire_t RippleCarrySubtracter::GetWire(PORTS port, size_t index) const {
 	if (index >= num_bits) {
-		cout << "[Error] Index " << index << " out of bound for "
-			 << "RippleCarrySubtracter \"" << name << "\".\n";
-		exit(1);
+		Error("Index " + to_string(index) + " out of bound for RippleCarrySubtracter \"" + name + "\".\n");
 	}
 
 	switch (port) {
@@ -150,9 +142,7 @@ const wire_t RippleCarrySubtracter::GetWire(PORTS port, size_t index) const {
 	case PORTS::B:
 		return nots[index]->GetWire(PORTS::I);
 	default:
-		cout << "[Error] Trying to retrieve undefined port of RippleCarrySubtracter "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to retrieve undefined port of RippleCarrySubtracter \"" + name + "\".\n");
 	}
 }
 
@@ -165,9 +155,7 @@ const PORT_DIR RippleCarrySubtracter::GetPortDirection(PORTS port) const {
 	case PORTS::O:
 		return PORT_DIR::OUTPUT;
 	default:
-		cout << "[Error] Trying to get port direction of undefined port in RippleCarrySubtracter "
-			 << "\"" << name << "\".\n";
-		exit(1);
+		Error("Trying to get port direction of undefined port in RippleCarrySubtracter \"" + name + "\".\n");
 	}
 }
 
