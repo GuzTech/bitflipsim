@@ -11,6 +11,8 @@ public:
 	~Wire() = default;
 
 	void SetValue(bool val, bool propagating = true);
+	void SetInput(const comp_t &component);
+	void SetInput(const wire_t &wire);
 	void AddOutput(const comp_t &component);
 	void AddOutput(const wire_t &wire);
 	void SetAsInputWire() {is_input_wire = true;}
@@ -20,6 +22,8 @@ public:
 	const bool HasChanged() const {return has_changed;}
 	const string &GetName() const {return name;}
 	const size_t GetNumToggles() const {return toggle_count;}
+	const comp_wt &GetComponentInput() const {return comp_input;}
+	const wire_wt &GetWireInput() const {return wire_input;}
 	const vector<comp_wt> &GetComponentOutputs() const {return comp_outputs;}
 	const vector<wire_wt> &GetWireOutputs() const {return wire_outputs;}
 	const wb_t GetWireBundle() const {return part_of_bundle;}
@@ -42,6 +46,8 @@ private:
 	size_t toggle_count = 0; // Tracks how many times this wire has changed its value.
 	string name; // Name of this wire.
 
+	comp_wt comp_input; // The component that drives this wire.
+	wire_wt wire_input; // The wire that drives this wire.
 	vector<comp_wt> comp_outputs; // The components that are driven by this wire.
 	vector<wire_wt> wire_outputs; // The wires that are driven by this wire.
 	size_t num_outputs = 1; // The number of components and wires that are driven by this wire.

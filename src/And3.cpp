@@ -49,6 +49,7 @@ void And3::Connect(PORTS port, const wire_t &wire, size_t index) {
 		break;
 	case PORTS::O:
 		O = wire;
+		wire->SetInput(this->shared_from_base<And3>());
 		output_wires.emplace_back(O);
 		break;
 	default:

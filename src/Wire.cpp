@@ -31,6 +31,16 @@ void Wire::SetValue(bool val, bool propagating) {
 	}
 }
 
+void Wire::SetInput(const comp_t &component) {
+	comp_input = component;
+	wire_input.reset();
+}
+
+void Wire::SetInput(const wire_t &wire) {
+	wire_input = wire;
+	comp_input.reset();
+}
+
 void Wire::AddOutput(const comp_t &component) {
 //	if (find(comp_outputs.begin(),
 //			 comp_outputs.end(),
