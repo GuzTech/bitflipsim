@@ -1154,8 +1154,8 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 	    wb_t wb;
 	};
 
-	map<string, shared_ptr<io_bundle>> in_values;
-	map<string, shared_ptr<io_bundle>> out_values;
+	ordered_map<string, shared_ptr<io_bundle>> in_values;
+	ordered_map<string, shared_ptr<io_bundle>> out_values;
 
 	// Create enough space for wire bundles.
 	for (const auto &[name, bundle] : system.GetWireBundles()) {
