@@ -5,8 +5,8 @@
 
 class System {
 public:
-
 	void AddComponent(comp_t component);
+	void AddWireBundle(wb_t wires);
 	void FindLongestPathInSystem();
 	void FindInitialState();
 	void Update();
@@ -36,12 +36,10 @@ private:
 	wire_map_t wires;
 	wb_map_t   wire_bundles;
 
-	// Only wires that have been defined as input wires (not part of wire bundles).
-	vector<wire_t> input_wires;
-	// All input wires, including those of input wire bundles.
-	vector<wire_t> all_input_wires;
-	vector<wire_t> output_wires;
-	vector<wire_t> all_output_wires;
+	vector<wire_t> input_wires; // Only wires that have been defined as input wires (not part of wire bundles).
+	vector<wire_t> all_input_wires; // All input wires, including those of input wire bundles.
+	vector<wire_t> output_wires; // Only wires that have been defined as output wires (not part of wire bundles).
+	vector<wire_t> all_output_wires; // All output wires, including those of output wire bundles.
 
 	vector<wb_t> input_bundles;
 	vector<wb_t> output_bundles;

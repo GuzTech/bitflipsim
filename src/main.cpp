@@ -228,6 +228,29 @@ void Connect(const comp_t &component, const PORTS port, const wire_t &wire, size
 	}
 }
 
+//void ParseWireAndSize2(string wire_string, string &wire_name, size_t &size, WireBundle::REPR &repr) {
+//	// Check if the wire name contains a space to indicate that it consists of the name and size of the wire bundle.
+//	size_t pos = wire_string.find(" ");
+//
+//	try {
+//		if (pos == npos) {
+//			// The name is just the wire name and does not contain a size.
+//			wire_name = wire_string;
+//		} else {
+//			// We assume the first value is the name.
+//			wire_name = wire_string.substr(0, pos);
+//
+//			// We remove the name + " " part from the string, and search again.
+//			// There should be a second part which should be a number to indicate the size.
+//			wire_string.erase(0, pos + 1);
+//
+//			pos = wire_string.find(" ");
+//		}
+//	} catch (exception &e) {
+//
+//	}
+//}
+
 void ParseWireAndSize(string wire_string, string &wire_name, size_t &size, WireBundle::REPR &repr) {
 	auto error_inconsistent = [](const auto &wire) {
 		Error("Inconsistent wire declaration for wire \"" + wire + "\".\nFormat for wires:\n"
@@ -559,6 +582,8 @@ struct WireInformation {
 	string name;
 	bool is_bundle = false;
 	size_t bundle_size = 1;
+	wire_t wire = nullptr;
+	wb_t wires = nullptr;
 
 	void AddFrom(const string &comp_name, const PORTS port, const size_t begin_idx, const size_t end_idx) {
 		size_t idx = 0;
@@ -605,7 +630,7 @@ struct WireInformation {
 
 using wi_t = shared_ptr<WireInformation>;
 
-void ParseWires(comp_map_t &comps, YAML::Node config) {
+vector<wi_t> ParseWires(comp_map_t &comps, YAML::Node config) {
 	const auto &wires = config["wires"];
 
 	vector<wi_t> wire_information;
@@ -638,28 +663,14 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 
 				wire_info->bundle_size = bundle_size;
 				wire_info->is_bundle = true;
+				wire_info->wires = wire_bundle;
 			}
 
-			for (size_t b_idx = 0; b_idx < size; ++b_idx) {
-				if (bundle_size > 0) {
-					wire = (*wire_bundle)[b_idx];
-				} else {
-					wire = make_shared<Wire>(wire_name);
-				}
-
-				// There is always a single source for a Wire.
-				const auto &from = it->second[0];
-
+			auto check_from = [&](const auto &from) {
 				// Check for consistency of the "from:" section.
-				if (from.IsNull()) {
-					Error("No \"from:\" section found for wire \"" + wire_name + "\".\n");
-				}
-				if (from.IsScalar()) {
-					Error("\"from:\" section of wire \"" + wire_name + "\" is a scalar, but it must be a map.\n");
-				}
-				if (from.IsSequence()) {
-					Error("\"from:\" section of wire \"" + wire_name + "\" is a sequence, but it must be a map.\n");
-				}
+				if (from.IsNull())     Error("No \"from:\" section found for wire \"" + wire_name + "\".\n");
+				if (from.IsScalar())   Error("\"from:\" section of wire \"" + wire_name + "\" is a scalar, but it must be a map.\n");
+				if (from.IsSequence()) Error("\"from:\" section of wire \"" + wire_name + "\" is a sequence, but it must be a map.\n");
 				if (from.IsMap()) {
 					auto from_node = from["from"];
 					if (!from_node.IsDefined()) {
@@ -670,44 +681,22 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 						Error("\"from:\" section of wire \"" + wire_name + "\" must be a scalar.\n");
 					}
 				}
+			};
 
-				const auto &from_name = from["from"].as<string>();
-				const bool from_is_input = from_name.compare("input") == 0;
-
-				// Check if a component with this name exists.
-				if (!from_is_input && !IsComponentDeclared(comps, from_name)) {
-					Error("\"from:\" section of wire \"" + wire_name + "\" points to component \""
-						  + from_name + "\" which does not exist.\n");
-				}
-
-				const auto &from_port_node = from["port"];
-
+			auto check_from_port_node = [&](const auto &from_is_input, const auto &from_port_node) {
 				// Check for consistency of the "port:" section if the wire input is not "input".
 				if (!from_is_input) {
-					if (!from_port_node.IsDefined()) {
-						Error("No \"port:\" section found for wire \"" + wire_name + "\".\n");
-					}
-					if (from_port_node.IsNull()) {
-						Error("\"port:\" section of wire \"" + wire_name + "\" is empty.\n");
-					}
-					if (!from_port_node.IsScalar()) {
-						Error("\"port:\" section of wire \"" + wire_name + "\" must be a scalar.\n");
-					}
+					if (!from_port_node.IsDefined()) Error("No \"port:\" section found for wire \"" + wire_name + "\".\n");
+					if (from_port_node.IsNull())     Error("\"port:\" section of wire \"" + wire_name + "\" is empty.\n");
+					if (!from_port_node.IsScalar())  Error("\"port:\" section of wire \"" + wire_name + "\" must be a scalar.\n");
 				}
+			};
 
-				// There can be multiple sinks for a Wire.
-				const auto &to = it->second[1];
-
+			auto check_to = [&](const auto &to) {
 				// Check for consistency of the "to:" section.
-				if (to.IsNull()) {
-					Error("No \"to:\" section found for wire \"" + wire_name + "\".\n");
-				}
-				if (to.IsScalar()) {
-					Error("\"to:\" section for wire \"" + wire_name + "\" is a scalar, but it must be a map.\n");
-				}
-				if (to.IsSequence()) {
-					Error("\"to:\" section for wire \"" + wire_name + "\" is a sequence, but it must be a map.\n");
-				}
+				if (to.IsNull())     Error("No \"to:\" section found for wire \"" + wire_name + "\".\n");
+				if (to.IsScalar())   Error("\"to:\" section for wire \"" + wire_name + "\" is a scalar, but it must be a map.\n");
+				if (to.IsSequence()) Error("\"to:\" section for wire \"" + wire_name + "\" is a sequence, but it must be a map.\n");
 				if (to.IsMap()) {
 					const auto &to_node = to["to"];
 					if (!to_node.IsDefined()) {
@@ -720,6 +709,34 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 						Error("\"to:\" section contains empty map for wire \"" + wire_name + "\".\n");
 					}
 				}
+			};
+
+			for (size_t b_idx = 0; b_idx < size; ++b_idx) {
+				if (bundle_size > 0) {
+					wire = (*wire_bundle)[b_idx];
+				} else {
+					wire = make_shared<Wire>(wire_name);
+					wire_info->wire = wire;
+				}
+
+				// There is always a single source for a Wire.
+				const auto &from = it->second[0];
+				check_from(from);
+
+				const auto &from_name = from["from"].as<string>();
+				const bool from_is_input = from_name.compare("input") == 0;
+
+				// Check if a component with this name exists.
+				if (!from_is_input && !IsComponentDeclared(comps, from_name)) {
+					Error("\"from:\" section of wire \"" + wire_name + "\" points to component \"" + from_name + "\" which does not exist.\n");
+				}
+
+				const auto &from_port_node = from["port"];
+				check_from_port_node(from_is_input, from_port_node);
+
+				// There can be multiple sinks for a Wire.
+				const auto &to = it->second[1];
+				check_to(to);
 
 				vector<string> to_port_names; // Names of the sink ports.
 				vector<comp_t> to_components; // Sink Components.
@@ -745,8 +762,7 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 						to_components.push_back(comps[comp_name]);
 						to_port_names.push_back(to_port_node.as<string>());
 					} else {
-						Error("Wire \"" + wire_name + "\" refers to component \""
-							  + comp_name + "\" which does not exist.\n");
+						Error("Wire \"" + wire_name + "\" refers to component \"" + comp_name + "\" which does not exist.\n");
 					}
 				}
 				// If both "to:" and "port:" keys exist and have sequence values.
@@ -761,12 +777,10 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 							if (!output) {
 								output = true;
 							} else {
-								Error("\"to:\" section of wire \"" + wire_name
-									  + "\" has multiple \"output\" items configured.\n");
+								Error("\"to:\" section of wire \"" + wire_name + "\" has multiple \"output\" items configured.\n");
 							}
 						} else {
-							Error("Wire \"" + wire_name + "\" refers to component \""
-								  + comp_name + "\" which does not exist.\n");
+							Error("Wire \"" + wire_name + "\" refers to component \"" + comp_name + "\" which does not exist.\n");
 						}
 					}
 
@@ -857,8 +871,7 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 							Error("Output component of wire \"" + wire_name + "\" does not exist.\n");
 						}
 					} else {
-						Error("Output wire \"" + wire_name + "\" input declaration needs one \"from:\" and "
-							  + "one \"to:\" section.\n");
+						Error("Output wire \"" + wire_name + "\" input declaration needs one \"from:\" and one \"to:\" section.\n");
 					}
 				}
 
@@ -900,6 +913,8 @@ void ParseWires(comp_map_t &comps, YAML::Node config) {
 			cout << "comp: " << get<0>(to) << " port: " << PortToPortNameMap[get<1>(to)] << " bIdx: " << get<2>(to) << " eIdx: " << get<3>(to) << '\n';
 		}
 	}
+
+	return wire_information;
 }
 
 const string ValueToBinaryString(int64_t value, size_t size) {
@@ -1608,10 +1623,18 @@ int main(int argc, char **argv) {
 		}
 
 		ParseComponents(comps, config);
-		ParseWires(comps, config);
+		vector<wi_t> wire_information = ParseWires(comps, config);
 
 		for (const auto &c : comps) {
 			system.AddComponent(c.second);
+		}
+
+		for (const auto &wi : wire_information) {
+			if (wi->is_bundle && wi->wires) {
+				system.AddWireBundle(wi->wires);
+			} else if (wi->wire) {
+
+			}
 		}
 
 		system.FindLongestPathInSystem();
@@ -1631,7 +1654,7 @@ int main(int argc, char **argv) {
 		cout << "\nSimulation done!\n";
 		cout << "Number of toggles: " << system.GetNumToggles() << '\n';
 
-#if 0
+#if 1
 		cout << "\nValue of all wires:\n";
 		for (const auto &[ow_name, ow] : system.GetWires()) {
 			cout << "Wire \"" << ow_name

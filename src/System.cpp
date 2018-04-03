@@ -3,62 +3,109 @@
 void System::AddComponent(comp_t component) {
 	components.insert(pair<string, comp_t>(component->GetName(), component));
 
-	// Add all wires of this component.
-	for (const auto &w : component->GetWires()) {
-		if (!w) {
-			cout << "[Warning] Component \"" << component->GetName()
-				 << "\" has one or more ports that are not connected.\n";
-		} else {
-			wires.insert(pair<string, wire_t>(w->GetName(), w));
+//	// Add all wires of this component.
+//	for (const auto &w : component->GetWires()) {
+//		if (!w) {
+//			cout << "[Warning] Component \"" << component->GetName()
+//				 << "\" has one or more ports that are not connected.\n";
+//		} else {
+//			wires.insert(pair<string, wire_t>(w->GetName(), w));
+//
+//			const auto &wb = w->GetWireBundle();
+//			if (wb) {
+//				const auto wb_name = wb->GetName();
+//
+//				if (wire_bundles.find(wb_name) == wire_bundles.end()) {
+//					wire_bundles.insert(pair<string, wb_t>(wb_name, wb));
+//
+//					if (wb->IsInputBundle()) {
+//						// Add this wire to the list of input bundles
+//						// if we haven't done so already.
+//						if (find(input_bundles.begin(),
+//								 input_bundles.end(),
+//								 wb) == input_bundles.end()) {
+//							input_bundles.emplace_back(wb);
+//						}
+//					} else if (wb->IsOutputBundle()) {
+//						// Since outputs can only be driven by one
+//						// component only, we do not have to check if
+//						// we already have this bundle in the list of
+//						// output bundles.
+//						output_bundles.emplace_back(wb);
+//					} else {
+//						if (find(internal_bundles.begin(),
+//								 internal_bundles.end(),
+//								 wb) == internal_bundles.end()) {
+//							internal_bundles.emplace_back(wb);
+//						}
+//					}
+//				}
+//			} else {
+//				if (w->IsInputWire()) {
+//					// Add this wire to the list of input wires
+//					// if we haven't done so already.
+//					if (find(input_wires.begin(),
+//							 input_wires.end(),
+//							 w) == input_wires.end())
+//					{
+//						input_wires.emplace_back(w);
+//					}
+//				} else if (w->IsOutputWire()) {
+//					// Since outputs can only be driven by one
+//					// component only, we do not have to check if
+//					// we already have this wire in the list of
+//					// output wires.
+//					output_wires.emplace_back(w);
+//				}
+//			}
+//
+//			if (w->IsInputWire()) {
+//				// Add this wire to the list of input wires
+//				// if we haven't done so already.
+//				if (find(all_input_wires.begin(),
+//						 all_input_wires.end(),
+//						 w) == all_input_wires.end())
+//				{
+//					all_input_wires.emplace_back(w);
+//				}
+//			} else if (w->IsOutputWire()) {
+//				if (find(all_output_wires.begin(),
+//						 all_output_wires.end(),
+//						 w) == all_output_wires.end())
+//				{
+//					all_output_wires.emplace_back(w);
+//				}
+//			}
+//		}
+//	}
+}
 
-			const auto &wb = w->GetWireBundle();
-			if (wb) {
-				const auto wb_name = wb->GetName();
+void System::AddWireBundle(wb_t wb) {
+	if (wire_bundles.find(wb->GetName()) == wire_bundles.end()) {
+		wire_bundles.insert(pair<string, wb_t>(wb->GetName(), wb));
 
-				if (wire_bundles.find(wb_name) == wire_bundles.end())
-				{
-					wire_bundles.insert(pair<string, wb_t>(wb_name, wb));
-
-					if (wb->IsInputBundle()) {
-						// Add this wire to the list of input bundles
-						// if we haven't done so already.
-						if (find(input_bundles.begin(),
-								 input_bundles.end(),
-								 wb) == input_bundles.end()) {
-							input_bundles.emplace_back(wb);
-						}
-					} else if (wb->IsOutputBundle()) {
-						// Since outputs can only be driven by one
-						// component only, we do not have to check if
-						// we already have this bundle in the list of
-						// output bundles.
-						output_bundles.emplace_back(wb);
-					} else {
-						if (find(internal_bundles.begin(),
-								 internal_bundles.end(),
-								 wb) == internal_bundles.end()) {
-							internal_bundles.emplace_back(wb);
-						}
-					}
-				}
-			} else {
-				if (w->IsInputWire()) {
-					// Add this wire to the list of input wires
-					// if we haven't done so already.
-					if (find(input_wires.begin(),
-							 input_wires.end(),
-							 w) == input_wires.end())
-					{
-						input_wires.emplace_back(w);
-					}
-				} else if (w->IsOutputWire()) {
-					// Since outputs can only be driven by one
-					// component only, we do not have to check if
-					// we already have this wire in the list of
-					// output wires.
-					output_wires.emplace_back(w);
-				}
+		if (wb->IsInputBundle()) {
+			if (find(input_bundles.begin(),
+					input_bundles.end(),
+					wb) == input_bundles.end()) {
+				input_bundles.emplace_back(wb);
 			}
+		} else if (wb->IsOutputBundle()) {
+			if (find(output_bundles.begin(),
+					output_bundles.end(),
+					wb) == output_bundles.end()) {
+				output_bundles.emplace_back(wb);
+			}
+		} else {
+			if (find(internal_bundles.begin(),
+					 internal_bundles.end(),
+					 wb) == internal_bundles.end()) {
+				internal_bundles.emplace_back(wb);
+			}
+		}
+
+		for (const auto &w : wb->GetWires()) {
+			wires.insert(pair<string, wire_t>(w->GetName(), w));
 
 			if (w->IsInputWire()) {
 				// Add this wire to the list of input wires
