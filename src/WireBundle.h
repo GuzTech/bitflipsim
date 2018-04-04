@@ -19,6 +19,8 @@ public:
 	const REPR GetRepresentation() const {return repr;};
 	const bool IsInputBundle() const {return is_input_bundle;}
 	const bool IsOutputBundle() const {return is_output_bundle;}
+	const size_t GetFromMinIdx() const {return from_min_idx;}
+	const size_t GetFromMaxIdx() const {return from_max_idx;}
 
 	const wire_t &operator [] (size_t i) const {return wires[i];}
 	const optional<size_t> GetWireIndex(const wire_t &wire) const;
@@ -28,6 +30,8 @@ public:
 	void SetRepresentation(REPR _repr) {repr = _repr;}
 	void SetAsInputBundle() {is_input_bundle = true;}
 	void SetAsOutputBundle() {is_output_bundle = true;}
+	void SetFromMinIdx(size_t idx) {from_min_idx = idx;};
+	void SetFromMaxIdx(size_t idx) {from_max_idx = idx;};
 private:
 	string name;
 	size_t size;
@@ -35,6 +39,8 @@ private:
 	REPR repr; // Number representation format.
 	bool is_input_bundle = false;
 	bool is_output_bundle = false;
+	size_t from_min_idx = 0;
+	size_t from_max_idx = 0;
 };
 
 #endif // WIREBUNDLE_H

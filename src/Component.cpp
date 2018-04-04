@@ -26,7 +26,13 @@ void Component::GenerateAssignments(const PORTS port,
 									const string &signal_name,
 									TemplateDictionary &inst,
 									const bool last_port) const {
-	map<string, tuple<size_t, size_t, size_t>> wire_indices;
+	struct wireData {
+		size_t min_idx = 256;
+		size_t max_idx = 0;
+		size_t port_size = 0;
+	};
+
+	map<string, wireData> wire_indices;
 
 	for (size_t i = 0; i < port_width; ++i) {
 		const auto &w = GetWire(port, i);
@@ -34,15 +40,12 @@ void Component::GenerateAssignments(const PORTS port,
 			const auto &wb = w->GetWireBundle();
 
 			if (wb) {
-				const auto &p = wire_indices[wb->GetName()];
-				size_t min_idx = min(get<0>(p), i);
-				size_t max_idx = max(get<1>(p), i);
-				wire_indices[wb->GetName()] = tuple<size_t, size_t, size_t>(min_idx, max_idx, wb->GetSize());
+				wire_indices[wb->GetName()] = wireData{wb->GetFromMinIdx(), wb->GetFromMaxIdx(), wb->GetSize()};
 			} else {
 				const auto &p = wire_indices[w->GetName()];
-				size_t min_idx = min(get<0>(p), i);
-				size_t max_idx = max(get<1>(p), i);
-				wire_indices[w->GetName()] = tuple<size_t, size_t, size_t>(min_idx, max_idx, 1);
+				size_t min_idx = min(p.min_idx, i);
+				size_t max_idx = max(p.max_idx, i);
+				wire_indices[w->GetName()] = wireData{min_idx, max_idx, 1};
 			}
 		}
 	}
@@ -50,12 +53,30 @@ void Component::GenerateAssignments(const PORTS port,
 	string signal = "";
 
 	if (wire_indices.size()) {
+		// At least one wire is connected to this port.
 		for (const auto &[name, indices] : wire_indices) {
-			auto min_str = to_string(get<0>(indices));
-			auto max_str = to_string(get<1>(indices));
-			signal += signal_name + " => int_" + name + '(' + max_str + " DOWNTO " + min_str + "),\n";
+			if (indices.min_idx == indices.max_idx) {
+				// This is a wire.
+				signal += signal_name + " => int_" + name + ",\n";
+			} else {
+				// This is a wire bundle.
+				if (GetPortDirection(port) == PORT_DIR::OUTPUT) {
+					// We have to assign the port fully.
+					signal += signal_name + " => int_" + name + ",\n";
+				} else {
+					if (indices.min_idx == 0 && indices.max_idx == (port_width - 1)) {
+						// Fully assign the wire bundle.
+						signal += signal_name + " => int_" + name + ",\n";
+					} else {
+						auto min_str = to_string(indices.min_idx);
+						auto max_str = to_string(indices.max_idx);
+						signal += signal_name + " => int_" + name + '(' + max_str + " DOWNTO " + min_str + "),\n";
+					}
+				}
+			}
 		}
 	} else {
+		// Not a single wire is connected to this port.
 		const auto dir = GetPortDirection(port);
 
 		switch (dir) {
