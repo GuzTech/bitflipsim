@@ -80,6 +80,60 @@ using comp_map_t = ordered_map<string, comp_t>;
 using wire_map_t = ordered_map<string, wire_t>;
 using wb_map_t   = ordered_map<string, wb_t>;
 
+struct WireInformation {
+
+	// About the Wire(Bundle) itself.
+	string name;
+	bool is_bundle = false;
+	size_t bundle_size = 1;
+	wire_t wire = nullptr;
+	wb_t wires = nullptr;
+
+	void AddFrom(const string &comp_name, const PORTS port, const size_t begin_idx, const size_t end_idx) {
+		size_t idx = 0;
+		for (; idx < from.size(); ++idx) {
+			if (get<1>(from[idx]) == port) {
+				break;
+			}
+		}
+
+		if (idx < from.size()) {
+			// We had already stored this one, so just update the begin and end indices.
+			get<2>(from[idx]) = begin_idx;
+			get<3>(from[idx]) = end_idx;
+
+		} else {
+			// We had not stored this one yet, so add it.
+			from.emplace_back(tuple<string, PORTS, size_t, size_t>(comp_name, port, begin_idx, end_idx));
+		}
+	}
+
+	void AddTo(const string &comp_name, const PORTS port, const size_t begin_idx, const size_t end_idx) {
+		size_t idx = 0;
+		for (; idx < to.size(); ++idx) {
+			if (get<1>(to[idx]) == port) {
+				break;
+			}
+		}
+
+		if (idx < to.size()) {
+			// We had already stored this one, so just update the begin and end indices.
+			get<2>(to[idx]) = begin_idx;
+			get<3>(to[idx]) = end_idx;
+
+		} else {
+			// We had not stored this one yet, so add it.
+			to.emplace_back(tuple<string, PORTS, size_t, size_t>(comp_name, port, begin_idx, end_idx));
+		}
+	}
+
+	// <from/to port, begin index, end index>
+	vector<tuple<string, PORTS, size_t, size_t>> from;
+	vector<tuple<string, PORTS, size_t, size_t>> to;
+};
+
+using wi_t = shared_ptr<WireInformation>;
+
 #include "Component.h"
 #include "HalfAdder.h"
 #include "FullAdder.h"

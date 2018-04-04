@@ -7,6 +7,7 @@ class System {
 public:
 	void AddComponent(comp_t component);
 	void AddWireBundle(wb_t wires);
+	void SetWireInformation(const auto &wire_info) {wire_information = wire_info;};
 	void FindLongestPathInSystem();
 	void FindInitialState();
 	void Update();
@@ -35,6 +36,8 @@ private:
 	comp_map_t components;
 	wire_map_t wires;
 	wb_map_t   wire_bundles;
+
+	vector<wi_t> wire_information;
 
 	vector<wire_t> input_wires; // Only wires that have been defined as input wires (not part of wire bundles).
 	vector<wire_t> all_input_wires; // All input wires, including those of input wire bundles.

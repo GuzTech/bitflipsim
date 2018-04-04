@@ -576,60 +576,6 @@ void ParseComponents(comp_map_t &comps, const YAML::Node &config) {
 	}
 }
 
-struct WireInformation {
-
-	// About the Wire(Bundle) itself.
-	string name;
-	bool is_bundle = false;
-	size_t bundle_size = 1;
-	wire_t wire = nullptr;
-	wb_t wires = nullptr;
-
-	void AddFrom(const string &comp_name, const PORTS port, const size_t begin_idx, const size_t end_idx) {
-		size_t idx = 0;
-		for (; idx < from.size(); ++idx) {
-			if (get<1>(from[idx]) == port) {
-				break;
-			}
-		}
-
-		if (idx < from.size()) {
-			// We had already stored this one, so just update the begin and end indices.
-			get<2>(from[idx]) = begin_idx;
-			get<3>(from[idx]) = end_idx;
-
-		} else {
-			// We had not stored this one yet, so add it.
-			from.emplace_back(tuple<string, PORTS, size_t, size_t>(comp_name, port, begin_idx, end_idx));
-		}
-	}
-
-	void AddTo(const string &comp_name, const PORTS port, const size_t begin_idx, const size_t end_idx) {
-		size_t idx = 0;
-		for (; idx < to.size(); ++idx) {
-			if (get<1>(to[idx]) == port) {
-				break;
-			}
-		}
-
-		if (idx < to.size()) {
-			// We had already stored this one, so just update the begin and end indices.
-			get<2>(to[idx]) = begin_idx;
-			get<3>(to[idx]) = end_idx;
-
-		} else {
-			// We had not stored this one yet, so add it.
-			to.emplace_back(tuple<string, PORTS, size_t, size_t>(comp_name, port, begin_idx, end_idx));
-		}
-	}
-
-	// <from/to port, begin index, end index>
-	vector<tuple<string, PORTS, size_t, size_t>> from;
-	vector<tuple<string, PORTS, size_t, size_t>> to;
-};
-
-using wi_t = shared_ptr<WireInformation>;
-
 vector<wi_t> ParseWires(comp_map_t &comps, YAML::Node config) {
 	const auto &wires = config["wires"];
 
@@ -842,6 +788,10 @@ vector<wi_t> ParseWires(comp_map_t &comps, YAML::Node config) {
 
 						ParsePortAndIndex(wire_name, from_port, from_port_name, from_begin_idx, from_end_idx);
 						wire_info->AddFrom(from_name, PortNameToPortMap[from_port_name], from_begin_idx, from_end_idx);
+						if (wire_bundle) {
+							wire_bundle->SetFromMinIdx(from_begin_idx);
+							wire_bundle->SetFromMaxIdx(from_end_idx);
+						}
 
 						if (b_idx + from_begin_idx <= from_end_idx) {
 							Connect(from_comp, PortNameToPortMap[from_port_name], wire, b_idx + from_begin_idx);
@@ -895,24 +845,24 @@ vector<wi_t> ParseWires(comp_map_t &comps, YAML::Node config) {
 		wire_information.emplace_back(wire_info);
 	}
 
-	cout << "Wire information:\n";
-	for (const auto &wi : wire_information) {
-		if (wi->is_bundle) {
-			cout << "\nWireBundle: " << wi->name;
-		} else {
-			cout << "Wire: " << wi->name;
-		}
-
-		cout << "\nfrom:\n";
-		for (const auto &from : wi->from) {
-			cout << "comp: " << get<0>(from) << " port: " << PortToPortNameMap[get<1>(from)] << " bIdx: " << get<2>(from) << " eIdx: " << get<3>(from) << '\n';
-		}
-
-		cout << "\nto:\n";
-		for (const auto &to : wi->to) {
-			cout << "comp: " << get<0>(to) << " port: " << PortToPortNameMap[get<1>(to)] << " bIdx: " << get<2>(to) << " eIdx: " << get<3>(to) << '\n';
-		}
-	}
+//	cout << "Wire information:\n";
+//	for (const auto &wi : wire_information) {
+//		if (wi->is_bundle) {
+//			cout << "\nWireBundle: " << wi->name;
+//		} else {
+//			cout << "Wire: " << wi->name;
+//		}
+//
+//		cout << "\nfrom:\n";
+//		for (const auto &from : wi->from) {
+//			cout << "comp: " << get<0>(from) << " port: " << PortToPortNameMap[get<1>(from)] << " bIdx: " << get<2>(from) << " eIdx: " << get<3>(from) << '\n';
+//		}
+//
+//		cout << "\nto:\n";
+//		for (const auto &to : wi->to) {
+//			cout << "comp: " << get<0>(to) << " port: " << PortToPortNameMap[get<1>(to)] << " bIdx: " << get<2>(to) << " eIdx: " << get<3>(to) << '\n';
+//		}
+//	}
 
 	return wire_information;
 }
@@ -1624,6 +1574,7 @@ int main(int argc, char **argv) {
 
 		ParseComponents(comps, config);
 		vector<wi_t> wire_information = ParseWires(comps, config);
+		system.SetWireInformation(wire_information);
 
 		for (const auto &c : comps) {
 			system.AddComponent(c.second);
@@ -1654,7 +1605,7 @@ int main(int argc, char **argv) {
 		cout << "\nSimulation done!\n";
 		cout << "Number of toggles: " << system.GetNumToggles() << '\n';
 
-#if 1
+#if 0
 		cout << "\nValue of all wires:\n";
 		for (const auto &[ow_name, ow] : system.GetWires()) {
 			cout << "Wire \"" << ow_name
