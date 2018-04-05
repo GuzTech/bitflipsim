@@ -1,0 +1,197 @@
+components:
+  SmagTo2C: [real_x1_smag, 32]
+  SmagTo2C: [imag_x1_smag, 32]
+  Multiplier: {
+    name: real_mul_0,
+    A width: 32,
+    B width: 32,
+    number format: SMAG,
+    layout: carry save,
+    type: none
+  }
+  Multiplier: {
+    name: imag_mul_0,
+    A width: 32,
+    B width: 32,
+    number format: SMAG,
+    layout: carry save,
+    type: none
+  }
+  Multiplier: {
+    name: real_mul_1,
+    A width: 32,
+    B width: 32,
+    number format: SMAG,
+    layout: carry save,
+    type: none
+  }
+  SmagTo2C: [smag_mul_0, 32]
+  SmagTo2C: [smag_mul_1, 32]
+  Multiplier: {
+    name: imag_mul_1,
+    A width: 32,
+    B width: 32,
+    number format: SMAG,
+    layout: carry save,
+    type: none
+  }
+  SmagTo2C: [smag_mul_2, 32]
+  SmagTo2C: [smag_mul_3, 32]
+  RippleCarryAdder: [mul_add, 32]
+  RippleCarrySubtracter: [mul_sub, 32]
+  RippleCarryAdder: [complex_add_0, 32]
+  RippleCarryAdder: [complex_add_1, 32]
+  RippleCarrySubtracter: [complex_sub_0, 32]
+  RippleCarrySubtracter: [complex_sub_1, 32]
+wires:
+  # x(0) 2C input
+  real_x0 32:
+    - from: input
+    - to: [complex_add_0, complex_sub_0]
+      port: [A 0 31, A 0 31]
+  imag_x0 32:
+    - from: input
+    - to: [complex_add_1, complex_sub_1]
+      port: [A 0 31, A 0 31]
+
+  # x(1) 2C input
+  real_x1 32:
+    - from: input
+    - to: real_x1_smag
+      port: A 0 31
+  imag_x1 32:
+    - from: input
+    - to: imag_x1_smag
+      port: A 0 31
+
+  # x(1) smag input
+  smag_real_x1 32 smag:
+    - from: real_x1_smag
+      port: O 0 31
+    - to: [real_mul_0, imag_mul_1]
+      port: [A 0 31, A 0 31]
+  smag_imag_x1 32 smag:
+    - from: imag_x1_smag
+      port: O 0 31
+    - to: [real_mul_1, imag_mul_0]
+      port: [A 0 31, A 0 31]
+
+  # twiddle smag input
+  real_twiddle 32 smag:
+    - from: input
+    - to: [real_mul_0, imag_mul_0]
+      port: [B 0 31, B 0 31]
+  imag_twiddle 32 smag:
+    - from: input
+    - to: [real_mul_1, imag_mul_1]
+      port: [B 0 31, B 0 31]
+
+  # real mul 0 smag output
+  real_mul_smag_O_0 64 smag:
+    - from: real_mul_0
+      port: O 30 60
+    - to: smag_mul_0
+      port: A 0 30
+  real_mul_smag_sign_O_0:
+    - from: real_mul_0
+      port: O 63
+    - to: smag_mul_0
+      port: A 31
+
+  # real mul 1 smag output
+  real_mul_smag_O_1 64 smag:
+    - from: real_mul_1
+      port: O 30 60
+    - to: smag_mul_1
+      port: A 0 30
+  real_mul_smag_sign_O_1:
+    - from: real_mul_1
+      port: O 63
+    - to: smag_mul_1
+      port: A 31
+
+  # imag mul 0 smag output
+  imag_mul_smag_O_0 64 smag:
+    - from: imag_mul_0
+      port: O 30 60
+    - to: smag_mul_2
+      port: A 0 30
+  imag_mul_smag_sign_O_0:
+    - from: imag_mul_0
+      port: O 63
+    - to: smag_mul_2
+      port: A 31
+
+  # imag mul 1 smag output
+  imag_mul_smag_O_1 64 smag:
+    - from: imag_mul_1
+      port: O 30 60
+    - to: smag_mul_3
+      port: A 0 30
+  imag_mul_smag_sign_O_1:
+    - from: imag_mul_1
+      port: O 63
+    - to: smag_mul_3
+      port: A 31
+
+  # real mul 0 2C output
+  real_mul_O_0 32:
+    - from: smag_mul_0
+      port: O 0 31
+    - to: mul_sub
+      port: A 0 31
+
+  # real mul 1 2C output
+  real_mul_O_1 32:
+    - from: smag_mul_1
+      port: O 0 31
+    - to: mul_sub
+      port: B 0 31
+
+  # imag mul 0 2C output
+  imag_mul_O_0 32:
+    - from: smag_mul_2
+      port: O 0 31
+    - to: mul_add
+      port: A 0 31
+
+  # imag mul 1 2C output
+  imag_mul_O_1 32:
+    - from: smag_mul_3
+      port: O 0 31
+    - to: mul_add
+      port: B 0 31
+
+  real_O 32:
+    - from: mul_sub
+      port: O 0 31
+    - to: [complex_add_0, complex_sub_0]
+      port: [B 0 31, B 0 31]
+  imag_O 32:
+    - from: mul_add
+      port: O 0 31
+    - to: [complex_add_1, complex_sub_1]
+      port: [B 0 31, B 0 31]
+  real_F0 32:
+    - from: complex_add_0
+      port: O 0 31
+    - to: output
+  imag_F0 32:
+    - from: complex_add_1
+      port: O 0 31
+    - to: output
+  real_F1 32:
+    - from: complex_sub_0
+      port: O 0 31
+    - to: output
+  imag_F1 32:
+    - from: complex_sub_1
+      port: O 0 31
+    - to: output
+stimuli:
+  - real_x0: 0b00000000000000000000111110100000
+    imag_x0: 0b00000000000000000000000000000000
+    real_x1: 0b00000000000000000000111110100000
+    imag_x1: 0b00000000000000000000000000000000
+    real_twiddle: 0b01000000000000000000000000000000
+    imag_twiddle: 0b00000000000000000000000000000000
