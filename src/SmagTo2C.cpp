@@ -164,9 +164,15 @@ void SmagTo2C::GenerateVHDLEntity(const string &path) const {
 
 const string SmagTo2C::GenerateVHDLInstance() const {
 	string output;
-	//TemplateDictionary inst("And");
-	//inst.SetValue("NAME", name);
-	//ExpandTemplate("src/templates/VHDL/And_inst.tpl", DO_NOT_STRIP, &inst, &output);
+	TemplateDictionary inst("SmagTo2C");
+
+
+	GenerateAssignments(PORTS::A, num_bits, "A", inst);
+	GenerateAssignments(PORTS::O, num_bits, "O", inst, true);
+
+	inst.SetValue("NAME", name);
+	inst.SetValue("SIZE", to_string(num_bits));
+	ExpandTemplate("src/templates/VHDL/SmagTo2C_inst.tpl", DO_NOT_STRIP, &inst, &output);
 
 	return output;
 }
