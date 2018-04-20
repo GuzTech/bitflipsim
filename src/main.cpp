@@ -845,24 +845,24 @@ vector<wi_t> ParseWires(comp_map_t &comps, YAML::Node config) {
 		wire_information.emplace_back(wire_info);
 	}
 
-//	cout << "Wire information:\n";
-//	for (const auto &wi : wire_information) {
-//		if (wi->is_bundle) {
-//			cout << "\nWireBundle: " << wi->name;
-//		} else {
-//			cout << "Wire: " << wi->name;
-//		}
-//
-//		cout << "\nfrom:\n";
-//		for (const auto &from : wi->from) {
-//			cout << "comp: " << get<0>(from) << " port: " << PortToPortNameMap[get<1>(from)] << " bIdx: " << get<2>(from) << " eIdx: " << get<3>(from) << '\n';
-//		}
-//
-//		cout << "\nto:\n";
-//		for (const auto &to : wi->to) {
-//			cout << "comp: " << get<0>(to) << " port: " << PortToPortNameMap[get<1>(to)] << " bIdx: " << get<2>(to) << " eIdx: " << get<3>(to) << '\n';
-//		}
-//	}
+	cout << "Wire information:\n";
+	for (const auto &wi : wire_information) {
+		if (wi->is_bundle) {
+			cout << "\nWireBundle: " << wi->name;
+		} else {
+			cout << "Wire: " << wi->name;
+		}
+
+		cout << "\nfrom:\n";
+		for (const auto &from : wi->from) {
+			cout << "comp: " << get<0>(from) << " port: " << PortToPortNameMap[get<1>(from)] << " bIdx: " << get<2>(from) << " eIdx: " << get<3>(from) << '\n';
+		}
+
+		cout << "\nto:\n";
+		for (const auto &to : wi->to) {
+			cout << "comp: " << get<0>(to) << " port: " << PortToPortNameMap[get<1>(to)] << " bIdx: " << get<2>(to) << " eIdx: " << get<3>(to) << '\n';
+		}
+	}
 
 	return wire_information;
 }
@@ -1584,7 +1584,7 @@ int main(int argc, char **argv) {
 			if (wi->is_bundle && wi->wires) {
 				system.AddWireBundle(wi->wires);
 			} else if (wi->wire) {
-
+				system.AddWire(wi->wire);
 			}
 		}
 
@@ -1600,7 +1600,7 @@ int main(int argc, char **argv) {
 		cout << "Number of components: " << system.GetNumComponents() <<
 			"\nNumber of wires: " << system.GetNumWires() << '\n';
 
-		ParseStimuli(system, config, config_file_name, true);
+		ParseStimuli(system, config, config_file_name, false);
 
 		cout << "\nSimulation done!\n";
 		cout << "Number of toggles: " << system.GetNumToggles() << '\n';
@@ -1622,7 +1622,7 @@ int main(int argc, char **argv) {
 			}
 		}
 #endif
-#if 1
+#if 0
 		cout << "\nInputs:\n";
 		vector<wb_t> processed_wire_bundles;
 

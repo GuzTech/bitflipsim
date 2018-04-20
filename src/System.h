@@ -6,6 +6,7 @@
 class System {
 public:
 	void AddComponent(comp_t component);
+	void AddWire(wire_t wire);
 	void AddWireBundle(wb_t wires);
 	void SetWireInformation(const auto &wire_info) {wire_information = wire_info;};
 	void FindLongestPathInSystem();
