@@ -148,17 +148,19 @@ const PORT_DIR SmagTo2C::GetPortDirection(PORTS port) const {
 }
 
 void SmagTo2C::GenerateVHDLEntity(const string &path) const {
-	// We only need to do it once, since all instances of the And gate are identical.
+	// We only need to do it once, since all instances of the SmagTo2C component are identical.
 	if (!entityGenerated) {
 		string output;
-		//TemplateDictionary entity("And");
-		//ExpandTemplate("src/templates/VHDL/And_entity.tpl", DO_NOT_STRIP, &entity, &output);
+		TemplateDictionary entity("SmagTo2C");
+		ExpandTemplate("src/templates/VHDL/SmagTo2C_entity.tpl", DO_NOT_STRIP, &entity, &output);
 
-		//auto outfile = ofstream(path + "/And.vhd");
-		//outfile << output;
-		//outfile.close();
+		auto outfile = ofstream(path + "/SmagTo2C.vhd");
+		outfile << output;
+		outfile.close();
 
-		//entityGenerated = true;
+        adders.front()->GenerateVHDLEntity(path);
+
+		entityGenerated = true;
 	}
 }
 
