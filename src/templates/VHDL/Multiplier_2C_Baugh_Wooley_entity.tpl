@@ -15,8 +15,8 @@ PORT (
 END Multiplier_2C_Baugh_Wooley;
 
 ARCHITECTURE carry_save OF Multiplier_2C_Baugh_Wooley IS
-	CONSTANT NUM_BITS_O       : INTEGER := NUM_BITS_A + NUM_BITS_B - 1;
-	CONSTANT NUM_ADD_LVLS     : INTEGER := NUM_BITS_B;
+	CONSTANT NUM_BITS_O       : INTEGER := NUM_BITS_A + NUM_BITS_B;
+	CONSTANT NUM_ADD_LVLS     : INTEGER := NUM_BITS_B - 1;
 	CONSTANT NUM_AND_LVLS     : INTEGER := NUM_BITS_B;
 	CONSTANT NUM_ADDS_PER_LVL : INTEGER := NUM_BITS_A;
 	CONSTANT NUM_ANDS_PER_LVL : INTEGER := NUM_BITS_A;
@@ -32,8 +32,7 @@ ARCHITECTURE carry_save OF Multiplier_2C_Baugh_Wooley IS
 	SIGNAL cs_Cout : array_cs;
 BEGIN
 	O(0)          <= and_o(0)(0);
-	O(O'HIGH)     <= A(A'HIGH) XOR B(B'HIGH);
-	O(O'HIGH - 1) <= cs_Cout(cs_Cout'HIGH)(cs_Cout(cs_Cout'HIGH)'HIGH);
+	O(O'HIGH)     <= NOT cs_Cout(cs_Cout'HIGH)(NUM_ANDS_PER_LVL - 1);
 
 	gen_ands_i: FOR i IN 0 TO (NUM_AND_LVLS - 1) GENERATE
 	    gen_row: IF (i < (NUM_AND_LVLS - 1)) GENERATE
@@ -63,7 +62,7 @@ BEGIN
 
 	gen_adders: FOR i IN 0 TO (NUM_ADD_LVLS - 1) GENERATE
 		csa0: IF (i = 0) GENERATE
-			cs_A(i)   <= '0' & and_o(0)(and_o(0)'HIGH DOWNTO 1);
+			cs_A(i)   <= '1' & and_o(0)(and_o(0)'HIGH DOWNTO 1);
 			cs_B(i)   <= and_o(1);
 			cs_Cin(i) <= and_o(2)(and_o(2)'HIGH - 1 DOWNTO 0) & '0';
 
@@ -121,7 +120,7 @@ BEGIN
 			O(i) <= cs_O(i - 1)(0);
 		END GENERATE out_low;
 
-		out_high: IF (i > (NUM_BITS_O - NUM_ADDS_PER_LVL - 2) AND i < (NUM_BITS_O - 2)) GENERATE
+		out_high: IF (i >= (NUM_BITS_O - NUM_ADDS_PER_LVL - 1) AND i < (NUM_BITS_O - 1)) GENERATE
 			O(i) <= cs_O(cs_O'HIGH)(i - NUM_ADDS_PER_LVL + 1);
 		END GENERATE out_high;
 	END GENERATE gen_outs;
