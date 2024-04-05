@@ -10,6 +10,7 @@
 #include <climits>
 #include <fstream>
 #include <bitset>
+#include <optional>
 #include <ctemplate/template.h>
 #include <tsl/ordered_map.h>
 
