@@ -7,7 +7,7 @@ class System {
 public:
 	void AddComponent(comp_t component);
 	void AddWireBundle(wb_t wires);
-	void SetWireInformation(const auto &wire_info) {wire_information = wire_info;};
+	void SetWireInformation(const vector<wi_t> &wire_info) {wire_information = wire_info;};
 	void FindLongestPathInSystem();
 	void FindInitialState();
 	void Update();
