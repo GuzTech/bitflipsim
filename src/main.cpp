@@ -1165,15 +1165,51 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		}
 	};
 
-	auto process_wire_bundle_shift_up = [&](const auto &wb, const auto &constraint, auto &system, const size_t num_times) {
-		for (size_t i = 0; i < num_times; ++i) {
-			const auto curr_val = wb->GetValue();
-			const auto new_val = curr_val << 1;
-			wb->SetValue(new_val, false);
+	auto process_wire_bundle_count = [&](const auto &wb, const auto &constraint, auto &system, const size_t num_times, DIRECTION dir) {
+		if (dir == DIRECTION::UP) {
+			for (size_t i = 0; i < num_times; ++i) {
+				const auto curr_val = wb->GetValue();
+				const auto new_val = curr_val + 1;
+				wb->SetValue(new_val, false);
 
-			const auto &map_val = in_values[wb->GetName()];
-			map_val->values.emplace_back(wb->GetValue());
-			map_val->values_2C.emplace_back(wb->Get2CValue());
+				const auto &map_val = in_values[wb->GetName()];
+				map_val->values.emplace_back(wb->GetValue());
+				map_val->values_2C.emplace_back(wb->Get2CValue());
+			}
+		} else {
+			for (size_t i = 0; i < num_times; ++i) {
+				const auto curr_val = wb->GetValue();
+				const auto new_val = curr_val - 1;
+				wb->SetValue(new_val, false);
+
+				const auto &map_val = in_values[wb->GetName()];
+				map_val->values.emplace_back(wb->GetValue());
+				map_val->values_2C.emplace_back(wb->Get2CValue());
+			}
+		}
+	};
+
+	auto process_wire_bundle_shift = [&](const auto &wb, const auto &constraint, auto &system, const size_t num_times, DIRECTION dir) {
+		if (dir == DIRECTION::UP) {
+			for (size_t i = 0; i < num_times; ++i) {
+				const auto curr_val = wb->GetValue();
+				const auto new_val = curr_val << 1;
+				wb->SetValue(new_val, false);
+
+				const auto &map_val = in_values[wb->GetName()];
+				map_val->values.emplace_back(wb->GetValue());
+				map_val->values_2C.emplace_back(wb->Get2CValue());
+			}
+		} else {
+			for (size_t i = 0; i < num_times; ++i) {
+				const auto curr_val = wb->GetValue();
+				const auto new_val = curr_val >> 1;
+				wb->SetValue(new_val, false);
+
+				const auto &map_val = in_values[wb->GetName()];
+				map_val->values.emplace_back(wb->GetValue());
+				map_val->values_2C.emplace_back(wb->Get2CValue());
+			}
 		}
 	};
 
@@ -1235,7 +1271,19 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 										break;
 									}
 									case Constraint::TYPE::SHIFT_UP: {
-										process_wire_bundle_shift_up(wb, c, system, 1);
+										process_wire_bundle_shift(wb, c, system, 1, DIRECTION::UP);
+										break;
+									}
+									case Constraint::TYPE::SHIFT_DOWN: {
+										process_wire_bundle_shift(wb, c, system, 1, DIRECTION::DOWN);
+										break;
+									}
+									case Constraint::TYPE::COUNT_UP: {
+										process_wire_bundle_count(wb, c, system, 1, DIRECTION::UP);
+										break;
+									}
+									case Constraint::TYPE::COUNT_DOWN: {
+										process_wire_bundle_count(wb, c, system, 1, DIRECTION::DOWN);
 										break;
 									}
 									case Constraint::TYPE::NONE: break;
@@ -1284,7 +1332,19 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 							break;
 						}
 						case Constraint::TYPE::SHIFT_UP: {
-							process_wire_bundle_shift_up(wb, c, system, c->times);
+							process_wire_bundle_shift(wb, c, system, c->times, DIRECTION::UP);
+							break;
+						}
+						case Constraint::TYPE::SHIFT_DOWN: {
+							process_wire_bundle_shift(wb, c, system, c->times, DIRECTION::DOWN);
+							break;
+						}
+						case Constraint::TYPE::COUNT_UP: {
+							process_wire_bundle_count(wb, c, system, c->times, DIRECTION::UP);
+							break;
+						}
+						case Constraint::TYPE::COUNT_DOWN: {
+							process_wire_bundle_count(wb, c, system, c->times, DIRECTION::DOWN);
 							break;
 						}
 						case Constraint::TYPE::NONE: break;
