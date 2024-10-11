@@ -4,7 +4,7 @@
 
 ### How do I build it? ###
 ```
-git clone --recursive https://bitbucket.org/guztech/bitflipsim
+git clone --recursive https://github.com/GuzTech/bitflipsim.git
 cd bitflipsim
 make init
 make
