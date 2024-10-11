@@ -44,3 +44,7 @@ stimuli:
 # 30 bits
 #    - {wire: A, type: uniform, ub: 536870911, lb: -536870912, seed: 3, times: 10000}
 #    - {wire: B, type: uniform, ub: 536870911, lb: -536870912, seed: 5, times: 10000}
+
+# 32 bits
+#    - {wire: A, type: uniform, ub: 2147483647, lb: -2147483648, seed: 3, times: 10000}
+#    - {wire: B, type: uniform, ub: 2147483647, lb: -2147483648, seed: 5, times: 10000}
