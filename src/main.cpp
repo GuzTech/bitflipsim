@@ -1,7 +1,7 @@
 #include "main.h"
 #include <yaml-cpp/yaml.h>
 #include <random>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <stdnoreturn.h>
 
 using namespace std;
@@ -1515,6 +1515,8 @@ void ParseStimuli(System &system, YAML::Node config, const string &config_file_n
 		stimfile_path = config_file_name.substr(0, config_file_name.find_last_of("."));
 	}
 
+	std::filesystem::create_directory(stimfile_path);
+
 	auto stim_file = ofstream(stimfile_path + "/stim_file.txt");
 	for (size_t i = 0; i < max_iterations; ++i) {
 		for (const auto &[name, bundle] : in_values) {
@@ -1653,7 +1655,7 @@ int main(int argc, char **argv) {
 
 		if (generate_vhdl) {
 			// Recursively create the folders of the path.
-			experimental::filesystem::create_directory(output_file_path);
+			std::filesystem::create_directory(output_file_path);
 		}
 
 		cout << "Longest path in the system: " << system.GetLongestPath() << '\n';

@@ -1,7 +1,7 @@
 CC := g++
 SANITIZER := #-fsanitize=memory -fsanitize-memory-track-origins
 INCLUDE_DIRS := -Ilib/yaml-cpp/include -Ilib/ctemplate/src -Ilib/ordered-map
-CFLAGS := $(INCLUDE_DIRS) -O3 -std=c++1z -Werror $(SANITIZER)
+CFLAGS := $(INCLUDE_DIRS) -O3 -std=c++17 -Werror $(SANITIZER)
 LIBS := -lyaml-cpp -static -lctemplate_nothreads -lstdc++fs
 LDFLAGS := -Llib/yaml-cpp/build -Llib/ctemplate/.libs $(LIBS) $(SANITIZER)
 OBJDIR := obj
